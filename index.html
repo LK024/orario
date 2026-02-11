@@ -134,4 +134,380 @@
     .hour-toggle span.active { background: var(--accent-color); color: white; }
 
     .grid-cell {
-        border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-
+        border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color);
+        padding: 6px; min-height: 110px; position: relative; display: flex; flex-direction: column;
+    }
+
+    .break-col {
+        background: repeating-linear-gradient(45deg, var(--bg-app), var(--bg-app) 5px, rgba(0,0,0,0.05) 5px, rgba(0,0,0,0.05) 10px);
+        border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .break-text {
+        writing-mode: vertical-rl; text-orientation: mixed; font-size: 10px;
+        letter-spacing: 3px; color: var(--text-secondary); font-weight: 600; opacity: 0.5;
+    }
+
+    .lesson {
+        flex: 1; background: var(--bg-header); border-radius: 6px; padding: 5px;
+        box-shadow: var(--shadow-card); display: flex; flex-direction: column;
+        justify-content: center; align-items: center; text-align: center;
+        border-left: 3px solid var(--accent-color); margin-bottom: 15px; transition: transform 0.1s;
+    }
+    .lesson:hover { transform: translateY(-2px); }
+
+    .subject { font-size: 18px; font-weight: 700; outline: none; margin-bottom: 4px; }
+    .meta { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+    .tag { font-size: 11px; padding: 1px 5px; border-radius: 4px; font-weight: 600; }
+    .tag.aula { background: var(--tag-aula-bg); color: var(--tag-aula-text); }
+    .tag.prof { background: var(--tag-prof-bg); color: var(--tag-prof-text); }
+
+    .time-label {
+        position: absolute; bottom: 3px; font-size: 10px; font-family: monospace;
+        color: var(--text-secondary); font-weight: 600; opacity: 0.7;
+    }
+    .time-start { left: 8px; }
+    .time-end { right: 8px; }
+
+    .grid-cell.disabled {
+        background-color: rgba(0,0,0,0.03);
+        background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.05) 10px, rgba(0,0,0,0.05) 20px);
+        pointer-events: none;
+    }
+    body.dark .grid-cell.disabled { background-color: rgba(255,255,255,0.03); }
+    .grid-cell.disabled .lesson { display: none; }
+    .grid-cell.disabled .time-label { display: none; }
+
+    body.is-editing .subject, body.is-editing .tag { border-bottom: 1px dashed var(--accent-color); cursor: text; }
+    body.is-editing .lesson { box-shadow: none; border: 1px dashed var(--border-color); }
+
+    /* Stile per la lezione corrente (Windows Active State) */
+    .now-active {
+        position: relative;
+        border: 2px solid var(--accent-color) !important;
+        background-color: var(--bg-header) !important;
+        box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05), var(--shadow-card) !important;
+        z-index: 5;
+        transform: scale(1.02);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .now-active::after {
+        content: "● ORA";
+        position: absolute;
+        top: -10px; right: 10px;
+        background-color: var(--accent-color);
+        color: white;
+        font-size: 10px; font-weight: 700;
+        padding: 2px 8px; border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        animation: pulse 2s infinite;
+    }
+
+    .break-col.now-active {
+        background: var(--tag-prof-bg) !important;
+        border: 2px solid var(--tag-prof-text);
+        color: var(--tag-prof-text);
+    }
+    .break-col.now-active .break-text { opacity: 1; color: var(--tag-prof-text); }
+    .break-col.now-active::after { display: none; }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+</style>
+</head>
+<body class="light">
+
+<header>
+    <div class="title-group">
+        <h1>Orario Settimanale</h1>
+    </div>
+    <div class="controls">
+        <div class="color-wrapper" title="Scegli colore o incolla HEX">
+            <input type="color" id="colorPicker" value="#0078d4">
+            <input type="text" id="hexInput" class="hex-input" value="#0078D4" maxlength="7" spellcheck="false">
+        </div>
+        <button class="btn" onclick="toggleTheme()">🌗 Tema</button>
+        <button class="btn" id="editBtn" onclick="toggleEdit()">✏️ Modifica</button>
+        <button class="btn" onclick="resetData()" style="color:#d13438; border-color: transparent;">✖</button>
+        <button class="btn" onclick="exportConfiguration()" title="Copia codice per GitHub">📤</button>
+    </div>
+</header>
+
+<div class="grid-container">
+    <div class="schedule-grid" id="mainGrid"></div>
+</div>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registrato', reg))
+                .catch(err => console.log('SW errore', err));
+        });
+    }
+
+    // --- CONFIGURAZIONE AGGIORNATA ---
+    const defaultHoursConfig = [5,6,6,5,6,5]; 
+    const defaultLessons = [["","","","","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>",""],["2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab4</span> <span class=\"tag prof\">BONELLI</span></div>","","5E<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>"],["1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab1</span></div>"],["","","","","",""],["3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","",""],["1G<br><div class=\"meta\"><span class=\"tag aula\">1.14</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">2.03</span></div>","","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>",""]];
+    // ----------------------------------
+
+    const days = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ", "SABATO"];
+
+    function calculateTime(dayHours, hourIndex) {
+        let baseMinutes = 8 * 60 + 25; 
+        let duration = (dayHours === 6) ? 50 : 60;
+        let breakDuration = 20;
+        let currentStart = baseMinutes + (hourIndex * duration);
+        if (hourIndex >= 3) currentStart += breakDuration;
+        let currentEnd = currentStart + duration;
+        return { start: minToTime(currentStart), end: minToTime(currentEnd) };
+    }
+
+    function minToTime(mins) {
+        let h = Math.floor(mins / 60);
+        let m = mins % 60;
+        return `${h}:${m.toString().padStart(2, '0')}`;
+    }
+
+    function renderGrid() {
+        const grid = document.getElementById('mainGrid');
+        grid.innerHTML = ''; 
+
+        const headers = ["GIORNO", "1ª ORA", "2ª ORA", "3ª ORA", "INT.", "4ª ORA", "5ª ORA", "6ª ORA"];
+        headers.forEach((h, i) => {
+            const div = document.createElement('div');
+            div.className = 'grid-header';
+            div.innerText = h;
+            if(h === "INT.") div.style.background = "rgba(0,0,0,0.02)";
+            grid.appendChild(div);
+        });
+
+        let savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
+        let savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+
+        days.forEach((dayName, dayIndex) => {
+            const hoursMode = savedConfig[dayIndex];
+            const dayLabel = document.createElement('div');
+            dayLabel.className = 'day-row-label';
+            dayLabel.innerHTML = `
+                <span>${dayName}</span>
+                <div class="hour-toggle" onclick="toggleDayHours(${dayIndex})">
+                    <span class="${hoursMode===5?'active':''}">5h</span>
+                    <span class="${hoursMode===6?'active':''}">6h</span>
+                </div>
+            `;
+            grid.appendChild(dayLabel);
+
+            for (let i = 0; i < 6; i++) {
+                if (i === 3) {
+                    const breakCol = document.createElement('div');
+                    breakCol.className = 'break-col';
+                    breakCol.innerHTML = '<span class="break-text">INTERVALLO</span>';
+                    grid.appendChild(breakCol);
+                }
+
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                const times = calculateTime(hoursMode, i);
+                
+                if (i === 5 && hoursMode === 5) {
+                    cell.classList.add('disabled');
+                } else {
+                    let content = savedLessons[dayIndex][i] || "";
+                    if (!content) content = `<div class="subject"></div><div class="meta"></div>`;
+                    let innerHTML = content.includes('class="lesson"') ? content : `<div class="lesson">${content}</div>`;
+                    let style = !savedLessons[dayIndex][i] ? 'style="opacity:0.6; min-height:40px;"' : ""; 
+                    
+                    cell.innerHTML = `
+                        <div class="lesson" ${style}>${content}</div>
+                        <span class="time-label time-start">${times.start}</span>
+                        <span class="time-label time-end">${times.end}</span>
+                    `;
+                }
+                grid.appendChild(cell);
+            }
+        });
+        applyEditMode();
+        highlightCurrentLesson(); // AGGIUNTO QUI PER AGGIORNAMENTO ISTANTANEO
+    }
+
+    let isEditing = false;
+    function toggleEdit() {
+        isEditing = !isEditing;
+        const btn = document.getElementById('editBtn');
+        document.body.classList.toggle('is-editing');
+        
+        if (isEditing) {
+            btn.innerHTML = "💾 Salva";
+            btn.style.background = "var(--accent-color)";
+            btn.style.color = "white";
+        } else {
+            btn.innerHTML = "✏️ Modifica";
+            btn.style.background = "";
+            btn.style.color = "";
+            saveCurrentData();
+        }
+        applyEditMode();
+    }
+
+    function applyEditMode() {
+        const contents = document.querySelectorAll('.lesson');
+        contents.forEach(el => el.contentEditable = isEditing);
+    }
+
+    function saveCurrentData() {
+        let currentLessons = [[],[],[],[],[],[]];
+        const grid = document.getElementById('mainGrid');
+        let allDivs = Array.from(grid.children).slice(8);
+        const rowSize = 8;
+        
+        for(let d=0; d<6; d++) {
+            let rowStart = d * rowSize;
+            let cellIndices = [1, 2, 3, 5, 6, 7];
+            cellIndices.forEach((offset, hIndex) => {
+                let cell = allDivs[rowStart + offset];
+                if(cell && !cell.classList.contains('disabled')) {
+                    let lessonDiv = cell.querySelector('.lesson');
+                    if(lessonDiv && lessonDiv.innerText.trim().length > 0) {
+                        currentLessons[d][hIndex] = lessonDiv.innerHTML;
+                    } else {
+                        currentLessons[d][hIndex] = "";
+                    }
+                } else {
+                    currentLessons[d][hIndex] = "";
+                }
+            });
+        }
+        localStorage.setItem('lessonsData', JSON.stringify(currentLessons));
+    }
+
+    function toggleDayHours(dayIndex) {
+        let savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+        savedConfig[dayIndex] = (savedConfig[dayIndex] === 5) ? 6 : 5;
+        localStorage.setItem('daysConfig', JSON.stringify(savedConfig));
+        if(!isEditing) saveCurrentData(); 
+        renderGrid();
+    }
+    
+    function resetData() {
+        if(confirm("Reset completo dati e impostazioni?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    const picker = document.getElementById('colorPicker');
+    const hexInput = document.getElementById('hexInput');
+
+    function setAccent(hex) {
+        if(!hex.startsWith('#')) hex = '#' + hex;
+        document.documentElement.style.setProperty('--accent-color', hex);
+        localStorage.setItem('accentColor', hex);
+        picker.value = hex;
+        hexInput.value = hex.toUpperCase();
+    }
+
+    picker.addEventListener('input', (e) => setAccent(e.target.value));
+    hexInput.addEventListener('input', (e) => {
+        let val = e.target.value;
+        if (/^#?[0-9A-Fa-f]{6}$/.test(val)) setAccent(val);
+    });
+
+    function toggleTheme() {
+        const body = document.body;
+        const newTheme = body.classList.contains('light') ? 'dark' : 'light';
+        body.className = newTheme;
+        localStorage.setItem('theme', newTheme);
+    }
+
+    function highlightCurrentLesson() {
+        document.querySelectorAll('.now-active').forEach(el => el.classList.remove('now-active'));
+
+        const now = new Date();
+        let dayIndex = now.getDay() - 1; 
+        
+        if (dayIndex < 0 || dayIndex > 5) return;
+
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+        const hoursMode = savedConfig[dayIndex];
+        
+        const baseStart = 8 * 60 + 25; 
+        const duration = (hoursMode === 6) ? 50 : 60;
+        const breakDuration = 20;
+
+        let activeGridIndex = -1;
+
+        // Prime 3 ore
+        for(let i=0; i<3; i++) {
+            let start = baseStart + (i * duration);
+            let end = start + duration;
+            if(currentMinutes >= start && currentMinutes < end) {
+                activeGridIndex = i + 1; 
+            }
+        }
+
+        // Intervallo
+        let breakStart = baseStart + (3 * duration);
+        let breakEnd = breakStart + breakDuration;
+        if(currentMinutes >= breakStart && currentMinutes < breakEnd) {
+            activeGridIndex = 4;
+        }
+
+        // Ultime 3 ore
+        for(let i=3; i<6; i++) {
+            let start = baseStart + (3 * duration) + breakDuration + ((i - 3) * duration);
+            let end = start + duration;
+            if(currentMinutes >= start && currentMinutes < end) {
+                activeGridIndex = i + 2; 
+            }
+        }
+
+        if (activeGridIndex !== -1) {
+            const grid = document.getElementById('mainGrid');
+            const absoluteIndex = 8 + (dayIndex * 8) + activeGridIndex;
+            const targetCell = grid.children[absoluteIndex];
+            if(targetCell) {
+                targetCell.classList.add('now-active');
+                if(window.innerWidth < 768) {
+                    targetCell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                }
+            }
+        }
+    }
+
+    function exportConfiguration() {
+        const currentLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
+        const currentConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+
+        const codeBlock = `// --- CONFIGURAZIONE AGGIORNATA ---
+const defaultHoursConfig = ${JSON.stringify(currentConfig)}; 
+const defaultLessons = ${JSON.stringify(currentLessons)};
+// ----------------------------------`;
+
+        navigator.clipboard.writeText(codeBlock).then(() => {
+            alert("✅ Codice copiato!\n\nOra apri GitHub, modifica index.html e INCOLLA questo codice al posto delle vecchie variabili 'const defaultHoursConfig' e 'const defaultLessons'.");
+        }).catch(err => {
+            console.error('Errore copia:', err);
+            alert("Impossibile copiare automaticamente. Controlla la console.");
+        });
+    }
+
+    // --- INIT ---
+    const savedTheme = localStorage.getItem('theme');
+    if(savedTheme) document.body.className = savedTheme;
+    const savedColor = localStorage.getItem('accentColor');
+    if(savedColor) setAccent(savedColor);
+
+    renderGrid();
+    
+    // Aggiorna l'evidenziatore ogni 60 secondi
+    setInterval(highlightCurrentLesson, 60000);
+
+</script>
+</body>
+</html>
