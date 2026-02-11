@@ -398,6 +398,29 @@
         localStorage.setItem('theme', newTheme);
     }
 
+    function exportConfiguration() {
+    // 1. Prendi i dati attuali dalla memoria locale (quelli che vedi a schermo)
+    const currentLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
+    const currentConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+
+    // 2. Crea la stringa di codice formattata
+    const codeBlock = `// --- CONFIGURAZIONE AGGIORNATA ---
+const defaultHoursConfig = ${JSON.stringify(currentConfig)}; 
+const defaultLessons = ${JSON.stringify(currentLessons)};
+// ----------------------------------`;
+
+    // 3. Copia negli appunti
+    navigator.clipboard.writeText(codeBlock).then(() => {
+        alert("✅ Codice copiato!\n\nOra apri GitHub, modifica index.html e INCOLLA questo codice al posto delle vecchie variabili 'const defaultHoursConfig' e 'const defaultLessons'.");
+        
+        // Opzionale: apre GitHub per te (sostituisci col tuo link)
+        // window.open("https://github.com/TUO_USER/TUA_REPO/edit/main/index.html", "_blank");
+    }).catch(err => {
+        console.error('Errore copia:', err);
+        alert("Impossibile copiare automaticamente. Controlla la console.");
+    });
+}
+
     // --- INIT ---
     const savedTheme = localStorage.getItem('theme');
     if(savedTheme) document.body.className = savedTheme;
@@ -409,4 +432,5 @@
 </body>
 
 </html>
+
 
