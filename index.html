@@ -2,344 +2,179 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orario Settimanale - Pro</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#f3f3f3">
-<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3652/3652191.png">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Orario Settimanale - Full Fit</title>
 <style>
     :root {
-        --accent-color: #0078d4;
-        --bg-app: #f3f3f3;
-        --bg-surface: rgba(255, 255, 255, 0.85);
-        --bg-header: #ffffff;
-        --border-color: #e5e5e5;
-        --text-primary: #1a1a1a;
-        --text-secondary: #5f5f5f;
-        --tag-aula-bg: #e6f2ff;
-        --tag-aula-text: #004578;
-        --tag-prof-bg: #fff4ce;
-        --tag-prof-text: #7d6300;
-        --shadow-card: 0 2px 4px rgba(0,0,0,0.04);
+        --accent-color: #0078d4; --bg-app: #f3f3f3; --bg-surface: rgba(255, 255, 255, 0.9);
+        --bg-header: #ffffff; --border-color: #e5e5e5; --text-primary: #1a1a1a;
+        --text-secondary: #5f5f5f; --tag-aula-bg: #e6f2ff; --tag-aula-text: #004578;
+        --tag-prof-bg: #fff4ce; --tag-prof-text: #7d6300;
     }
-
     body.dark {
-        --bg-app: #121212;
-        --bg-surface: rgba(30, 30, 30, 0.9);
-        --bg-header: #1e1e1e;
-        --border-color: #333333;
-        --text-primary: #ffffff;
-        --text-secondary: #aaaaaa;
-        --tag-aula-bg: #2d3d4d;
-        --tag-aula-text: #96c8fa;
-        --tag-prof-bg: #3d3a2d;
-        --tag-prof-text: #fce100;
+        --bg-app: #121212; --bg-surface: rgba(30, 30, 30, 0.95); --bg-header: #1e1e1e;
+        --border-color: #333333; --text-primary: #ffffff; --text-secondary: #aaaaaa;
+        --tag-aula-bg: #2d3d4d; --tag-aula-text: #96c8fa; --tag-prof-bg: #3d3a2d; --tag-prof-text: #fce100;
     }
 
-    /* Reset totale per evitare overflow */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* RESET TOTALE */
+    html, body { 
+        height: 100%; width: 100%; margin: 0; padding: 0; 
+        overflow: hidden !important; /* BLOCCO TOTALE SCROLLBAR */
+    }
+    * { box-sizing: border-box; }
 
     body {
         font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
         background-color: var(--bg-app);
         color: var(--text-primary);
-        padding: 10px;
-        height: 100vh;
-        height: 100dvh;
-        overflow: hidden; /* NIENTE BARRE ESTERNE */
         display: flex;
         flex-direction: column;
+        padding: 8px; /* Margine minimo esterno */
     }
 
     header {
-        height: 50px; /* Altezza fissa header */
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-shrink: 0;
-        padding-bottom: 10px;
+        height: 48px;
+        display: flex; justify-content: space-between; align-items: center;
+        flex-shrink: 0; padding: 0 10px;
     }
 
-    .title-group h1 { font-size: 20px; font-weight: 600; }
-    .controls { display: flex; align-items: center; gap: 8px; }
+    .controls { display: flex; gap: 8px; align-items: center; }
+    .btn { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
 
-    .btn {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-color);
-        color: var(--text-primary);
-        padding: 5px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 13px;
-    }
-
-    .color-wrapper {
-        display: flex; align-items: center; background: var(--bg-surface);
-        border: 1px solid var(--border-color); border-radius: 6px; padding: 2px 6px;
-    }
-    input[type="color"] { border: none; width: 18px; height: 18px; cursor: pointer; background: none; }
-    input.hex-input { border: none; background: transparent; color: var(--text-primary); font-family: monospace; width: 60px; font-size: 11px; outline: none; margin-left: 5px; }
-
-    /* CONTENITORE INTELLIGENTE */
-    .grid-container {
+    /* CONTENITORE CHE NON PUÒ CRESCERE */
+    .grid-wrapper {
         flex: 1;
-        height: 0; /* TRUCCO: forza il contenitore a obbedire al flexbox senza espandersi */
-        overflow: hidden; 
+        min-height: 0; /* Fondamentale per far funzionare il flex-shrink */
+        display: flex;
+        flex-direction: column;
         background: var(--bg-surface);
         border: 1px solid var(--border-color);
-        border-radius: 12px;
-        display: flex;
+        border-radius: 8px;
+        overflow: hidden;
     }
 
     .schedule-grid {
         display: grid;
-        grid-template-columns: 120px repeat(3, 1fr) 30px repeat(3, 1fr); 
-        grid-template-rows: 35px repeat(6, 1fr); /* 35px header + 6 giorni uguali */
-        height: 100%;
-        width: 100%;
+        grid-template-columns: 110px repeat(3, 1fr) 25px repeat(3, 1fr);
+        grid-template-rows: 32px repeat(6, 1fr);
+        height: 100%; width: 100%;
+        min-width: 0; min-height: 0;
     }
 
-    .grid-header {
-        background: var(--bg-header);
-        border-bottom: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color);
-        display: flex; align-items: center; justify-content: center;
-        font-weight: 600; color: var(--text-secondary); font-size: 11px;
-    }
+    .grid-header { background: var(--bg-header); border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 10px; color: var(--text-secondary); }
+    .day-row-label { background: var(--bg-header); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; color: var(--accent-color); font-size: 11px; }
+    .hour-toggle { font-size: 8px; background: var(--bg-app); border: 1px solid var(--border-color); border-radius: 8px; display: flex; margin-top: 2px; }
+    .hour-toggle span { padding: 1px 4px; }
+    .hour-toggle span.active { background: var(--accent-color); color: white; border-radius: 6px; }
 
-    .day-row-label {
-        background: var(--bg-header);
-        border-right: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color);
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        font-weight: 700; color: var(--accent-color); font-size: 12px;
-    }
+    .grid-cell { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 2px; position: relative; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+    .break-col { background: var(--bg-app); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; opacity: 0.5; }
+    .break-text { writing-mode: vertical-rl; font-size: 8px; font-weight: 700; color: var(--text-secondary); }
 
-    .hour-toggle {
-        margin-top: 2px; font-size: 8px; background: var(--bg-app);
-        border: 1px solid var(--border-color); border-radius: 10px; display: flex;
-    }
-    .hour-toggle span { padding: 1px 5px; }
-    .hour-toggle span.active { background: var(--accent-color); color: white; border-radius: 8px; }
-
-    .grid-cell {
-        border-bottom: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color);
-        padding: 3px;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        min-height: 0; /* Permette il restringimento estremo */
-    }
-
-    .break-col {
-        background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.02) 5px, rgba(0,0,0,0.02) 10px);
-        border-right: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color);
-        display: flex; align-items: center; justify-content: center;
-    }
-    .break-text {
-        writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px;
-        color: var(--text-secondary); font-weight: 600; opacity: 0.3;
-    }
-
-    /* CARD LEZIONE */
-    .lesson {
-        flex: 1;
-        background: var(--bg-header);
-        border-radius: 6px;
-        padding: 2px;
-        box-shadow: var(--shadow-card);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        border-left: 3px solid var(--accent-color);
-        overflow: hidden;
-    }
-
-    .subject { 
-        font-size: clamp(12px, 1.7vh, 16px); 
-        font-weight: 700; 
-        line-height: 1;
-        margin-bottom: 2px;
-    }
-    
-    .meta { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
-    .tag { font-size: 9px; padding: 0px 4px; border-radius: 3px; font-weight: 600; }
+    .lesson { flex: 1; background: var(--bg-header); border-radius: 4px; padding: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: center; align-items: center; border-left: 3px solid var(--accent-color); overflow: hidden; }
+    .subject { font-size: clamp(10px, 1.4vh, 15px); font-weight: 700; line-height: 1; text-align: center; }
+    .meta { display: flex; gap: 2px; margin-top: 2px; flex-wrap: wrap; justify-content: center; }
+    .tag { font-size: 8px; padding: 0 3px; border-radius: 2px; font-weight: 600; }
     .tag.aula { background: var(--tag-aula-bg); color: var(--tag-aula-text); }
     .tag.prof { background: var(--tag-prof-bg); color: var(--tag-prof-text); }
 
-    .time-label {
-        position: absolute; bottom: 1px; font-size: 8px; font-family: monospace;
-        color: var(--text-secondary); opacity: 0.5;
-    }
-    .time-start { left: 4px; }
-    .time-end { right: 4px; }
+    .time-label { position: absolute; bottom: 1px; font-size: 7px; color: var(--text-secondary); opacity: 0.6; font-family: monospace; }
+    .time-start { left: 4px; } .time-end { right: 4px; }
 
-    .grid-cell.disabled { background-color: rgba(0,0,0,0.02); }
+    .grid-cell.disabled { background: rgba(0,0,0,0.02); }
     .grid-cell.disabled .lesson { display: none; }
-
-    /* HIGHLIGHT LIVE */
-    .now-active { border: 2px solid var(--accent-color) !important; z-index: 10; }
-    .now-active::after {
-        content: "• ORA"; position: absolute; top: -7px; right: 4px;
-        background: var(--accent-color); color: white; font-size: 8px;
-        padding: 1px 5px; border-radius: 4px; font-weight: 800;
-    }
-
-    body.is-editing .lesson { border: 1px dashed var(--accent-color); cursor: text; }
+    .now-active { border: 2px solid var(--accent-color) !important; z-index: 5; }
 </style>
 </head>
 <body class="light">
-
 <header>
-    <div class="title-group">
-        <h1>Orario Settimanale</h1>
-    </div>
+    <div class="title-group"><h1 style="margin:0; font-size:18px;">Orario Settimanale</h1></div>
     <div class="controls">
-        <div class="color-wrapper">
-            <input type="color" id="colorPicker" value="#0078d4">
-            <input type="text" id="hexInput" class="hex-input" value="#0078D4">
-        </div>
+        <input type="color" id="colorPicker" value="#0078d4" style="width:25px;height:25px;border:none;cursor:pointer;">
         <button class="btn" onclick="toggleTheme()">🌗 Tema</button>
         <button class="btn" id="editBtn" onclick="toggleEdit()">✏️ Modifica</button>
         <button class="btn" onclick="exportConfiguration()">📤 Export</button>
     </div>
 </header>
-
-<div class="grid-container">
-    <div class="schedule-grid" id="mainGrid"></div>
-</div>
-
+<div class="grid-wrapper"><div class="schedule-grid" id="mainGrid"></div></div>
 <script>
     const defaultHoursConfig = [5, 6, 6, 5, 6, 5]; 
     const defaultLessons = [["","","","","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>",""],["2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab4</span> <span class=\"tag prof\">BONELLI</span></div>","","5E<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>"],["1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab1</span></div>"],["","","","","",""],["3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","",""],["1G<br><div class=\"meta\"><span class=\"tag aula\">1.14</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">2.03</span></div>","","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>",""]];
-
-    const days = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ", "SABATO"];
-
-    function calculateTime(dayHours, hourIndex) {
-        let base = 8 * 60 + 25, dur = (dayHours === 6) ? 50 : 60, brk = 20;
-        let start = base + (hourIndex * dur);
-        if (hourIndex >= 3) start += brk;
-        const fmt = (m) => `${Math.floor(m/60)}:${(m%60).toString().padStart(2,'0')}`;
-        return { start: fmt(start), end: fmt(start + dur) };
-    }
-
+    const days = ["LUN", "MAR", "MER", "GIO", "VEN", "SAB"];
     function renderGrid() {
-        const grid = document.getElementById('mainGrid');
-        grid.innerHTML = ''; 
-        ["GIORNO", "1ª ORA", "2ª ORA", "3ª ORA", "INT.", "4ª ORA", "5ª ORA", "6ª ORA"].forEach(h => {
-            const div = document.createElement('div'); div.className = 'grid-header'; div.innerText = h;
-            grid.appendChild(div);
+        const grid = document.getElementById('mainGrid'); grid.innerHTML = '';
+        ["GIORNO", "1ª", "2ª", "3ª", "INT.", "4ª", "5ª", "6ª"].forEach(h => {
+            const d = document.createElement('div'); d.className='grid-header'; d.innerText=h; grid.appendChild(d);
         });
-
         let lessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
         let config = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-
         days.forEach((day, dIdx) => {
             const mode = config[dIdx];
-            const label = document.createElement('div'); label.className = 'day-row-label';
-            label.innerHTML = `<span>${day}</span><div class="hour-toggle" onclick="toggleDayHours(${dIdx})"><span class="${mode===5?'active':''}">5h</span><span class="${mode===6?'active':''}">6h</span></div>`;
-            grid.appendChild(label);
-
-            for (let i = 0; i < 6; i++) {
-                if (i === 3) {
-                    const brk = document.createElement('div'); brk.className = 'break-col';
-                    brk.innerHTML = '<span class="break-text">INT.</span>';
-                    grid.appendChild(brk);
-                }
-                const cell = document.createElement('div'); cell.className = 'grid-cell';
-                const times = calculateTime(mode, i);
-                if (i === 5 && mode === 5) cell.classList.add('disabled');
-                else {
-                    cell.innerHTML = `<div class="lesson">${lessons[dIdx][i] || ""}</div><span class="time-label time-start">${times.start}</span><span class="time-label time-end">${times.end}</span>`;
-                }
-                grid.appendChild(cell);
+            const l = document.createElement('div'); l.className='day-row-label';
+            l.innerHTML = `<span>${day}</span><div class="hour-toggle" onclick="toggleDayHours(${dIdx})"><span class="${mode===5?'active':''}">5</span><span class="${mode===6?'active':''}">6</span></div>`;
+            grid.appendChild(l);
+            for (let i=0; i<6; i++) {
+                if (i===3) { const b=document.createElement('div'); b.className='break-col'; b.innerHTML='<span class="break-text">INT.</span>'; grid.appendChild(b); }
+                const c = document.createElement('div'); c.className='grid-cell';
+                if (i===5 && mode===5) c.classList.add('disabled');
+                else { c.innerHTML = `<div class="lesson">${lessons[dIdx][i] || ""}</div>`; }
+                grid.appendChild(c);
             }
         });
-        highlightCurrentLesson();
-        if(isEditing) applyEditMode();
+        highlight();
     }
-
     function toggleDayHours(idx) {
         let conf = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-        conf[idx] = (conf[idx] === 5) ? 6 : 5;
-        localStorage.setItem('daysConfig', JSON.stringify(conf)); renderGrid();
+        conf[idx] = (conf[idx] === 5) ? 6 : 5; localStorage.setItem('daysConfig', JSON.stringify(conf)); renderGrid();
     }
-
     let isEditing = false;
     function toggleEdit() {
-        isEditing = !isEditing;
-        document.body.classList.toggle('is-editing');
+        isEditing = !isEditing; document.body.classList.toggle('is-editing');
         const btn = document.getElementById('editBtn');
-        if (isEditing) { btn.innerHTML = "💾 Salva"; btn.style.background = "var(--accent-color)"; btn.style.color = "white"; }
-        else { btn.innerHTML = "✏️ Modifica"; btn.style.background = ""; btn.style.color = ""; saveCurrentData(); }
-        applyEditMode();
+        if (isEditing) btn.innerText = "💾 Salva";
+        else { btn.innerText = "✏️ Modifica"; save(); }
+        document.querySelectorAll('.lesson').forEach(el => el.contentEditable = isEditing);
     }
-
-    function applyEditMode() { document.querySelectorAll('.lesson').forEach(el => el.contentEditable = isEditing); }
-
-    function saveCurrentData() {
+    function save() {
         let data = [[],[],[],[],[],[]];
-        const grid = document.getElementById('mainGrid');
+        let cells = Array.from(document.querySelectorAll('.grid-cell'));
         let config = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-        let cells = Array.from(grid.children).filter(c => c.classList.contains('grid-cell'));
-        let cellIdx = 0;
+        let cIdx = 0;
         for(let d=0; d<6; d++) {
             for(let h=0; h<6; h++) {
-                const lessonDiv = cells[cellIdx].querySelector('.lesson');
-                data[d][h] = (cells[cellIdx].classList.contains('disabled')) ? "" : (lessonDiv ? lessonDiv.innerHTML : "");
-                cellIdx++;
+                const lesson = cells[cIdx].querySelector('.lesson');
+                data[d][h] = lesson ? lesson.innerHTML : "";
+                cIdx++;
             }
         }
         localStorage.setItem('lessonsData', JSON.stringify(data));
     }
-
-    function highlightCurrentLesson() {
-        document.querySelectorAll('.now-active').forEach(el => el.classList.remove('now-active'));
-        const now = new Date(); let dIdx = now.getDay() - 1; if (dIdx < 0 || dIdx > 5) return;
-        const curMin = now.getHours() * 60 + now.getMinutes();
+    function highlight() {
+        const now = new Date(); let dIdx = now.getDay() - 1; if(dIdx < 0 || dIdx > 5) return;
+        const curMin = now.getHours()*60 + now.getMinutes();
         const config = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-        const mode = config[dIdx], base = 8 * 60 + 25, dur = mode === 6 ? 50 : 60, brk = 20;
+        const mode = config[dIdx];
         for(let i=0; i<mode; i++) {
-            let s = base + (i * dur); if (i >= 3) s += brk;
-            if (curMin >= s && curMin < s + dur) {
-                const gridIdx = 8 + (dIdx * 8) + (i < 3 ? i + 1 : i + 2);
-                const cell = document.getElementById('mainGrid').children[gridIdx];
+            let s = (8*60+25) + (i*(mode===6?50:60)); if(i>=3) s+=20;
+            if(curMin >= s && curMin < s+(mode===6?50:60)) {
+                const idx = 8 + (dIdx*8) + (i<3 ? i+1 : i+2);
+                const cell = document.getElementById('mainGrid').children[idx];
                 if(cell) cell.classList.add('now-active');
             }
         }
     }
-
     function toggleTheme() {
-        const body = document.body; const newT = body.classList.contains('light') ? 'dark' : 'light';
-        body.className = newT; localStorage.setItem('theme', newT);
+        document.body.className = document.body.className === 'light' ? 'dark' : 'light';
+        localStorage.setItem('theme', document.body.className);
     }
-
-    function setAccent(hex) {
-        document.documentElement.style.setProperty('--accent-color', hex);
-        localStorage.setItem('accentColor', hex);
-        document.getElementById('colorPicker').value = hex;
-        document.getElementById('hexInput').value = hex.toUpperCase();
-    }
-
-    document.getElementById('colorPicker').addEventListener('input', (e) => setAccent(e.target.value));
-    function exportConfiguration() {
-        const l = localStorage.getItem('lessonsData') || JSON.stringify(defaultLessons);
-        const c = localStorage.getItem('daysConfig') || JSON.stringify(defaultHoursConfig);
-        navigator.clipboard.writeText(`const defaultHoursConfig = ${c};\nconst defaultLessons = ${l};`).then(() => alert("Copiato!"));
-    }
-
-    // INIT
-    const savedTheme = localStorage.getItem('theme');
-    if(savedTheme) document.body.className = savedTheme;
-    const savedColor = localStorage.getItem('accentColor');
-    if(savedColor) setAccent(savedColor);
-    renderGrid();
-    setInterval(highlightCurrentLesson, 60000);
+    document.getElementById('colorPicker').oninput = (e) => {
+        document.documentElement.style.setProperty('--accent-color', e.target.value);
+        localStorage.setItem('accentColor', e.target.value);
+    };
+    const savedTheme = localStorage.getItem('theme'); if(savedTheme) document.body.className = savedTheme;
+    const savedColor = localStorage.getItem('accentColor'); if(savedColor) document.documentElement.style.setProperty('--accent-color', savedColor);
+    renderGrid(); setInterval(highlight, 60000);
 </script>
 </body>
 </html>
