@@ -242,6 +242,11 @@
 </div>
 
 <script>
+    // --- REDIRECT AUTOMATICO PER MOBILE ---
+if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    // Se l'utente è su mobile, lo manda alla versione MD3
+    window.location.href = "android.html";
+}
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
@@ -511,3 +516,4 @@ const defaultLessons = ${JSON.stringify(currentLessons)};
 </script>
 </body>
 </html>
+
