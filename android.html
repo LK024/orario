@@ -18,20 +18,27 @@
         --md-sys-color-on-background: #191c1a;
     }
 
-    body {
-        font-family: 'Roboto', sans-serif;
-        margin: 0; padding: 0; height: 100dvh;
-        display: grid;
-        /* GRIGLIA FISSA: Header(64px) | Tabs(52px) | Settings(40px) | Content(tutto il resto) */
-        grid-template-rows: 64px auto auto 1fr;
-        background-color: var(--md-sys-color-background);
-        color: var(--md-sys-color-on-background);
-        transition: background-color 0.3s ease;
-        overflow: hidden; /* Blocca lo scroll di tutto il body */
-    }
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-rows: auto auto auto 1fr;
+    background-color: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-background);
+    transition: background-color 0.3s ease;
+    overflow: hidden;
+}
 
     /* HEADER - Altezza bloccata */
     header {
+        min-height: 64px;
         grid-row: 1;
         display: flex; justify-content: space-between; align-items: center;
         padding: 0 8px 0 20px;
