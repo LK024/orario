@@ -214,7 +214,7 @@
             <input type="color" id="colorPicker" value="#0078d4">
             <input type="text" id="hexInput" class="hex-input" value="#0078D4" maxlength="7">
         </div>
-        <button class="btn" onclick="toggleTheme()">🌗 Tema</button>
+        <button class="btn" id="themeBtn" onclick="cycleTheme()">🌓 Auto</button>
         <button class="btn" id="editBtn" onclick="toggleEdit()">✏️ Modifica</button>
         <button class="btn" onclick="resetData()" style="color:#d13438;">✖</button>
         <button class="btn" onclick="exportConfiguration()">📤 Export</button>
@@ -227,10 +227,10 @@
 
 <script>
     // --- REDIRECT AUTOMATICO PER MOBILE ---
-if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    // Se l'utente è su mobile, lo manda alla versione MD3
-    window.location.href = "android.html";
-}
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        window.location.href = "android.html";
+    }
+
     // --- DATI DEFAULT ---
     const defaultHoursConfig = [5, 6, 6, 5, 5, 5]; 
     const defaultLessons = [
@@ -382,13 +382,7 @@ if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
     }
 
-    function toggleTheme() {
-        const body = document.body;
-        const newTheme = body.classList.contains('light') ? 'dark' : 'light';
-        body.className = newTheme;
-        localStorage.setItem('theme', newTheme);
-    }
-
+    // --- GESTIONE COLORE ---
     function setAccent(hex) {
         document.documentElement.style.setProperty('--accent-color', hex);
         localStorage.setItem('accentColor', hex);
@@ -413,11 +407,49 @@ if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         if(confirm("Vuoi resettare tutto?")) { localStorage.clear(); location.reload(); }
     }
 
-    // INIT
-    const savedTheme = localStorage.getItem('theme');
-    if(savedTheme) document.body.className = savedTheme;
+    // --- GESTIONE TEMA 3 STATI (Auto -> Light -> Dark) ---
+    const themes = ['auto', 'light', 'dark'];
+    const themeIcons = { 'auto': '🌓 Auto', 'light': '☀️ Light', 'dark': '🌙 Dark' };
+
+    function getSystemTheme() {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme() {
+        let mode = localStorage.getItem('themeMode') || 'auto';
+        let effectiveTheme = mode;
+
+        if (mode === 'auto') {
+            effectiveTheme = getSystemTheme();
+        }
+
+        document.body.className = effectiveTheme;
+        const btn = document.getElementById('themeBtn');
+        if(btn) btn.innerText = themeIcons[mode];
+    }
+
+    function cycleTheme() {
+        let current = localStorage.getItem('themeMode') || 'auto';
+        let nextIndex = (themes.indexOf(current) + 1) % themes.length;
+        let nextMode = themes[nextIndex];
+
+        localStorage.setItem('themeMode', nextMode);
+        applyTheme();
+    }
+
+    // Listener Live per cambio sistema
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if ((localStorage.getItem('themeMode') || 'auto') === 'auto') {
+            applyTheme();
+        }
+    });
+
+    // --- INIT ---
     const savedColor = localStorage.getItem('accentColor');
     if(savedColor) setAccent(savedColor);
+    
+    applyTheme(); // Applica il tema corretto all'avvio
+
     renderGrid();
     setInterval(highlightCurrentLesson, 60000);
 </script>
