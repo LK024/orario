@@ -4,52 +4,49 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<title>Orario MD3 Ultimate</title>
+<title>Orario MD3 Pro</title>
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
+    /* RESET & BASE */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    
     :root {
         --md-sys-color-background: #fbfdf9;
         --md-sys-color-on-background: #191c1a;
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
-    
     body {
         font-family: 'Roboto', sans-serif;
-        margin: 0;
-        padding: 0;
-        height: 100dvh; /* Altezza dinamica per mobile */
-        display: flex;
-        flex-direction: column;
+        margin: 0; padding: 0; height: 100dvh;
+        display: flex; flex-direction: column;
         background-color: var(--md-sys-color-background);
         color: var(--md-sys-color-on-background);
         transition: background-color 0.3s ease;
         overflow: hidden;
     }
 
-    /* HEADER - Forza l'altezza e impedisce il collasso */
+    /* HEADER */
     header {
-        height: 64px !important;
-        min-height: 64px !important;
-        flex-shrink: 0 !important; /* Impedisce la compressione */
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 16px 0 20px;
+        height: 64px; min-height: 64px; flex-shrink: 0;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 0 8px 0 20px;
         background-color: var(--md-sys-color-background);
-        z-index: 1000;
+        z-index: 1000; transition: background 0.3s;
     }
     
-    .headline { font-size: 22px; font-weight: 400; color: var(--md-sys-color-on-background); }
-    .actions { display: flex; gap: 4px; align-items: center; }
+    body.is-editing header {
+        background-color: var(--md-sys-color-primary-container);
+    }
+    
+    .headline { font-size: 20px; font-weight: 500; color: var(--md-sys-color-on-background); }
+    .actions { display: flex; gap: 2px; align-items: center; }
 
-    /* Picker e Icone */
     .color-btn {
-        width: 40px; height: 40px; border-radius: 50%; border: none; position: relative; overflow: hidden;
-        background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);
+        width: 38px; height: 38px; border-radius: 50%; border: none; position: relative; overflow: hidden;
+        background: var(--md-sys-color-secondary-container);
         display: flex; justify-content: center; align-items: center;
     }
     .color-btn input[type="color"] { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; opacity: 0; cursor: pointer; }
@@ -60,53 +57,71 @@
         display: flex; justify-content: center; align-items: center; font-size: 20px;
     }
 
-    /* TABS E SETTINGS - Fissi anche questi */
+    /* CONTROLLI */
     .tabs-wrapper {
-        height: 48px; min-height: 48px; flex-shrink: 0;
-        display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 8px 16px; scrollbar-width: none;
+        height: 48px; flex-shrink: 0;
+        padding: 0 16px 8px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
     }
     .tabs-wrapper::-webkit-scrollbar { display: none; }
     
     .tab {
         border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface-variant);
-        background: transparent; padding: 6px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; white-space: nowrap;
+        background: transparent; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; white-space: nowrap;
     }
-    .tab.active { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); border-color: transparent; }
+    .tab.active { background: var(--md-sys-color-primary); color: white; border-color: transparent; }
 
-    .settings-bar { height: 40px; min-height: 40px; flex-shrink: 0; margin: 0 16px 8px 16px; display: flex; justify-content: space-between; align-items: center; }
-    .filter-chip { border: 1px solid var(--md-sys-color-outline); border-radius: 8px; height: 32px; padding: 0 12px; font-size: 14px; display: flex; align-items: center; }
-    .filter-chip span.active { color: var(--md-sys-color-primary); font-weight: 700; }
+    .settings-bar { height: 32px; flex-shrink: 0; margin: 0 16px 8px 16px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* AREE DI CONTENUTO SCROLLABILI */
-    .content-area { flex: 1; overflow-y: auto; padding: 0 16px 100px 16px; -webkit-overflow-scrolling: touch; }
+    /* CONTENT AREAS */
+    .content-area { flex: 1; overflow-y: auto; padding: 0 16px 100px 16px; }
 
+    /* VISTA RECAP (Settimanale - Schermo Intero) */
     .weekly-grid-container { 
-        display: none; flex: 1; overflow-x: auto; padding: 16px; gap: 12px; -webkit-overflow-scrolling: touch;
+        display: none; flex: 1; padding: 8px 4px; gap: 4px; 
+        overflow: hidden; /* Tutto in una schermata */
     }
-    .weekly-column { min-width: 160px; flex: 1; display: flex; flex-direction: column; gap: 8px; }
-    .week-day-label { font-size: 12px; font-weight: 700; color: var(--md-sys-color-primary); text-align: center; margin-bottom: 4px; }
-    .mini-card { background: var(--md-sys-color-surface-container); border-radius: 12px; padding: 12px; font-size: 11px; flex: 1; display: flex; flex-direction: column; justify-content: center; border: 1px solid var(--md-sys-color-outline-variant); }
+    .weekly-column {
+        flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    }
+    .week-day-label { font-size: 10px; font-weight: 700; color: var(--md-sys-color-primary); text-align: center; }
+    
+    .mini-card {
+        background: var(--md-sys-color-surface-container); border-radius: 6px; padding: 4px; font-size: 9px;
+        flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center;
+        border: 0.5px solid var(--md-sys-color-outline-variant); line-height: 1.1; overflow: hidden;
+    }
 
-    /* CARD DAILY */
-    .lesson-card { display: flex; background: var(--md-sys-color-surface-container); border-radius: 16px; margin-bottom: 12px; overflow: hidden; min-height: 80px; }
-    .time-strip { width: 56px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.03); border-right: 1px solid var(--md-sys-color-outline-variant); }
-    .time-text { font-size: 11px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); }
-    .info-box { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; justify-content: center; }
-    .subject { font-size: 16px; font-weight: 500; }
-    .meta { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
-    .tag { font-size: 10px; padding: 2px 8px; border-radius: 6px; font-weight: 500; }
+    /* DAILY CARDS */
+    .lesson-card {
+        display: flex; background: var(--md-sys-color-surface-container);
+        border-radius: 16px; margin-bottom: 8px; overflow: hidden; min-height: 75px;
+        transition: 0.2s;
+    }
+    .time-strip { width: 52px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.03); border-right: 1px solid var(--md-sys-color-outline-variant); }
+    .time-text { font-size: 10px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); }
+    .info-box { flex: 1; padding: 10px 14px; display: flex; flex-direction: column; justify-content: center; }
+    .subject { font-size: 15px; font-weight: 500; }
+    .meta { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+    .tag { font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 500; }
     .tag.aula { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
     .tag.prof { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
 
-    .lesson-card.now-active { border: 2.5px solid var(--md-sys-color-primary); background: var(--md-sys-color-background); transform: scale(1.02); z-index: 10; }
+    .lesson-card.now-active { border: 2px solid var(--md-sys-color-primary); background: var(--md-sys-color-background); }
+
+    /* EDIT MODE VISIBILITY */
+    body.is-editing .lesson-card {
+        border: 1px dashed var(--md-sys-color-primary);
+        background: rgba(0,0,0,0.02);
+    }
+    body.is-editing .info-box { cursor: text; }
 
     .fab {
         position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 16px;
         background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);
-        display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 2000;
+        display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
 
-    .break-indicator { display: flex; align-items: center; gap: 12px; margin: 12px 0; color: var(--md-sys-color-outline); font-size: 12px; }
+    .break-indicator { display: flex; align-items: center; gap: 8px; margin: 8px 0; color: var(--md-sys-color-outline); font-size: 11px; }
     .break-line { height: 1px; flex: 1; background: var(--md-sys-color-outline-variant); }
 </style>
 </head>
@@ -115,7 +130,8 @@
 <header>
     <div class="headline" id="headerTitle">Orario</div>
     <div class="actions">
-        <button class="icon-btn" onclick="toggleView()" id="viewToggle">📅</button>
+        <button class="icon-btn" onclick="goToToday()" id="btnToday" title="Torna a Oggi">🎯</button>
+        <button class="icon-btn" onclick="toggleView()" id="viewToggle" title="Vista Recap">📅</button>
         <div class="color-btn">🎨<input type="color" id="monetPicker" value="#006c4c"></div>
         <button class="icon-btn" onclick="toggleTheme()">🌗</button>
         <button class="icon-btn" onclick="exportConfiguration()">📤</button>
@@ -176,14 +192,20 @@
         root.style.setProperty('--md-sys-color-surface-container', `hsl(${h}, 5%, ${l_surf}%)`);
         root.style.setProperty('--md-sys-color-outline', `hsl(${h}, 5%, 50%)`);
         root.style.setProperty('--md-sys-color-outline-variant', `hsl(${h}, 5%, ${isDark ? 30 : 85}%)`);
-        document.querySelector('meta[name="theme-color"]').content = `hsl(${h}, 5%, ${l_bg}%)`;
     }
 
     // --- APP LOGIC ---
+    function goToToday() {
+        viewMode = 'daily';
+        currentDayIndex = new Date().getDay() - 1;
+        if (currentDayIndex < 0 || currentDayIndex > 5) currentDayIndex = 0;
+        renderApp();
+        setTimeout(highlightCurrentLesson, 100);
+    }
+
     function toggleView() {
         viewMode = (viewMode === 'daily') ? 'weekly' : 'daily';
-        document.getElementById('viewToggle').innerText = (viewMode === 'daily') ? '📅' : '📱';
-        document.getElementById('headerTitle').innerText = (viewMode === 'daily') ? 'Orario' : 'Recap';
+        document.getElementById('headerTitle').innerText = (viewMode === 'daily') ? 'Orario' : 'Recap Settimanale';
         renderApp();
     }
 
@@ -214,7 +236,7 @@
         const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
         const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
         const mode = savedConfig[currentDayIndex];
-        document.getElementById('settingsBar').innerHTML = `<div style="font-size:14px; font-weight:500;">${dayNames[currentDayIndex]}</div><div class="filter-chip" onclick="toggleHourMode()"><span class="${mode===5?'active':''}">5h</span> / <span class="${mode===6?'active':''}">6h</span></div>`;
+        document.getElementById('settingsBar').innerHTML = `<div style="font-size:13px; font-weight:700; color:var(--md-sys-color-primary)">${dayNames[currentDayIndex].toUpperCase()}</div><div class="filter-chip" onclick="toggleHourMode()"><span class="${mode===5?'active':''}">5h</span> / <span class="${mode===6?'active':''}">6h</span></div>`;
         for(let i=0; i<mode; i++) {
             if(i===3) list.innerHTML += `<div class="break-indicator"><div class="break-line"></div>Intervallo<div class="break-line"></div></div>`;
             const base = 8*60+25, dur = mode===6?50:60;
@@ -236,9 +258,11 @@
             const col = document.createElement('div'); col.className = 'weekly-column';
             col.innerHTML = `<div class="week-day-label">${name}</div>`;
             const mode = savedConfig[dIdx];
-            for(let i=0; i<mode; i++) {
+            for(let i=0; i<6; i++) {
                 const mini = document.createElement('div'); mini.className = 'mini-card';
-                mini.innerHTML = savedLessons[dIdx][i] || '-'; col.appendChild(mini);
+                if(i < mode) mini.innerHTML = savedLessons[dIdx][i] || '-';
+                else mini.style.opacity = '0'; // Placeholder per mantenere la griglia allineata
+                col.appendChild(mini);
             }
             grid.appendChild(col);
         });
@@ -252,7 +276,17 @@
 
     function toggleEdit() {
         isEditing = !isEditing;
-        if(!isEditing) {
+        const fab = document.getElementById('editFab');
+        const headerTitle = document.getElementById('headerTitle');
+        
+        if(isEditing) {
+            document.body.classList.add('is-editing');
+            fab.innerText = '💾';
+            headerTitle.innerText = 'MODIFICA IN CORSO';
+        } else {
+            document.body.classList.remove('is-editing');
+            fab.innerText = '✏️';
+            headerTitle.innerText = 'Orario';
             let data = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
             document.querySelectorAll('.lesson-card').forEach((c, i) => data[currentDayIndex][i] = c.querySelector('.info-box').innerHTML);
             localStorage.setItem('lessonsData', JSON.stringify(data));
@@ -277,7 +311,7 @@
 
     function toggleTheme() { isDark = !isDark; localStorage.setItem('isDark', isDark); applyMonetTheme(document.getElementById('monetPicker').value); }
     document.getElementById('monetPicker').oninput = (e) => { applyMonetTheme(e.target.value); localStorage.setItem('monetColor', e.target.value); };
-    function exportConfiguration() { const data = localStorage.getItem('lessonsData') || JSON.stringify(defaultLessons), conf = localStorage.getItem('daysConfig') || JSON.stringify(defaultHoursConfig); navigator.clipboard.writeText(`const defaultHoursConfig = ${conf};\nconst defaultLessons = ${data};`).then(() => alert("Copiato!")); }
+    function exportConfiguration() { const data = localStorage.getItem('lessonsData') || JSON.stringify(defaultLessons), conf = localStorage.getItem('daysConfig') || JSON.stringify(defaultHoursConfig); navigator.clipboard.writeText(`const defaultHoursConfig = ${conf};\nconst defaultLessons = ${data};`).then(() => alert("Codice Copiato!")); }
 
     const savedColor = localStorage.getItem('monetColor') || "#006c4c", savedTheme = localStorage.getItem('isDark');
     if (savedTheme !== null) isDark = (savedTheme === 'true');
