@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<title>Orario MD3 Pro</title>
+<title>Orario</title>
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -138,7 +138,7 @@ body {
         <button class="icon-btn" onclick="goToToday()" title="Oggi">🎯</button>
         <button class="icon-btn" onclick="toggleView()" id="viewToggle" title="Vista Recap">📅</button>
         <div class="color-btn">🎨<input type="color" id="monetPicker" value="#006c4c"></div>
-        <button class="icon-btn" onclick="toggleTheme()">🌗</button>
+        <button class="icon-btn" id="themeBtn" onclick="cycleTheme()">🌓</button>
         <button class="icon-btn" onclick="exportConfiguration()">📤</button>
     </div>
 </header>
@@ -162,7 +162,6 @@ body {
     
     let isEditing = false, isDark = false, viewMode = 'daily';
 
-    // --- MONET ENGINE ---
     function hexToHSL(H) {
         let r = 0, g = 0, b = 0;
         if (H.length == 7) { r = "0x" + H[1] + H[2]; g = "0x" + H[3] + H[4]; b = "0x" + H[5] + H[6]; }
@@ -200,13 +199,11 @@ body {
         document.querySelector('meta[name="theme-color"]').content = `hsl(${h}, 5%, ${l_bg}%)`;
     }
 
-    // --- APP LOGIC ---
     function goToToday() {
         viewMode = 'daily';
         currentDayIndex = new Date().getDay() - 1;
         if (currentDayIndex < 0 || currentDayIndex > 5) currentDayIndex = 0;
         renderApp();
-        setTimeout(highlightCurrentLesson, 100);
     }
 
     function toggleView() {
@@ -306,14 +303,69 @@ body {
         }
     }
 
-    function toggleTheme() { isDark = !isDark; localStorage.setItem('isDark', isDark); applyMonetTheme(document.getElementById('monetPicker').value); }
-    document.getElementById('monetPicker').oninput = (e) => { applyMonetTheme(e.target.value); localStorage.setItem('monetColor', e.target.value); };
+    // --- GESTIONE TEMA 3 STATI + MONET ---
+    const themes = ['auto', 'light', 'dark'];
+    const themeIcons = { 'auto': '🌓', 'light': '☀️', 'dark': '🌙' };
+
+    function getSystemTheme() {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches; // True se dark
+    }
+
+    function applyTheme() {
+        let mode = localStorage.getItem('themeMode') || 'auto';
+        
+        if (mode === 'auto') {
+            isDark = getSystemTheme();
+        } else {
+            isDark = (mode === 'dark');
+        }
+
+        const btn = document.getElementById('themeBtn');
+        if(btn) btn.innerText = themeIcons[mode];
+
+        applyMonetTheme(document.getElementById('monetPicker').value);
+    }
+
+    function cycleTheme() {
+        let current = localStorage.getItem('themeMode') || 'auto';
+        let nextIndex = (themes.indexOf(current) + 1) % themes.length;
+        let nextMode = themes[nextIndex];
+
+        localStorage.setItem('themeMode', nextMode);
+        applyTheme();
+    }
+
+    // Listener Live per cambio sistema
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        if ((localStorage.getItem('themeMode') || 'auto') === 'auto') {
+            isDark = e.matches;
+            applyMonetTheme(document.getElementById('monetPicker').value);
+        }
+    });
+
+    // --- GESTIONE COLORE ---
+    document.getElementById('monetPicker').oninput = (e) => {
+        applyMonetTheme(e.target.value);
+        localStorage.setItem('monetColor', e.target.value);
+    };
     function exportConfiguration() { const data = localStorage.getItem('lessonsData') || JSON.stringify(defaultLessons), conf = localStorage.getItem('daysConfig') || JSON.stringify(defaultHoursConfig); navigator.clipboard.writeText(`const defaultHoursConfig = ${conf};\nconst defaultLessons = ${data};`).then(() => alert("Copiato!")); }
 
-    const savedColor = localStorage.getItem('monetColor') || "#006c4c", savedTheme = localStorage.getItem('isDark');
-    if (savedTheme !== null) isDark = (savedTheme === 'true');
+    function fixLayout() {
+        window.dispatchEvent(new Event('resize'));
+        document.body.style.display = 'none';
+        document.body.offsetHeight; // Trigger reflow
+        document.body.style.display = 'grid';
+    }
+
+    // --- INIT ---
+    const savedColor = localStorage.getItem('monetColor') || "#006c4c";
     document.getElementById('monetPicker').value = savedColor;
-    applyMonetTheme(savedColor); renderApp(); setInterval(highlightCurrentLesson, 60000);
+    
+    applyTheme(); // Gestisce anche isDark e Monet
+    
+    renderApp(); 
+    setInterval(highlightCurrentLesson, 60000);
+    window.onload = () => setTimeout(fixLayout, 300);
 </script>
 </body>
 </html>
