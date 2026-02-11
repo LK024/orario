@@ -45,8 +45,8 @@
         color: var(--text-primary);
         margin: 0;
         padding: 15px;
-        height: 100dvh; /* Altezza totale fissa */
-        overflow: hidden; /* Impedisce scrollbar esterne */
+        height: 100dvh;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
         transition: background 0.3s;
@@ -83,10 +83,9 @@
     input[type="color"] { border: none; width: 20px; height: 20px; cursor: pointer; background: none; padding: 0; }
     input.hex-input { border: none; background: transparent; color: var(--text-primary); font-family: monospace; width: 65px; font-size: 11px; outline: none; margin-left: 5px; }
 
-    /* GRIGLIA ADATTIVA */
     .grid-container {
         flex: 1;
-        overflow: hidden; /* Blocca ogni scroll interno */
+        overflow: hidden;
         background: var(--bg-surface);
         border: 1px solid var(--border-color);
         border-radius: 12px;
@@ -95,9 +94,7 @@
 
     .schedule-grid {
         display: grid;
-        /* Colonne: Giorno (120px) | 3h (fr) | Int (30px) | 3h (fr) */
         grid-template-columns: 120px repeat(3, 1fr) 30px repeat(3, 1fr); 
-        /* Righe: Header(40px) | 6 Giorni(divisi equamente) */
         grid-template-rows: 40px repeat(6, 1fr);
         height: 100%;
         width: 100%;
@@ -132,7 +129,7 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        overflow: hidden; /* Evita che il contenuto sfori */
+        overflow: hidden;
     }
 
     .break-col {
@@ -146,7 +143,6 @@
         letter-spacing: 2px; color: var(--text-secondary); font-weight: 600; opacity: 0.4;
     }
 
-    /* LEZIONE FULL-HEIGHT */
     .lesson {
         flex: 1;
         background: var(--bg-header);
@@ -188,7 +184,6 @@
     }
     .grid-cell.disabled .lesson { display: none; }
 
-    /* HIGHLIGHT LIVE */
     .now-active {
         border: 2px solid var(--accent-color) !important;
         position: relative;
@@ -231,16 +226,9 @@
         window.location.href = "android.html";
     }
 
-    // --- DATI DEFAULT ---
-    const defaultHoursConfig = [5, 6, 6, 5, 5, 5]; 
-    const defaultLessons = [
-        ["", "", "", "", '3E<br><div class="meta"><span class="tag aula">202</span></div>', ""],
-        ['2G<br><div class="meta"><span class="tag aula">Lab2</span> <span class="tag prof">BONAV</span></div>', '5D<br><div class="meta"><span class="tag aula">N2.03</span></div>', '1G<br><div class="meta"><span class="tag aula">Lab2</span> <span class="tag prof">PETTE</span></div>', '3E<br><div class="meta"><span class="tag aula">Lab4</span> <span class="tag prof">BONEL</span></div>', "", '5E<br><div class="meta"><span class="tag aula">Lab2</span> <span class="tag prof">PETTE</span></div>'],
-        ['1G<br><div class="meta"><span class="tag aula">Lab2</span> <span class="tag prof">PETTE</span></div>', '5D<br><div class="meta"><span class="tag aula">Lab2</span> <span class="tag prof">PETTENATI</span></div>', '5E<br><div class="meta"><span class="tag aula">N2.01</span></div>', '3E<br><div class="meta"><span class="tag aula">Lab3</span> <span class="tag prof">BONELLI</span></div>', "", '2G<br><div class="meta"><span class="tag aula">Lab1</span></div>'],
-        ["", "", "", "", "", ""],
-        ['3E<br><div class="meta"><span class="tag aula">202</span></div>', '3E<br><div class="meta"><span class="tag aula">202</span></div>', '2G<br><div class="meta"><span class="tag aula">Lab2</span> <span class="tag prof">BONAV</span></div>', '5D<br><div class="meta"><span class="tag aula">N2.03</span></div>', "", ""],
-        ['1G<br><div class="meta"><span class="tag aula">1.14</span></div>', '2G<br><div class="meta"><span class="tag aula">2.03</span></div>', "", '3E<br><div class="meta"><span class="tag aula">Lab3</span> <span class="tag prof">BONEL</span></div>', '5E<br><div class="meta"><span class="tag aula">N2.01</span></div>', ""]
-    ];
+    // --- NUOVI DATI DEFAULT ---
+    const defaultHoursConfig = [5,6,6,5,6,5];
+    const defaultLessons = [["","","","","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>"],["2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab4</span> <span class=\"tag prof\">BONELLI</span></div>","","5E<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>"],["1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab1</span></div>"],["","","","",""],["3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","",""],["1G<br><div class=\"meta\"><span class=\"tag aula\">1.14</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">2.03</span></div>","","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>"]];
 
     const days = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ", "SABATO"];
 
@@ -407,7 +395,7 @@
         if(confirm("Vuoi resettare tutto?")) { localStorage.clear(); location.reload(); }
     }
 
-    // --- GESTIONE TEMA 3 STATI (Auto -> Light -> Dark) ---
+    // --- GESTIONE TEMA 3 STATI ---
     const themes = ['auto', 'light', 'dark'];
     const themeIcons = { 'auto': '🌓 Auto', 'light': '☀️ Light', 'dark': '🌙 Dark' };
 
@@ -423,9 +411,20 @@
             effectiveTheme = getSystemTheme();
         }
 
+        // 1. Applica CSS al body
         document.body.className = effectiveTheme;
+        
+        // 2. Aggiorna bottone
         const btn = document.getElementById('themeBtn');
         if(btn) btn.innerText = themeIcons[mode];
+
+        // 3. Aggiorna il colore della barra del titolo (browser)
+        const metaThemeColor = document.querySelector("meta[name=theme-color]");
+        if (effectiveTheme === 'dark') {
+            metaThemeColor.setAttribute("content", "#121212");
+        } else {
+            metaThemeColor.setAttribute("content", "#f3f3f3");
+        }
     }
 
     function cycleTheme() {
@@ -437,7 +436,7 @@
         applyTheme();
     }
 
-    // Listener Live per cambio sistema
+    // Ascolto cambio sistema
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         if ((localStorage.getItem('themeMode') || 'auto') === 'auto') {
             applyTheme();
@@ -448,8 +447,7 @@
     const savedColor = localStorage.getItem('accentColor');
     if(savedColor) setAccent(savedColor);
     
-    applyTheme(); // Applica il tema corretto all'avvio
-
+    applyTheme(); // Avvia tema e colore header
     renderGrid();
     setInterval(highlightCurrentLesson, 60000);
 </script>
