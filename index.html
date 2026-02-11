@@ -226,6 +226,11 @@
 </div>
 
 <script>
+    // --- REDIRECT AUTOMATICO PER MOBILE ---
+if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    // Se l'utente è su mobile, lo manda alla versione MD3
+    window.location.href = "android.html";
+}
     // --- DATI DEFAULT ---
     const defaultHoursConfig = [5, 6, 6, 5, 5, 5]; 
     const defaultLessons = [
