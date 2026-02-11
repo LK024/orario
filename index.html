@@ -181,6 +181,48 @@
 
     body.is-editing .subject, body.is-editing .tag { border-bottom: 1px dashed var(--accent-color); cursor: text; }
     body.is-editing .lesson { box-shadow: none; border: 1px dashed var(--border-color); }
+
+    /* Stile per la lezione corrente (Windows Active State) */
+.now-active {
+    position: relative;
+    border: 2px solid var(--accent-color) !important;
+    background-color: var(--bg-header) !important;
+    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05), var(--shadow-card) !important;
+    z-index: 5; /* Porta in primo piano */
+    transform: scale(1.02); /* Leggero ingrandimento */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Etichetta "IN CORSO" */
+.now-active::after {
+    content: "● ORA";
+    position: absolute;
+    top: -10px;
+    right: 10px;
+    background-color: var(--accent-color);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: pulse 2s infinite;
+}
+
+/* Stile per l'intervallo attivo */
+.break-col.now-active {
+    background: var(--tag-prof-bg) !important;
+    border: 2px solid var(--tag-prof-text);
+    color: var(--tag-prof-text);
+}
+.break-col.now-active .break-text { opacity: 1; color: var(--tag-prof-text); }
+.break-col.now-active::after { display: none; } /* Niente badge per intervallo */
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
 </style>
 </head>
 <body class="light">
@@ -392,6 +434,81 @@ const defaultLessons = [["","","","","3E<br><div class=\"meta\"><span class=\"ta
         localStorage.setItem('theme', newTheme);
     }
 
+    // --- GESTIONE TEMPO REALE ---
+function highlightCurrentLesson() {
+    // 1. Pulisci tutte le classi attive precedenti
+    document.querySelectorAll('.now-active').forEach(el => el.classList.remove('now-active'));
+
+    const now = new Date();
+    // Ottieni giorno (0=Dom, 1=Lun... convertiamo a 0=Lun)
+    let dayIndex = now.getDay() - 1; 
+    
+    // Se è Domenica (dayIndex = -1) o fuori range, esci
+    if (dayIndex < 0 || dayIndex > 5) return;
+
+    // Converti ora attuale in minuti totali (es. 08:30 = 510 min)
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    // Recupera configurazione ore (5 o 6)
+    const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+    const hoursMode = savedConfig[dayIndex];
+    
+    // Parametri temporali
+    const baseStart = 8 * 60 + 25; // 08:25
+    const duration = (hoursMode === 6) ? 50 : 60;
+    const breakDuration = 20;
+
+    // Calcoliamo gli slot della giornata
+    // Indici griglia: 1, 2, 3 (break=4), 5, 6, 7
+    // Ore lezione: 0, 1, 2, -, 3, 4, 5
+    
+    let activeGridIndex = -1;
+
+    // Controllo Prime 3 ore
+    for(let i=0; i<3; i++) {
+        let start = baseStart + (i * duration);
+        let end = start + duration;
+        if(currentMinutes >= start && currentMinutes < end) {
+            activeGridIndex = i + 1; // +1 perché c'è la label giorno
+        }
+    }
+
+    // Controllo Intervallo (dopo la 3a ora)
+    let breakStart = baseStart + (3 * duration);
+    let breakEnd = breakStart + breakDuration;
+    if(currentMinutes >= breakStart && currentMinutes < breakEnd) {
+        activeGridIndex = 4; // Colonna Intervallo
+    }
+
+    // Controllo Ultime 3 ore
+    for(let i=3; i<6; i++) {
+        // Start = 3 ore prima + intervallo + (ore passate dopo intervallo)
+        let start = baseStart + (3 * duration) + breakDuration + ((i - 3) * duration);
+        let end = start + duration;
+        if(currentMinutes >= start && currentMinutes < end) {
+            activeGridIndex = i + 2; // +1 label + 1 break = +2 offset
+        }
+    }
+
+    // Se abbiamo trovato uno slot attivo, applichiamo la classe CSS
+    if (activeGridIndex !== -1) {
+        const grid = document.getElementById('mainGrid');
+        // Calcola indice assoluto nel DOM Grid
+        // (8 headers) + (dayIndex * 8 celle per riga) + activeGridIndex
+        const absoluteIndex = 8 + (dayIndex * 8) + activeGridIndex;
+        
+        const targetCell = grid.children[absoluteIndex];
+        if(targetCell) {
+            targetCell.classList.add('now-active');
+            
+            // Scroll automatico su mobile se la lezione è fuori schermo
+            if(window.innerWidth < 768) {
+                targetCell.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+    }
+}
+
     function exportConfiguration() {
     // 1. Prendi i dati attuali dalla memoria locale (quelli che vedi a schermo)
     const currentLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
@@ -422,10 +539,18 @@ const defaultLessons = ${JSON.stringify(currentLessons)};
     if(savedColor) setAccent(savedColor);
 
     renderGrid();
+    
+    // NUOVO: Avvia Highlight e aggiorna ogni minuto
+    highlightCurrentLesson();
+    setInterval(highlightCurrentLesson, 60000);
+    
+
+    renderGrid();
 </script>
 </body>
 
 </html>
+
 
 
 
