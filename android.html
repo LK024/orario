@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#ffffff">
+<title>Orario MD3 Expressive</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+    /* RESET & BASE */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    
+    body {
+        font-family: 'Roboto', sans-serif;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background-color: var(--md-sys-color-background);
+        color: var(--md-sys-color-on-background);
+        transition: background-color 0.4s cubic-bezier(0.2, 0.0, 0, 1.0), color 0.4s;
+        overflow: hidden;
+    }
+
+    :root {
+        --md-sys-color-primary: #006c4c;
+        --md-sys-color-on-primary: #ffffff;
+        --md-sys-color-primary-container: #89f8c7;
+        --md-sys-color-on-primary-container: #002114;
+        --md-sys-color-secondary: #4c6358;
+        --md-sys-color-secondary-container: #ceE9da;
+        --md-sys-color-on-secondary-container: #092016;
+        --md-sys-color-tertiary: #3f6374;
+        --md-sys-color-tertiary-container: #c2e8fd;
+        --md-sys-color-on-tertiary-container: #001f2a;
+        --md-sys-color-background: #fbfdf9;
+        --md-sys-color-on-background: #191c1a;
+        --md-sys-color-surface: #fbfdf9;
+        --md-sys-color-surface-container: #eceee9;
+        --md-sys-color-surface-container-high: #e6e9e4;
+        --md-sys-color-outline: #717973;
+        --md-sys-color-outline-variant: #c0c9c2;
+    }
+
+    header {
+        padding: 12px 16px 12px 20px;
+        display: flex; justify-content: space-between; align-items: center;
+        background: var(--md-sys-color-surface);
+        flex-shrink: 0;
+    }
+    
+    .headline { font-size: 22px; font-weight: 400; color: var(--md-sys-color-on-background); }
+    .actions { display: flex; gap: 8px; align-items: center; }
+
+    .color-btn {
+        width: 40px; height: 40px; border-radius: 50%;
+        border: none; position: relative; overflow: hidden;
+        background: var(--md-sys-color-primary-container);
+        color: var(--md-sys-color-on-primary-container);
+        display: flex; justify-content: center; align-items: center;
+    }
+    .color-btn input[type="color"] {
+        position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+        opacity: 0; cursor: pointer;
+    }
+    
+    .icon-btn {
+        background: transparent; color: var(--md-sys-color-on-surface-variant);
+        border: none; width: 40px; height: 40px; border-radius: 50%;
+        display: flex; justify-content: center; align-items: center;
+        font-size: 20px;
+    }
+
+    .tabs-wrapper {
+        padding: 0 16px 12px 16px;
+        overflow-x: auto;
+        display: flex; gap: 8px;
+        scrollbar-width: none;
+        flex-shrink: 0;
+    }
+    .tabs-wrapper::-webkit-scrollbar { display: none; }
+
+    .tab {
+        border: 1px solid var(--md-sys-color-outline);
+        color: var(--md-sys-color-on-surface-variant);
+        background: transparent;
+        padding: 8px 16px; border-radius: 8px;
+        font-size: 14px; font-weight: 500;
+        white-space: nowrap;
+        transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+    }
+    
+    .tab.active {
+        background: var(--md-sys-color-secondary-container);
+        color: var(--md-sys-color-on-secondary-container);
+        border-color: transparent;
+    }
+
+    .settings-bar { margin: 0 16px 8px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .day-title { font-size: 14px; font-weight: 500; color: var(--md-sys-color-primary); }
+    
+    .filter-chip {
+        display: flex; align-items: center;
+        border: 1px solid var(--md-sys-color-outline);
+        border-radius: 8px; height: 32px; padding: 0 12px;
+        font-size: 14px; font-weight: 500;
+        color: var(--md-sys-color-on-surface);
+    }
+    .filter-chip span { opacity: 0.5; }
+    .filter-chip span.active { opacity: 1; font-weight: 700; color: var(--md-sys-color-primary); }
+
+    .content-area { flex: 1; overflow-y: auto; padding: 0 16px 88px 16px; scroll-behavior: smooth; }
+
+    .lesson-card {
+        display: flex; background: var(--md-sys-color-surface-container);
+        border-radius: 12px; margin-bottom: 8px; overflow: hidden; min-height: 72px;
+    }
+
+    .time-strip {
+        width: 48px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        background: rgba(0,0,0,0.02); border-right: 1px solid var(--md-sys-color-outline-variant);
+    }
+    .time-text { font-size: 11px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); }
+
+    .info-box { flex: 1; padding: 12px 16px; display: flex; flex-direction: column; justify-content: center; }
+    .subject { font-size: 16px; font-weight: 500; color: var(--md-sys-color-on-surface); }
+    .meta { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+    
+    .tag { font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 500; }
+    .tag.aula { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
+    .tag.prof { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+
+    .break-indicator { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 16px 0; color: var(--md-sys-color-outline); font-size: 12px; }
+    .break-line { height: 1px; flex: 1; background: var(--md-sys-color-outline-variant); }
+
+    .fab {
+        position: fixed; bottom: 24px; right: 24px;
+        width: 56px; height: 56px; border-radius: 16px;
+        background: var(--md-sys-color-primary-container);
+        color: var(--md-sys-color-on-primary-container);
+        display: flex; justify-content: center; align-items: center;
+        font-size: 24px; box-shadow: 0 4px 8px 3px rgba(0,0,0,0.15);
+    }
+
+    .lesson-card.now-active {
+        background: var(--md-sys-color-secondary-container);
+        border-left: 4px solid var(--md-sys-color-primary);
+        transform: scale(1.01);
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="headline">Orario</div>
+    <div class="actions">
+        <button class="color-btn">🎨<input type="color" id="monetPicker" value="#006c4c"></button>
+        <button class="icon-btn" onclick="toggleTheme()">🌗</button>
+        <button class="icon-btn" onclick="exportConfiguration()">📤</button>
+    </div>
+</header>
+
+<div class="tabs-wrapper" id="dayTabs"></div>
+<div class="settings-bar" id="settingsBar"></div>
+<div class="content-area" id="scheduleList"></div>
+<div class="fab" onclick="toggleEdit()">✎</div>
+
+<script>
+    // --- DATI (Sincronizzati col PC) ---
+    const defaultHoursConfig = [5,6,6,5,6,5]; 
+    const defaultLessons = [["","","","","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>",""],["2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab4</span> <span class=\"tag prof\">BONELLI</span></div>","","5E<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>"],["1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab1</span></div>"],["","","","","",""],["3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","",""],["1G<br><div class=\"meta\"><span class=\"tag aula\">1.14</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">2.03</span></div>","","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>",""]];
+
+    const dayNames = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+    let currentDayIndex = new Date().getDay() - 1; 
+    if (currentDayIndex < 0 || currentDayIndex > 5) currentDayIndex = 0;
+    let isEditing = false;
+    let isDark = false;
+
+    // --- MONET ENGINE ---
+    function hexToHSL(H) {
+        let r = 0, g = 0, b = 0;
+        if (H.length == 7) { r = "0x" + H[1] + H[2]; g = "0x" + H[3] + H[4]; b = "0x" + H[5] + H[6]; }
+        r /= 255; g /= 255; b /= 255;
+        let cmin = Math.min(r,g,b), cmax = Math.max(r,g,b), delta = cmax - cmin;
+        let h = 0, s = 0, l = 0;
+        if (delta == 0) h = 0;
+        else if (cmax == r) h = ((g - b) / delta) % 6;
+        else if (cmax == g) h = (b - r) / delta + 2;
+        else h = (r - g) / delta + 4;
+        h = Math.round(h * 60); if (h < 0) h += 360;
+        l = (cmax + cmin) / 2;
+        s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
+        return { h, s: +(s * 100).toFixed(1), l: +(l * 100).toFixed(1) };
+    }
+
+    function applyMonetTheme(hexColor) {
+        const hsl = hexToHSL(hexColor);
+        const root = document.documentElement;
+        const h = hsl.h, s = Math.min(hsl.s, 70);
+        
+        const l_bg = isDark ? 10 : 98, l_onbg = isDark ? 90 : 10;
+        const l_cont = isDark ? 25 : 90, l_oncont = isDark ? 90 : 10;
+        const l_surf = isDark ? 12 : 94;
+
+        root.style.setProperty('--md-sys-color-primary', `hsl(${h}, ${s}%, ${isDark ? 80 : 40}%)`);
+        root.style.setProperty('--md-sys-color-primary-container', `hsl(${h}, ${s}%, ${l_cont}%)`);
+        root.style.setProperty('--md-sys-color-on-primary-container', `hsl(${h}, ${s}%, ${l_oncont}%)`);
+        root.style.setProperty('--md-sys-color-secondary-container', `hsl(${h+10}, ${s-20}%, ${l_cont}%)`);
+        root.style.setProperty('--md-sys-color-on-secondary-container', `hsl(${h+10}, ${s-20}%, ${l_oncont}%)`);
+        root.style.setProperty('--md-sys-color-tertiary-container', `hsl(${h+180}, 30%, ${l_cont}%)`);
+        root.style.setProperty('--md-sys-color-on-tertiary-container', `hsl(${h+180}, 30%, ${l_oncont}%)`);
+        root.style.setProperty('--md-sys-color-background', `hsl(${h}, 5%, ${l_bg}%)`);
+        root.style.setProperty('--md-sys-color-on-background', `hsl(${h}, 5%, ${l_onbg}%)`);
+        root.style.setProperty('--md-sys-color-surface-container', `hsl(${h}, 5%, ${l_surf}%)`);
+        document.querySelector('meta[name="theme-color"]').content = `hsl(${h}, 5%, ${l_bg}%)`;
+    }
+
+    // --- APP LOGIC ---
+    function renderApp() {
+        const tabCont = document.getElementById('dayTabs');
+        tabCont.innerHTML = '';
+        dayNames.forEach((name, i) => {
+            const b = document.createElement('button');
+            b.className = `tab ${i===currentDayIndex?'active':''}`;
+            b.innerText = name;
+            b.onclick = () => { currentDayIndex = i; renderApp(); };
+            tabCont.appendChild(b);
+        });
+
+        const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+        const hoursMode = savedConfig[currentDayIndex];
+        document.getElementById('settingsBar').innerHTML = `
+            <div class="day-title">${dayNames[currentDayIndex]}</div>
+            <div class="filter-chip" onclick="toggleHourMode()">
+                <span class="${hoursMode===5?'active':''}">5h</span> / <span class="${hoursMode===6?'active':''}">6h</span>
+            </div>
+        `;
+
+        const list = document.getElementById('scheduleList');
+        list.innerHTML = '';
+        const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
+        
+        for(let i=0; i<hoursMode; i++) {
+            if(i===3) list.innerHTML += `<div class="break-indicator" id="break-${currentDayIndex}"><div class="break-line"></div>Intervallo<div class="break-line"></div></div>`;
+            const base = 8*60+25, dur = hoursMode===6?50:60;
+            let start = base + (i*dur); if(i>=3) start += 20;
+            const tStart = Math.floor(start/60)+":"+(start%60).toString().padStart(2,'0');
+            const tEnd = Math.floor((start+dur)/60)+":"+((start+dur)%60).toString().padStart(2,'0');
+            
+            const card = document.createElement('div');
+            card.className = 'lesson-card'; card.id = `lesson-${currentDayIndex}-${i}`;
+            card.innerHTML = `<div class="time-strip"><div class="time-text">${tStart}</div><div class="time-text">${tEnd}</div></div>
+                              <div class="info-box">${savedLessons[currentDayIndex][i] || 'Libera'}</div>`;
+            list.appendChild(card);
+        }
+        if(isEditing) document.querySelectorAll('.info-box').forEach(e => e.contentEditable = true);
+        highlightCurrentLesson();
+    }
+
+    function toggleHourMode() {
+        let conf = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+        conf[currentDayIndex] = conf[currentDayIndex] === 5 ? 6 : 5;
+        localStorage.setItem('daysConfig', JSON.stringify(conf)); renderApp();
+    }
+
+    function toggleEdit() {
+        isEditing = !isEditing;
+        if(!isEditing) {
+            let data = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
+            document.querySelectorAll('.lesson-card').forEach((c, i) => data[currentDayIndex][i] = c.querySelector('.info-box').innerHTML);
+            localStorage.setItem('lessonsData', JSON.stringify(data));
+        }
+        renderApp();
+    }
+
+    function highlightCurrentLesson() {
+        document.querySelectorAll('.now-active').forEach(e => e.classList.remove('now-active'));
+        const now = new Date(), d = now.getDay()-1, m = now.getHours()*60+now.getMinutes();
+        if(d !== currentDayIndex) return;
+        const conf = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+        const mode = conf[d], base = 8*60+25, dur = mode===6?50:60;
+        for(let i=0; i<mode; i++) {
+            let s = base+(i*dur); if(i>=3) s+=20;
+            if(m >= s && m < s+dur) document.getElementById(`lesson-${d}-${i}`)?.classList.add('now-active');
+        }
+    }
+
+    function toggleTheme() { isDark = !isDark; applyMonetTheme(document.getElementById('monetPicker').value); }
+    
+    document.getElementById('monetPicker').oninput = (e) => applyMonetTheme(e.target.value);
+    
+    function exportConfiguration() {
+        const data = localStorage.getItem('lessonsData') || JSON.stringify(defaultLessons);
+        const conf = localStorage.getItem('daysConfig') || JSON.stringify(defaultHoursConfig);
+        navigator.clipboard.writeText(`const defaultHoursConfig = ${conf};\nconst defaultLessons = ${data};`).then(() => alert("Codice Copiato!"));
+    }
+
+    applyMonetTheme("#006c4c");
+    renderApp();
+    setInterval(highlightCurrentLesson, 60000);
+</script>
+</body>
+</html>
