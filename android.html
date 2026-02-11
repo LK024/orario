@@ -21,33 +21,31 @@
     body {
         font-family: 'Roboto', sans-serif;
         margin: 0; padding: 0; height: 100dvh;
-        display: flex; flex-direction: column;
+        display: grid;
+        /* GRIGLIA FISSA: Header(64px) | Tabs(52px) | Settings(40px) | Content(tutto il resto) */
+        grid-template-rows: 64px auto auto 1fr;
         background-color: var(--md-sys-color-background);
         color: var(--md-sys-color-on-background);
         transition: background-color 0.3s ease;
-        overflow: hidden;
+        overflow: hidden; /* Blocca lo scroll di tutto il body */
     }
 
-    /* HEADER */
+    /* HEADER - Altezza bloccata */
     header {
-        height: 64px; min-height: 64px; flex-shrink: 0;
+        grid-row: 1;
         display: flex; justify-content: space-between; align-items: center;
         padding: 0 8px 0 20px;
         background-color: var(--md-sys-color-background);
         z-index: 1000; transition: background 0.3s;
     }
     
-    body.is-editing header {
-        background-color: var(--md-sys-color-primary-container);
-    }
-    
+    body.is-editing header { background-color: var(--md-sys-color-primary-container); }
     .headline { font-size: 20px; font-weight: 500; color: var(--md-sys-color-on-background); }
-    .actions { display: flex; gap: 2px; align-items: center; }
+    .actions { display: flex; gap: 4px; align-items: center; }
 
     .color-btn {
         width: 38px; height: 38px; border-radius: 50%; border: none; position: relative; overflow: hidden;
-        background: var(--md-sys-color-secondary-container);
-        display: flex; justify-content: center; align-items: center;
+        background: var(--md-sys-color-secondary-container); display: flex; justify-content: center; align-items: center;
     }
     .color-btn input[type="color"] { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; opacity: 0; cursor: pointer; }
     
@@ -59,43 +57,46 @@
 
     /* CONTROLLI */
     .tabs-wrapper {
-        height: 48px; flex-shrink: 0;
-        padding: 0 16px 8px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
+        grid-row: 2; padding: 4px 16px 8px 16px; 
+        display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
     }
     .tabs-wrapper::-webkit-scrollbar { display: none; }
     
     .tab {
         border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface-variant);
-        background: transparent; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 500; white-space: nowrap;
+        background: transparent; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 500; white-space: nowrap;
     }
     .tab.active { background: var(--md-sys-color-primary); color: white; border-color: transparent; }
 
-    .settings-bar { height: 32px; flex-shrink: 0; margin: 0 16px 8px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .settings-bar { 
+        grid-row: 3; margin: 0 16px 8px 16px; 
+        display: flex; justify-content: space-between; align-items: center; 
+    }
 
     /* CONTENT AREAS */
-    .content-area { flex: 1; overflow-y: auto; padding: 0 16px 100px 16px; }
+    .content-area { 
+        grid-row: 4; overflow-y: auto; padding: 0 16px 100px 16px; 
+        scrollbar-width: thin;
+    }
 
-    /* VISTA RECAP (Settimanale - Schermo Intero) */
+    /* VISTA RECAP (Tutto in una schermata) */
     .weekly-grid-container { 
-        display: none; flex: 1; padding: 8px 4px; gap: 4px; 
-        overflow: hidden; /* Tutto in una schermata */
+        grid-row: 2 / span 3; /* Occupa tutto lo spazio sotto l'header */
+        display: none; padding: 8px 6px; gap: 4px; overflow: hidden;
     }
-    .weekly-column {
-        flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0;
-    }
+    .weekly-column { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
     .week-day-label { font-size: 10px; font-weight: 700; color: var(--md-sys-color-primary); text-align: center; }
     
     .mini-card {
-        background: var(--md-sys-color-surface-container); border-radius: 6px; padding: 4px; font-size: 9px;
-        flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center;
-        border: 0.5px solid var(--md-sys-color-outline-variant); line-height: 1.1; overflow: hidden;
+        background: var(--md-sys-color-surface-container); border-radius: 6px; padding: 4px; 
+        font-size: 9px; flex: 1; display: flex; flex-direction: column; justify-content: center; 
+        text-align: center; border: 0.5px solid var(--md-sys-color-outline-variant); line-height: 1.1;
     }
 
     /* DAILY CARDS */
     .lesson-card {
         display: flex; background: var(--md-sys-color-surface-container);
         border-radius: 16px; margin-bottom: 8px; overflow: hidden; min-height: 75px;
-        transition: 0.2s;
     }
     .time-strip { width: 52px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.03); border-right: 1px solid var(--md-sys-color-outline-variant); }
     .time-text { font-size: 10px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); }
@@ -106,13 +107,10 @@
     .tag.aula { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
     .tag.prof { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
 
-    .lesson-card.now-active { border: 2px solid var(--md-sys-color-primary); background: var(--md-sys-color-background); }
+    .lesson-card.now-active { border: 2.5px solid var(--md-sys-color-primary); background: var(--md-sys-color-background); }
 
     /* EDIT MODE VISIBILITY */
-    body.is-editing .lesson-card {
-        border: 1px dashed var(--md-sys-color-primary);
-        background: rgba(0,0,0,0.02);
-    }
+    body.is-editing .lesson-card { border: 1.5px dashed var(--md-sys-color-primary); background: rgba(0,0,0,0.02); }
     body.is-editing .info-box { cursor: text; }
 
     .fab {
@@ -130,7 +128,7 @@
 <header>
     <div class="headline" id="headerTitle">Orario</div>
     <div class="actions">
-        <button class="icon-btn" onclick="goToToday()" id="btnToday" title="Torna a Oggi">🎯</button>
+        <button class="icon-btn" onclick="goToToday()" title="Oggi">🎯</button>
         <button class="icon-btn" onclick="toggleView()" id="viewToggle" title="Vista Recap">📅</button>
         <div class="color-btn">🎨<input type="color" id="monetPicker" value="#006c4c"></div>
         <button class="icon-btn" onclick="toggleTheme()">🌗</button>
@@ -192,6 +190,7 @@
         root.style.setProperty('--md-sys-color-surface-container', `hsl(${h}, 5%, ${l_surf}%)`);
         root.style.setProperty('--md-sys-color-outline', `hsl(${h}, 5%, 50%)`);
         root.style.setProperty('--md-sys-color-outline-variant', `hsl(${h}, 5%, ${isDark ? 30 : 85}%)`);
+        document.querySelector('meta[name="theme-color"]').content = `hsl(${h}, 5%, ${l_bg}%)`;
     }
 
     // --- APP LOGIC ---
@@ -252,16 +251,14 @@
 
     function renderWeekly() {
         const grid = document.getElementById('weeklyGrid'); grid.innerHTML = '';
-        const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
-        const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+        const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons, savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
         dayNames.forEach((name, dIdx) => {
             const col = document.createElement('div'); col.className = 'weekly-column';
             col.innerHTML = `<div class="week-day-label">${name}</div>`;
             const mode = savedConfig[dIdx];
             for(let i=0; i<6; i++) {
                 const mini = document.createElement('div'); mini.className = 'mini-card';
-                if(i < mode) mini.innerHTML = savedLessons[dIdx][i] || '-';
-                else mini.style.opacity = '0'; // Placeholder per mantenere la griglia allineata
+                if(i < mode) mini.innerHTML = savedLessons[dIdx][i] || '-'; else mini.style.opacity = '0';
                 col.appendChild(mini);
             }
             grid.appendChild(col);
@@ -276,17 +273,11 @@
 
     function toggleEdit() {
         isEditing = !isEditing;
-        const fab = document.getElementById('editFab');
-        const headerTitle = document.getElementById('headerTitle');
-        
+        const fab = document.getElementById('editFab'), headerTitle = document.getElementById('headerTitle');
         if(isEditing) {
-            document.body.classList.add('is-editing');
-            fab.innerText = '💾';
-            headerTitle.innerText = 'MODIFICA IN CORSO';
+            document.body.classList.add('is-editing'); fab.innerText = '💾'; headerTitle.innerText = 'MODIFICA IN CORSO';
         } else {
-            document.body.classList.remove('is-editing');
-            fab.innerText = '✏️';
-            headerTitle.innerText = 'Orario';
+            document.body.classList.remove('is-editing'); fab.innerText = '✏️'; headerTitle.innerText = 'Orario';
             let data = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
             document.querySelectorAll('.lesson-card').forEach((c, i) => data[currentDayIndex][i] = c.querySelector('.info-box').innerHTML);
             localStorage.setItem('lessonsData', JSON.stringify(data));
@@ -298,8 +289,7 @@
         document.querySelectorAll('.now-active').forEach(e => e.classList.remove('now-active'));
         const now = new Date(), d = now.getDay()-1, m = now.getHours()*60+now.getMinutes();
         if(d !== currentDayIndex || viewMode !== 'daily') return;
-        const conf = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-        const mode = conf[d], base = 8*60+25, dur = mode===6?50:60;
+        const conf = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig, mode = conf[d], base = 8*60+25, dur = mode===6?50:60;
         for(let i=0; i<mode; i++) {
             let s = base+(i*dur); if(i>=3) s+=20;
             if(m >= s && m < s+dur) {
@@ -311,7 +301,7 @@
 
     function toggleTheme() { isDark = !isDark; localStorage.setItem('isDark', isDark); applyMonetTheme(document.getElementById('monetPicker').value); }
     document.getElementById('monetPicker').oninput = (e) => { applyMonetTheme(e.target.value); localStorage.setItem('monetColor', e.target.value); };
-    function exportConfiguration() { const data = localStorage.getItem('lessonsData') || JSON.stringify(defaultLessons), conf = localStorage.getItem('daysConfig') || JSON.stringify(defaultHoursConfig); navigator.clipboard.writeText(`const defaultHoursConfig = ${conf};\nconst defaultLessons = ${data};`).then(() => alert("Codice Copiato!")); }
+    function exportConfiguration() { const data = localStorage.getItem('lessonsData') || JSON.stringify(defaultLessons), conf = localStorage.getItem('daysConfig') || JSON.stringify(defaultHoursConfig); navigator.clipboard.writeText(`const defaultHoursConfig = ${conf};\nconst defaultLessons = ${data};`).then(() => alert("Copiato!")); }
 
     const savedColor = localStorage.getItem('monetColor') || "#006c4c", savedTheme = localStorage.getItem('isDark');
     if (savedTheme !== null) isDark = (savedTheme === 'true');
