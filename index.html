@@ -58,6 +58,8 @@
         align-items: center;
         margin-bottom: 10px;
         flex-shrink: 0;
+        position: relative;
+        z-index: 200; /* Header sempre sopra tutto */
     }
 
     .title-group h1 { margin: 0; font-size: clamp(18px, 2.5dvh, 22px); font-weight: 600; }
@@ -85,11 +87,13 @@
 
     .grid-container {
         flex: 1;
-        overflow: hidden;
+        overflow: hidden; /* Importante per non creare scrollbar esterne */
         background: var(--bg-surface);
         border: 1px solid var(--border-color);
         border-radius: 12px;
         box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        position: relative;
+        z-index: 1;
     }
 
     .schedule-grid {
@@ -129,7 +133,15 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        overflow: hidden; /* Di base nascondiamo l'overflow per i testi lunghi */
+        z-index: 1; /* Livello base */
+    }
+
+    /* FIX SOVRAPPOSIZIONE */
+    .grid-cell.now-active {
+        overflow: visible !important; /* Lascia uscire l'etichetta */
+        z-index: 100 !important; /* Porta in primo piano sopra le altre celle */
+        border: 2px solid var(--accent-color) !important;
     }
 
     .break-col {
@@ -157,6 +169,7 @@
         border-left: 3px solid var(--accent-color);
         transition: transform 0.1s;
         height: 100%;
+        overflow: hidden;
     }
 
     .subject { 
@@ -184,15 +197,20 @@
     }
     .grid-cell.disabled .lesson { display: none; }
 
-    .now-active {
-        border: 2px solid var(--accent-color) !important;
-        position: relative;
-        z-index: 5;
-    }
+    /* ETICHETTA ORA */
     .now-active::after {
-        content: "• ORA"; position: absolute; top: -8px; right: 5px;
-        background: var(--accent-color); color: white; font-size: 9px;
-        padding: 1px 6px; border-radius: 8px; font-weight: 800;
+        content: "• ORA"; 
+        position: absolute; 
+        top: -9px; /* Spostato leggermente più su */
+        right: 8px; /* Più interno */
+        background: var(--accent-color); 
+        color: white; 
+        font-size: 9px;
+        padding: 2px 6px; 
+        border-radius: 8px; 
+        font-weight: 800;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Ombra per staccare dallo sfondo */
+        z-index: 101;
     }
 
     body.is-editing .lesson { border: 1px dashed var(--accent-color); box-shadow: none; }
@@ -226,7 +244,7 @@
         window.location.href = "android.html";
     }
 
-    // --- NUOVI DATI DEFAULT ---
+    // --- DATI DEFAULT ---
     const defaultHoursConfig = [5,6,6,5,6,5];
     const defaultLessons = [["","","","","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>"],["2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab4</span> <span class=\"tag prof\">BONELLI</span></div>","","5E<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>"],["1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab1</span></div>"],["","","","",""],["3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","",""],["1G<br><div class=\"meta\"><span class=\"tag aula\">1.14</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">2.03</span></div>","","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>"]];
 
@@ -411,14 +429,14 @@
             effectiveTheme = getSystemTheme();
         }
 
-        // 1. Applica CSS al body
+        // 1. Applica CSS
         document.body.className = effectiveTheme;
         
         // 2. Aggiorna bottone
         const btn = document.getElementById('themeBtn');
         if(btn) btn.innerText = themeIcons[mode];
 
-        // 3. Aggiorna il colore della barra del titolo (browser)
+        // 3. Aggiorna barra browser
         const metaThemeColor = document.querySelector("meta[name=theme-color]");
         if (effectiveTheme === 'dark') {
             metaThemeColor.setAttribute("content", "#121212");
@@ -436,7 +454,7 @@
         applyTheme();
     }
 
-    // Ascolto cambio sistema
+    // Listener Live
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         if ((localStorage.getItem('themeMode') || 'auto') === 'auto') {
             applyTheme();
@@ -447,7 +465,7 @@
     const savedColor = localStorage.getItem('accentColor');
     if(savedColor) setAccent(savedColor);
     
-    applyTheme(); // Avvia tema e colore header
+    applyTheme(); 
     renderGrid();
     setInterval(highlightCurrentLesson, 60000);
 </script>
