@@ -59,7 +59,7 @@
         margin-bottom: 10px;
         flex-shrink: 0;
         position: relative;
-        z-index: 200; /* Header sempre sopra tutto */
+        z-index: 200;
     }
 
     .title-group h1 { margin: 0; font-size: clamp(18px, 2.5dvh, 22px); font-weight: 600; }
@@ -87,7 +87,7 @@
 
     .grid-container {
         flex: 1;
-        overflow: hidden; /* Importante per non creare scrollbar esterne */
+        overflow: hidden;
         background: var(--bg-surface);
         border: 1px solid var(--border-color);
         border-radius: 12px;
@@ -133,15 +133,16 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        overflow: hidden; /* Di base nascondiamo l'overflow per i testi lunghi */
-        z-index: 1; /* Livello base */
+        overflow: hidden;
+        z-index: 1;
     }
 
-    /* FIX SOVRAPPOSIZIONE */
-    .grid-cell.now-active {
-        overflow: visible !important; /* Lascia uscire l'etichetta */
-        z-index: 100 !important; /* Porta in primo piano sopra le altre celle */
+    /* FIX EVIDENZIAZIONE CELLE E INTERVALLO */
+    .grid-cell.now-active, .break-col.now-active {
+        overflow: visible !important;
+        z-index: 100 !important;
         border: 2px solid var(--accent-color) !important;
+        position: relative; /* Assicura che l'intervallo accetti il posizionamento */
     }
 
     .break-col {
@@ -201,16 +202,21 @@
     .now-active::after {
         content: "• ORA"; 
         position: absolute; 
-        top: -9px; /* Spostato leggermente più su */
-        right: 8px; /* Più interno */
+        top: -9px; 
+        right: 8px; 
         background: var(--accent-color); 
         color: white; 
         font-size: 9px;
         padding: 2px 6px; 
         border-radius: 8px; 
         font-weight: 800;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Ombra per staccare dallo sfondo */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         z-index: 101;
+    }
+    /* Posizione etichetta specifica per la colonna intervallo stretta */
+    .break-col.now-active::after {
+        right: -10px; /* Sposta l'etichetta un po' a destra per centrarla visivamente */
+        top: -12px;
     }
 
     body.is-editing .lesson { border: 1px dashed var(--accent-color); box-shadow: none; }
@@ -375,12 +381,28 @@
         const currentMin = now.getHours() * 60 + now.getMinutes();
         const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
         const mode = savedConfig[dayIdx];
-        const base = 8 * 60 + 25, dur = mode === 6 ? 50 : 60, brk = 20;
+        const base = 8 * 60 + 25; 
+        const dur = mode === 6 ? 50 : 60;
+        const brk = 20;
 
+        // CHECK INTERVALLO
+        const breakStart = base + (3 * dur);
+        const breakEnd = breakStart + brk;
+        
+        if (currentMin >= breakStart && currentMin < breakEnd) {
+            // Calcolo indice: 8 headers + (giorno * 8 celle) + 4 (offset per arrivare all'intervallo)
+            // Struttura riga: [Label, 1, 2, 3, INT, 4, 5, 6] -> INT è indice 4 (partendo da 0)
+            const breakIndex = 8 + (dayIdx * 8) + 4; 
+            const breakCell = document.getElementById('mainGrid').children[breakIndex];
+            if (breakCell) breakCell.classList.add('now-active');
+        }
+
+        // CHECK LEZIONI
         for(let i=0; i<mode; i++) {
             let start = base + (i * dur);
             if (i >= 3) start += brk;
             if (currentMin >= start && currentMin < start + dur) {
+                // Calcolo indice lezione
                 const gridIndex = 8 + (dayIdx * 8) + (i < 3 ? i + 1 : i + 2);
                 const cell = document.getElementById('mainGrid').children[gridIndex];
                 if(cell) cell.classList.add('now-active');
@@ -429,14 +451,11 @@
             effectiveTheme = getSystemTheme();
         }
 
-        // 1. Applica CSS
         document.body.className = effectiveTheme;
-        
-        // 2. Aggiorna bottone
         const btn = document.getElementById('themeBtn');
         if(btn) btn.innerText = themeIcons[mode];
 
-        // 3. Aggiorna barra browser
+        // Barra browser
         const metaThemeColor = document.querySelector("meta[name=theme-color]");
         if (effectiveTheme === 'dark') {
             metaThemeColor.setAttribute("content", "#121212");
@@ -454,7 +473,6 @@
         applyTheme();
     }
 
-    // Listener Live
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
         if ((localStorage.getItem('themeMode') || 'auto') === 'auto') {
             applyTheme();
