@@ -7,6 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f3f3f3">
 <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3652/3652191.png">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,300,0,0" rel="stylesheet">
 
 <style>
     :root {
@@ -38,6 +39,25 @@
     }
 
     * { box-sizing: border-box; }
+
+    /* STILE WINDOWS 11 (Fluent Icons) */
+    .material-symbols-rounded {
+        font-family: 'Material Symbols Rounded';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 18px; /* Icone leggermente più piccole su Desktop */
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        vertical-align: text-bottom; /* Allineamento col testo */
+        
+        /* LA MAGIA FLUENT: Icone sottili e vuote */
+        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+    }
 
     body {
         font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
@@ -75,8 +95,10 @@
         font-size: 13px;
         backdrop-filter: blur(10px);
         transition: 0.2s;
-        text-decoration: none; /* Per il link */
-        display: inline-block;
+        text-decoration: none;
+        display: inline-flex; /* Per allineare icona e testo */
+        align-items: center;
+        gap: 6px; /* Spazio tra icona e testo */
     }
     .btn:hover { background: var(--border-color); }
 
@@ -121,7 +143,6 @@
         font-weight: 700; color: var(--accent-color); font-size: 13px;
     }
 
-    /* Toggle disabilitato perché controllato dal CSV ora, ma lasciato per visualizzazione */
     .hour-toggle {
         margin-top: 4px; font-size: 9px; background: var(--bg-app);
         border: 1px solid var(--border-color); border-radius: 10px; display: flex; cursor: default;
@@ -228,9 +249,18 @@
             <input type="color" id="colorPicker" value="#0078d4">
             <input type="text" id="hexInput" class="hex-input" value="#0078D4" maxlength="7">
         </div>
-        <button class="btn" id="themeBtn" onclick="cycleTheme()">🌓 Auto</button>
-        <a href="https://docs.google.com/spreadsheets/d/1xEUNMLQwEq2fwvvZ5wKgq4wFBE4T25C1FseqDapnrgk/edit?usp=sharing" target="_blank" class="btn" title="Modifica su Google Sheets">📝 Modifica</a>
-        <button class="btn" onclick="syncData(true)" title="Forza Aggiornamento">🔄</button>
+        
+        <button class="btn" id="themeBtn" onclick="cycleTheme()">
+            <span class="material-symbols-rounded">brightness_auto</span> Auto
+        </button>
+        
+        <a href="INSERISCI_QUI_IL_LINK_PER_MODIFICARE_IL_FOGLIO_GOOGLE" target="_blank" class="btn" title="Modifica su Google Sheets">
+            <span class="material-symbols-rounded">edit</span> Modifica
+        </a>
+        
+        <button class="btn" onclick="syncData(true)" title="Forza Aggiornamento">
+            <span class="material-symbols-rounded">refresh</span>
+        </button>
         
     </div>
 </header>
@@ -242,17 +272,22 @@
 <script>
     if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) window.location.href = "android.html";
     
-    // LINK AL TUO CSV PUBBLICO
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ_6t0reKL-nFDetOjKelXAUJsPYYUmvYbDY-pM3Sz2Sn_Vfi5FQeFrKuq13lWPGFurd8l9Z0mb-jo/pub?output=csv";
+    // 🚨 LINK AL CSV PUBBLICO (PLACEHOLDER) 🚨
+    const SHEET_URL = "INSERISCI_QUI_IL_LINK_DEL_CSV_PUBBLICATO";
 
-    // DATI FALLBACK (Se offline la prima volta)
+    // DATI FALLBACK
     const defaultHoursConfig = [5,6,6,5,6,5];
-    const defaultLessons = [["","","","","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>"],["2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab4</span> <span class=\"tag prof\">BONELLI</span></div>","","5E<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>"],["1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab1</span></div>"],["","","","",""],["3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","",""],["1G<br><div class=\"meta\"><span class=\"tag aula\">1.14</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">2.03</span></div>","","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>"]];
+    const dummyLesson = "Materia<br><div class=\"meta\"><span class=\"tag aula\">Aula</span> <span class=\"tag prof\">Prof</span></div>";
+    const defaultLessons = Array(6).fill(Array(6).fill(dummyLesson));
 
     const days = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ", "SABATO"];
 
     // --- SYNC ENGINE ---
     async function syncData(manual = false) {
+        if(SHEET_URL.includes("INSERISCI_QUI")) {
+            if(manual) alert("Configurazione mancante: Inserisci il link CSV nel file HTML!");
+            return;
+        }
         if(manual && confirm("Vuoi scaricare l'orario aggiornato da Google Sheets?")) {
             // Continua
         } else if (manual) return;
@@ -394,19 +429,24 @@
         let val = e.target.value; if (/^#?[0-9A-Fa-f]{6}$/.test(val)) setAccent(val.startsWith('#') ? val : '#'+val);
     });
 
-    
-
     const themes = ['auto', 'light', 'dark'];
-    const themeIcons = { 'auto': '🌓 Auto', 'light': '☀️ Light', 'dark': '🌙 Dark' };
+    const themeIcons = { 'auto': 'brightness_auto', 'light': 'light_mode', 'dark': 'dark_mode' };
+    const themeTexts = { 'auto': 'Auto', 'light': 'Light', 'dark': 'Dark' };
+
     function getSystemTheme() { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+    
     function applyTheme() {
         let mode = localStorage.getItem('themeMode') || 'auto';
         let effectiveTheme = (mode === 'auto') ? getSystemTheme() : mode;
         document.body.className = effectiveTheme;
-        document.getElementById('themeBtn').innerText = themeIcons[mode];
+        
+        // Aggiorna sia l'icona che il testo
+        document.getElementById('themeBtn').innerHTML = `<span class="material-symbols-rounded">${themeIcons[mode]}</span> ${themeTexts[mode]}`;
+        
         const metaThemeColor = document.querySelector("meta[name=theme-color]");
         metaThemeColor.setAttribute("content", effectiveTheme === 'dark' ? "#121212" : "#f3f3f3");
     }
+    
     function cycleTheme() {
         let current = localStorage.getItem('themeMode') || 'auto';
         let nextIndex = (themes.indexOf(current) + 1) % themes.length;
