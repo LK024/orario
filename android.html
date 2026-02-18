@@ -448,12 +448,9 @@ function renderWeekly() {
                         mini.innerHTML = '-';
                     } else {
                     mini.className = 'mini-card';
-                    
-                    // MODIFICA FONDAMENTALE:
-                    // 1. Usiamo una Regex (/<[^>]*>/g) per cancellare TUTTI i tag HTML (<div>, <span>, <br>)
-                    //    e lasciare solo il testo pulito (es: "Storia 202 Rossi").
-                    // 2. Usiamo .innerText per assicurarci che sia trattato come testo semplice.
-                    mini.innerText = content.replace(/<[^>]*>/g, ' '); 
+                    // RIPRISTINATO: Usa innerHTML per mantenere i badge colorati.
+                    // Rimuoviamo solo <br> per compattare, ma lasciamo i <div> e <span>
+                    mini.innerHTML = content.replace('<br>', ''); 
                 }
                 } else {
                     // Ore oltre l'orario (es. 6a ora se si fanno 5 ore)
