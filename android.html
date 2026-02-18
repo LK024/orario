@@ -78,11 +78,66 @@
 
     .content-area { grid-row: 4; overflow-y: auto; padding: 0 16px 120px 16px; -webkit-overflow-scrolling: touch; }
 
-    .weekly-grid-container { grid-row: 2 / span 3; display: none; padding: 12px 6px; gap: 4px; overflow: hidden; }
-    .weekly-column { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-    .week-day-label { font-size: 10px; font-weight: 700; color: var(--md-sys-color-primary); text-align: center; }
-    .mini-card { background: var(--md-sys-color-surface-container); border-radius: 6px; padding: 4px; font-size: 9px; flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; border: 0.5px solid var(--md-sys-color-outline-variant); line-height: 1.1; }
+    /* NUOVO RECAP ORIZZONTALE */
+    .weekly-grid-container { 
+        grid-row: 2 / span 3; 
+        display: none; 
+        flex-direction: column; 
+        padding: 16px; 
+        gap: 24px; /* Spazio arioso tra i giorni */
+        overflow-y: auto; 
+    }
 
+    .day-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    /* IL DIVIDER DEL GIORNO (Rettangolo stondato a sinistra) */
+    .day-divider-chip {
+        align-self: flex-start;
+        background-color: var(--md-sys-color-primary-container);
+        color: var(--md-sys-color-on-primary-container);
+        padding: 6px 16px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* GRIGLIA ORIZZONTALE DELLE ORE (6 Colonne) */
+    .day-lessons-row {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr); /* 6 celle uguali */
+        gap: 4px;
+    }
+
+    .mini-card { 
+        background: var(--md-sys-color-surface-container); 
+        border-radius: 8px; 
+        padding: 6px 2px; 
+        font-size: 10px; 
+        min-height: 50px; /* Altezza fissa per ordine */
+        display: flex; 
+        flex-direction: column;
+        align-items: center; 
+        justify-content: center; 
+        text-align: center; 
+        border: 1px solid var(--md-sys-color-outline-variant); 
+        line-height: 1.1; 
+        word-break: break-word;
+        overflow: hidden;
+    }
+    
+    /* Quando la card è vuota/buco */
+    .mini-card.empty {
+        background: transparent;
+        border: 1px dashed var(--md-sys-color-outline-variant);
+        opacity: 0.5;
+    }
     /* INDICATORE 5h/6h (Style Segmented Button) */
     .duration-switch {
         display: flex;
@@ -324,19 +379,60 @@ function renderDaily() {
         highlightCurrentLesson();
     }
 
-    function renderWeekly() {
-        const grid = document.getElementById('weeklyGrid'); grid.innerHTML = '';
-        const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons, savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-        dayNames.forEach((name, dIdx) => {
-            const col = document.createElement('div'); col.className = 'weekly-column';
-            col.innerHTML = `<div class="week-day-label">${name}</div>`;
+function renderWeekly() {
+        const grid = document.getElementById('weeklyGrid'); 
+        grid.innerHTML = '';
+        
+        // Impostiamo il display flex column invece che row (sovrascrive stile inline se c'era)
+        grid.style.display = 'flex';
+        grid.style.flexDirection = 'column';
+
+        const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
+        const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+        
+        // Nomi completi per il divider
+        const fullDayNames = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ", "SABATO"];
+
+        dayNames.forEach((shortName, dIdx) => {
             const mode = savedConfig[dIdx];
+            
+            // 1. Creiamo il blocco del giorno
+            const dayGroup = document.createElement('div');
+            dayGroup.className = 'day-group';
+            
+            // 2. Creiamo il "Divider" (Nome Giorno)
+            dayGroup.innerHTML = `<div class="day-divider-chip">${fullDayNames[dIdx]}</div>`;
+            
+            // 3. Creiamo la riga delle lezioni
+            const row = document.createElement('div');
+            row.className = 'day-lessons-row';
+            
             for(let i=0; i<6; i++) {
-                const mini = document.createElement('div'); mini.className = 'mini-card';
-                if(i < mode) mini.innerHTML = savedLessons[dIdx][i] || '-'; else mini.style.opacity = '0';
-                col.appendChild(mini);
+                const mini = document.createElement('div'); 
+                
+                // Gestione stile celle vuote o piene
+                if(i < mode) {
+                    let content = savedLessons[dIdx][i] || '';
+                    if(content === '') {
+                        mini.className = 'mini-card empty';
+                        mini.innerHTML = '-';
+                    } else {
+                        mini.className = 'mini-card';
+                        // Rimuoviamo i tag <br> per risparmiare spazio verticale nella mini card
+                        mini.innerHTML = content.replace('<br>', ' '); 
+                    }
+                } else {
+                    // Ore oltre l'orario (es. 6a ora se si fanno 5 ore)
+                    mini.className = 'mini-card';
+                    mini.style.opacity = '0'; // Invisibile ma occupa spazio per allineamento
+                    mini.style.border = 'none';
+                    mini.style.background = 'transparent';
+                }
+                row.appendChild(mini);
             }
-            grid.appendChild(col);
+            
+            dayGroup.appendChild(row);
+            grid.appendChild(dayGroup);
         });
     }
 
