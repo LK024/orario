@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<title>Orario MD3 Pro</title>
+<title>Orario</title>
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -46,7 +46,6 @@
         transition: background-color 0.3s ease;
     }
     
-    body.is-editing header { background-color: var(--md-sys-color-primary-container); }
     .headline { font-size: 20px; font-weight: 500; color: var(--md-sys-color-on-background); padding-bottom: 2px; }
     .actions { display: flex; gap: 4px; align-items: center; }
 
@@ -96,32 +95,21 @@
     .tag.prof { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
 
     .lesson-card.now-active { border: 2.5px solid var(--md-sys-color-primary); background: var(--md-sys-color-background); }
-    body.is-editing .lesson-card { border: 1.5px dashed var(--md-sys-color-primary); background: rgba(0,0,0,0.02); }
 
+    /* FAB PER MODIFICA FOGLIO */
     .fab {
         position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 16px;
         background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);
         display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        text-decoration: none;
     }
 
     /* INTERVALLO */
-    .break-indicator { 
-        display: flex; align-items: center; gap: 8px; margin: 8px 0; 
-        color: var(--md-sys-color-outline); font-size: 11px; transition: 0.3s;
-    }
+    .break-indicator { display: flex; align-items: center; gap: 8px; margin: 8px 0; color: var(--md-sys-color-outline); font-size: 11px; transition: 0.3s; }
     .break-line { height: 1px; flex: 1; background: var(--md-sys-color-outline-variant); transition: 0.3s; }
-
-    /* EVIDENZIAZIONE INTERVALLO */
-    .break-indicator.now-active {
-        color: var(--md-sys-color-primary);
-        font-weight: 700;
-        transform: scale(1.02);
-    }
-    .break-indicator.now-active .break-line {
-        background: var(--md-sys-color-primary);
-        height: 2px;
-    }
-
+    
+    .break-indicator.now-active { color: var(--md-sys-color-primary); font-weight: 700; transform: scale(1.02); }
+    .break-indicator.now-active .break-line { background: var(--md-sys-color-primary); height: 2px; }
 </style>
 </head>
 <body>
@@ -133,7 +121,7 @@
         <button class="icon-btn" onclick="toggleView()" id="viewToggle" title="Vista Recap">📅</button>
         <div class="color-btn">🎨<input type="color" id="monetPicker" value="#006c4c"></div>
         <button class="icon-btn" id="themeBtn" onclick="cycleTheme()">🌓</button>
-        <button class="icon-btn" onclick="exportConfiguration()">📤</button>
+        <button class="icon-btn" onclick="syncData(true)" title="Forza Aggiornamento">🔄</button>
     </div>
 </header>
 
@@ -141,18 +129,71 @@
 <div class="settings-bar" id="settingsBar"></div>
 <div class="content-area" id="scheduleList"></div>
 <div class="weekly-grid-container" id="weeklyGrid"></div>
-<div class="fab" onclick="toggleEdit()" id="editFab">✏️</div>
+
+<a href="https://docs.google.com/spreadsheets/d/1xEUNMLQwEq2fwvvZ5wKgq4wFBE4T25C1FseqDapnrgk/edit?usp=sharing" target="_blank" class="fab" title="Modifica Foglio">📝</a>
 
 <script>
-    // --- DATI ---
+    // --- DATI DEFAULT ---
     const defaultHoursConfig = [5,6,6,5,6,5]; 
     const defaultLessons = [["","","","","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>"],["2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab4</span> <span class=\"tag prof\">BONELLI</span></div>","","5E<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>"],["1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab1</span></div>"],["","","","",""],["3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","",""],["1G<br><div class=\"meta\"><span class=\"tag aula\">1.14</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">2.03</span></div>","","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>"]];
+
+    // --- CONFIG REMOTA ---
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ_6t0reKL-nFDetOjKelXAUJsPYYUmvYbDY-pM3Sz2Sn_Vfi5FQeFrKuq13lWPGFurd8l9Z0mb-jo/pub?output=csv";
 
     const dayNames = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
     let currentDayIndex = new Date().getDay() - 1; 
     if (currentDayIndex < 0 || currentDayIndex > 5) currentDayIndex = 0;
     
-    let isEditing = false, isDark = false, viewMode = 'daily';
+    let isDark = false, viewMode = 'daily';
+
+    // --- SYNC ENGINE ---
+    async function syncData(manual = false) {
+        if(manual && !confirm("Scaricare dati aggiornati?")) return;
+        try {
+            const response = await fetch(SHEET_URL + "&t=" + Date.now());
+            if (!response.ok) throw new Error("Errore rete");
+            const csvText = await response.text();
+            
+            const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
+            const configRow = rows[0].split(',');
+            const newConfig = configRow.slice(0, 6).map(val => parseInt(val.replace(/['"]+/g, '')) || 5);
+            
+            let newLessons = [];
+            for (let i = 1; i <= 6; i++) {
+                if (!rows[i]) { newLessons.push(["", "", "", "", "", ""]); continue; }
+                let dayCells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                let dayLessons = [];
+                for (let h = 0; h < 6; h++) {
+                    let raw = dayCells[h] || "";
+                    raw = raw.replace(/^"|"$/g, '').trim();
+                    if (!raw) { dayLessons.push(""); } else {
+                        let parts = raw.split('|');
+                        let subject = parts[0].trim();
+                        let room = parts[1] ? parts[1].trim() : "";
+                        let prof = parts[2] ? parts[2].trim() : "";
+                        let html = `${subject}`;
+                        if (room || prof) {
+                            html += `<br><div class="meta">`;
+                            if (room) html += `<span class="tag aula">${room}</span> `;
+                            if (prof) html += `<span class="tag prof">${prof}</span>`;
+                            html += `</div>`;
+                        }
+                        dayLessons.push(html);
+                    }
+                }
+                newLessons.push(dayLessons);
+            }
+
+            localStorage.setItem('daysConfig', JSON.stringify(newConfig));
+            localStorage.setItem('lessonsData', JSON.stringify(newLessons));
+            renderApp();
+            if(manual) alert("Aggiornato!");
+
+        } catch (e) {
+            console.log("Sync fallito:", e);
+            if(manual) alert("Errore aggiornamento (Offline?)");
+        }
+    }
 
     function hexToHSL(H) {
         let r = 0, g = 0, b = 0;
@@ -206,12 +247,12 @@
 
     function renderApp() {
         const tabs = document.getElementById('dayTabs'), settings = document.getElementById('settingsBar');
-        const list = document.getElementById('scheduleList'), grid = document.getElementById('weeklyGrid'), fab = document.getElementById('editFab');
+        const list = document.getElementById('scheduleList'), grid = document.getElementById('weeklyGrid');
         if (viewMode === 'daily') {
-            tabs.style.display = 'flex'; settings.style.display = 'flex'; list.style.display = 'block'; grid.style.display = 'none'; fab.style.display = 'flex';
+            tabs.style.display = 'flex'; settings.style.display = 'flex'; list.style.display = 'block'; grid.style.display = 'none';
             renderTabs(); renderDaily();
         } else {
-            tabs.style.display = 'none'; settings.style.display = 'none'; list.style.display = 'none'; grid.style.display = 'flex'; fab.style.display = 'none';
+            tabs.style.display = 'none'; settings.style.display = 'none'; list.style.display = 'none'; grid.style.display = 'flex';
             renderWeekly();
         }
     }
@@ -231,9 +272,8 @@
         const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
         const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
         const mode = savedConfig[currentDayIndex];
-        document.getElementById('settingsBar').innerHTML = `<div style="font-size:13px; font-weight:700; color:var(--md-sys-color-primary)">${dayNames[currentDayIndex].toUpperCase()}</div><div class="filter-chip" onclick="toggleHourMode()"><span class="${mode===5?'active':''}">5h</span> / <span class="${mode===6?'active':''}">6h</span></div>`;
+        document.getElementById('settingsBar').innerHTML = `<div style="font-size:13px; font-weight:700; color:var(--md-sys-color-primary)">${dayNames[currentDayIndex].toUpperCase()}</div><div class="filter-chip"><span class="${mode===5?'active':''}">5h</span> / <span class="${mode===6?'active':''}">6h</span></div>`;
         for(let i=0; i<mode; i++) {
-            // ID AGGIUNTO QUI PER IL SEPARATORE INTERVALLO
             if(i===3) list.innerHTML += `<div class="break-indicator" id="dailyBreak"><div class="break-line"></div>Intervallo<div class="break-line"></div></div>`;
             const base = 8*60+25, dur = mode===6?50:60;
             let start = base + (i*dur); if(i>=3) start += 20;
@@ -242,7 +282,6 @@
             card.innerHTML = `<div class="time-strip"><div class="time-text">${tS}</div><div class="time-text">${tE}</div></div><div class="info-box">${savedLessons[currentDayIndex][i] || 'Libera'}</div>`;
             list.appendChild(card);
         }
-        if(isEditing) document.querySelectorAll('.info-box').forEach(e => e.contentEditable = true);
         highlightCurrentLesson();
     }
 
@@ -262,124 +301,64 @@
         });
     }
 
-    function toggleHourMode() {
-        let conf = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-        conf[currentDayIndex] = conf[currentDayIndex] === 5 ? 6 : 5;
-        localStorage.setItem('daysConfig', JSON.stringify(conf)); renderApp();
-    }
-
-    function toggleEdit() {
-        isEditing = !isEditing;
-        const fab = document.getElementById('editFab'), headerTitle = document.getElementById('headerTitle');
-        if(isEditing) {
-            document.body.classList.add('is-editing'); fab.innerText = '💾'; headerTitle.innerText = 'MODIFICA IN CORSO';
-        } else {
-            document.body.classList.remove('is-editing'); fab.innerText = '✏️'; headerTitle.innerText = 'Orario';
-            let data = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
-            document.querySelectorAll('.lesson-card').forEach((c, i) => data[currentDayIndex][i] = c.querySelector('.info-box').innerHTML);
-            localStorage.setItem('lessonsData', JSON.stringify(data));
-        }
-        renderApp();
-    }
-
     function highlightCurrentLesson() {
-        // Reset
         document.querySelectorAll('.now-active').forEach(e => e.classList.remove('now-active'));
-        
-        const now = new Date();
-        const d = now.getDay() - 1;
-        const m = now.getHours() * 60 + now.getMinutes();
-        
+        const now = new Date(), d = now.getDay()-1, m = now.getHours()*60+now.getMinutes();
         if(d !== currentDayIndex || viewMode !== 'daily') return;
-        
-        const conf = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-        const mode = conf[d];
-        const base = 8*60+25;
-        const dur = mode===6 ? 50 : 60;
+        const conf = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig, mode = conf[d], base = 8*60+25, dur = mode===6?50:60;
 
-        // EVIDENZIAZIONE INTERVALLO
-        const breakStart = base + (3 * dur);
-        const breakEnd = breakStart + 20;
-        
+        const breakStart = base + (3 * dur); const breakEnd = breakStart + 20;
         const breakEl = document.getElementById('dailyBreak');
         if (breakEl && m >= breakStart && m < breakEnd) {
              breakEl.classList.add('now-active');
              breakEl.scrollIntoView({behavior:'smooth', block:'center'});
         }
 
-        // EVIDENZIAZIONE LEZIONI
         for(let i=0; i<mode; i++) {
-            let s = base+(i*dur); 
-            if(i>=3) s+=20;
+            let s = base+(i*dur); if(i>=3) s+=20;
             if(m >= s && m < s+dur) {
                 const el = document.getElementById(`lesson-${d}-${i}`);
-                if(el) { 
-                    el.classList.add('now-active'); 
-                    el.scrollIntoView({behavior:'smooth', block:'center'}); 
-                }
+                if(el) { el.classList.add('now-active'); el.scrollIntoView({behavior:'smooth', block:'center'}); }
             }
         }
     }
 
     function toggleTheme() { isDark = !isDark; localStorage.setItem('isDark', isDark); applyMonetTheme(document.getElementById('monetPicker').value); }
     document.getElementById('monetPicker').oninput = (e) => { applyMonetTheme(e.target.value); localStorage.setItem('monetColor', e.target.value); };
-    function exportConfiguration() { const data = localStorage.getItem('lessonsData') || JSON.stringify(defaultLessons), conf = localStorage.getItem('daysConfig') || JSON.stringify(defaultHoursConfig); navigator.clipboard.writeText(`const defaultHoursConfig = ${conf};\nconst defaultLessons = ${data};`).then(() => alert("Copiato!")); }
-
+    
     function fixLayout() {
         window.dispatchEvent(new Event('resize'));
         document.body.style.display = 'none';
-        document.body.offsetHeight; // Trigger reflow
+        document.body.offsetHeight;
         document.body.style.display = 'grid';
     }
 
-    // --- GESTIONE TEMA 3 STATI + MONET ---
     const themes = ['auto', 'light', 'dark'];
     const themeIcons = { 'auto': '🌓', 'light': '☀️', 'dark': '🌙' };
-
-    function getSystemTheme() {
-        return window.matchMedia('(prefers-color-scheme: dark)').matches; // Ritorna true se dark
-    }
-
+    function getSystemTheme() { return window.matchMedia('(prefers-color-scheme: dark)').matches; }
     function applyTheme() {
         let mode = localStorage.getItem('themeMode') || 'auto';
-        
-        if (mode === 'auto') {
-            isDark = getSystemTheme();
-        } else {
-            isDark = (mode === 'dark');
-        }
-
-        const btn = document.getElementById('themeBtn');
-        if(btn) btn.innerText = themeIcons[mode];
-
+        if (mode === 'auto') isDark = getSystemTheme(); else isDark = (mode === 'dark');
+        document.getElementById('themeBtn').innerText = themeIcons[mode];
         applyMonetTheme(document.getElementById('monetPicker').value);
     }
-
     function cycleTheme() {
         let current = localStorage.getItem('themeMode') || 'auto';
         let nextIndex = (themes.indexOf(current) + 1) % themes.length;
-        let nextMode = themes[nextIndex];
-
-        localStorage.setItem('themeMode', nextMode);
+        localStorage.setItem('themeMode', themes[nextIndex]);
         applyTheme();
     }
-
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        if ((localStorage.getItem('themeMode') || 'auto') === 'auto') {
-            isDark = e.matches;
-            applyMonetTheme(document.getElementById('monetPicker').value);
-        }
+        if ((localStorage.getItem('themeMode') || 'auto') === 'auto') { isDark = e.matches; applyMonetTheme(document.getElementById('monetPicker').value); }
     });
 
-    // --- INIT ---
+    // INIT
     const savedColor = localStorage.getItem('monetColor') || "#006c4c";
     document.getElementById('monetPicker').value = savedColor;
-    
-    applyTheme(); 
-    
+    applyTheme();
+    syncData(); 
     renderApp(); 
     setInterval(highlightCurrentLesson, 60000);
-
     window.onload = () => setTimeout(fixLayout, 300);
 </script>
 </body>
