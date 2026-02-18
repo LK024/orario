@@ -75,6 +75,8 @@
         font-size: 13px;
         backdrop-filter: blur(10px);
         transition: 0.2s;
+        text-decoration: none; /* Per il link */
+        display: inline-block;
     }
     .btn:hover { background: var(--border-color); }
 
@@ -119,9 +121,11 @@
         font-weight: 700; color: var(--accent-color); font-size: 13px;
     }
 
+    /* Toggle disabilitato perché controllato dal CSV ora, ma lasciato per visualizzazione */
     .hour-toggle {
         margin-top: 4px; font-size: 9px; background: var(--bg-app);
-        border: 1px solid var(--border-color); border-radius: 10px; display: flex; cursor: pointer;
+        border: 1px solid var(--border-color); border-radius: 10px; display: flex; cursor: default;
+        opacity: 0.7;
     }
     .hour-toggle span { padding: 1px 6px; color: var(--text-secondary); }
     .hour-toggle span.active { background: var(--accent-color); color: white; }
@@ -137,12 +141,11 @@
         z-index: 1;
     }
 
-    /* FIX EVIDENZIAZIONE CELLE E INTERVALLO */
     .grid-cell.now-active, .break-col.now-active {
         overflow: visible !important;
         z-index: 100 !important;
         border: 2px solid var(--accent-color) !important;
-        position: relative; /* Assicura che l'intervallo accetti il posizionamento */
+        position: relative; 
     }
 
     .break-col {
@@ -168,7 +171,6 @@
         align-items: center;
         text-align: center;
         border-left: 3px solid var(--accent-color);
-        transition: transform 0.1s;
         height: 100%;
         overflow: hidden;
     }
@@ -198,7 +200,6 @@
     }
     .grid-cell.disabled .lesson { display: none; }
 
-    /* ETICHETTA ORA */
     .now-active::after {
         content: "• ORA"; 
         position: absolute; 
@@ -213,13 +214,7 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         z-index: 101;
     }
-    /* Posizione etichetta specifica per la colonna intervallo stretta */
-    .break-col.now-active::after {
-        right: -10px; /* Sposta l'etichetta un po' a destra per centrarla visivamente */
-        top: -12px;
-    }
-
-    body.is-editing .lesson { border: 1px dashed var(--accent-color); box-shadow: none; }
+    .break-col.now-active::after { right: -10px; top: -12px; }
 </style>
 </head>
 <body class="light">
@@ -234,9 +229,9 @@
             <input type="text" id="hexInput" class="hex-input" value="#0078D4" maxlength="7">
         </div>
         <button class="btn" id="themeBtn" onclick="cycleTheme()">🌓 Auto</button>
-        <button class="btn" id="editBtn" onclick="toggleEdit()">✏️ Modifica</button>
+        <a href="https://docs.google.com/spreadsheets/d/1xEUNMLQwEq2fwvvZ5wKgq4wFBE4T25C1FseqDapnrgk/edit?usp=sharing" target="_blank" class="btn" title="Modifica su Google Sheets">📝 Modifica</a>
+        <button class="btn" onclick="syncData(true)" title="Forza Aggiornamento">🔄</button>
         <button class="btn" onclick="resetData()" style="color:#d13438;">✖</button>
-        <button class="btn" onclick="exportConfiguration()">📤 Export</button>
     </div>
 </header>
 
@@ -245,16 +240,71 @@
 </div>
 
 <script>
-    // --- REDIRECT AUTOMATICO PER MOBILE ---
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        window.location.href = "android.html";
-    }
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) window.location.href = "android.html";
+    
+    // LINK AL TUO CSV PUBBLICO
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ_6t0reKL-nFDetOjKelXAUJsPYYUmvYbDY-pM3Sz2Sn_Vfi5FQeFrKuq13lWPGFurd8l9Z0mb-jo/pub?output=csv";
 
-    // --- DATI DEFAULT ---
+    // DATI FALLBACK (Se offline la prima volta)
     const defaultHoursConfig = [5,6,6,5,6,5];
     const defaultLessons = [["","","","","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>"],["2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab4</span> <span class=\"tag prof\">BONELLI</span></div>","","5E<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>"],["1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab1</span></div>"],["","","","",""],["3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","",""],["1G<br><div class=\"meta\"><span class=\"tag aula\">1.14</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">2.03</span></div>","","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>"]];
 
     const days = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ", "SABATO"];
+
+    // --- SYNC ENGINE ---
+    async function syncData(manual = false) {
+        if(manual && confirm("Vuoi scaricare l'orario aggiornato da Google Sheets?")) {
+            // Continua
+        } else if (manual) return;
+
+        try {
+            const response = await fetch(SHEET_URL + "&t=" + Date.now());
+            if (!response.ok) throw new Error("Errore rete");
+            const csvText = await response.text();
+            const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
+            
+            // 1. Configurazione Ore
+            const configRow = rows[0].split(',');
+            const newConfig = configRow.slice(0, 6).map(val => parseInt(val.replace(/['"]+/g, '')) || 5);
+            
+            // 2. Lezioni
+            let newLessons = [];
+            for (let i = 1; i <= 6; i++) {
+                if (!rows[i]) { newLessons.push(["", "", "", "", "", ""]); continue; }
+                let dayCells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                let dayLessons = [];
+                for (let h = 0; h < 6; h++) {
+                    let raw = dayCells[h] || "";
+                    raw = raw.replace(/^"|"$/g, '').trim();
+                    if (!raw) { dayLessons.push(""); } else {
+                        let parts = raw.split('|');
+                        let subject = parts[0].trim();
+                        let room = parts[1] ? parts[1].trim() : "";
+                        let prof = parts[2] ? parts[2].trim() : "";
+                        let html = `${subject}`;
+                        if (room || prof) {
+                            html += `<br><div class="meta">`;
+                            if (room) html += `<span class="tag aula">${room}</span> `;
+                            if (prof) html += `<span class="tag prof">${prof}</span>`;
+                            html += `</div>`;
+                        }
+                        dayLessons.push(html);
+                    }
+                }
+                newLessons.push(dayLessons);
+            }
+
+            localStorage.setItem('daysConfig', JSON.stringify(newConfig));
+            localStorage.setItem('lessonsData', JSON.stringify(newLessons));
+            console.log("Sync completato.");
+            renderGrid();
+            if(manual) alert("Orario aggiornato con successo!");
+
+        } catch (e) {
+            console.log("Sync fallito:", e);
+            if(manual) alert("Impossibile aggiornare. Controlla la connessione.");
+        }
+    }
 
     function minToTime(mins) {
         let h = Math.floor(mins / 60);
@@ -274,12 +324,8 @@
     function renderGrid() {
         const grid = document.getElementById('mainGrid');
         grid.innerHTML = ''; 
-
-        const headers = ["GIORNO", "1ª ORA", "2ª ORA", "3ª ORA", "INT.", "4ª ORA", "5ª ORA", "6ª ORA"];
-        headers.forEach(h => {
-            const div = document.createElement('div');
-            div.className = 'grid-header';
-            div.innerText = h;
+        ["GIORNO", "1ª ORA", "2ª ORA", "3ª ORA", "INT.", "4ª ORA", "5ª ORA", "6ª ORA"].forEach(h => {
+            const div = document.createElement('div'); div.className = 'grid-header'; div.innerText = h;
             grid.appendChild(div);
         });
 
@@ -290,119 +336,46 @@
             const hoursMode = savedConfig[dayIndex];
             const dayLabel = document.createElement('div');
             dayLabel.className = 'day-row-label';
-            dayLabel.innerHTML = `
-                <span>${dayName}</span>
-                <div class="hour-toggle" onclick="toggleDayHours(${dayIndex})">
-                    <span class="${hoursMode===5?'active':''}">5h</span>
-                    <span class="${hoursMode===6?'active':''}">6h</span>
-                </div>
-            `;
+            dayLabel.innerHTML = `<span>${dayName}</span><div class="hour-toggle"><span class="${hoursMode===5?'active':''}">5h</span><span class="${hoursMode===6?'active':''}">6h</span></div>`;
             grid.appendChild(dayLabel);
 
             for (let i = 0; i < 6; i++) {
                 if (i === 3) {
-                    const breakCol = document.createElement('div');
-                    breakCol.className = 'break-col';
-                    breakCol.innerHTML = '<span class="break-text">INT.</span>';
-                    grid.appendChild(breakCol);
+                    const breakCol = document.createElement('div'); breakCol.className = 'break-col';
+                    breakCol.innerHTML = '<span class="break-text">INT.</span>'; grid.appendChild(breakCol);
                 }
-
-                const cell = document.createElement('div');
-                cell.className = 'grid-cell';
+                const cell = document.createElement('div'); cell.className = 'grid-cell';
                 const times = calculateTime(hoursMode, i);
-                
-                if (i === 5 && hoursMode === 5) {
-                    cell.classList.add('disabled');
-                } else {
+                if (i === 5 && hoursMode === 5) cell.classList.add('disabled');
+                else {
                     let content = savedLessons[dayIndex][i] || "";
-                    cell.innerHTML = `
-                        <div class="lesson">${content}</div>
-                        <span class="time-label time-start">${times.start}</span>
-                        <span class="time-label time-end">${times.end}</span>
-                    `;
+                    cell.innerHTML = `<div class="lesson">${content}</div><span class="time-label time-start">${times.start}</span><span class="time-label time-end">${times.end}</span>`;
                 }
                 grid.appendChild(cell);
             }
         });
         highlightCurrentLesson();
-        if(isEditing) applyEditMode();
-    }
-
-    let isEditing = false;
-    function toggleEdit() {
-        isEditing = !isEditing;
-        document.body.classList.toggle('is-editing');
-        const btn = document.getElementById('editBtn');
-        if (isEditing) {
-            btn.innerHTML = "💾 Salva";
-            btn.style.background = "var(--accent-color)";
-            btn.style.color = "white";
-        } else {
-            btn.innerHTML = "✏️ Modifica";
-            btn.style.background = "";
-            btn.style.color = "";
-            saveCurrentData();
-        }
-        applyEditMode();
-    }
-
-    function applyEditMode() {
-        document.querySelectorAll('.lesson').forEach(el => el.contentEditable = isEditing);
-    }
-
-    function saveCurrentData() {
-        let currentLessons = [[],[],[],[],[],[]];
-        const cells = document.querySelectorAll('.grid-cell:not(.disabled)');
-        let cellIdx = 0;
-        for(let d=0; d<6; d++) {
-            let savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-            let hCount = savedConfig[d];
-            for(let h=0; h<hCount; h++) {
-                const lessonDiv = cells[cellIdx].querySelector('.lesson');
-                currentLessons[d][h] = lessonDiv ? lessonDiv.innerHTML : "";
-                cellIdx++;
-            }
-        }
-        localStorage.setItem('lessonsData', JSON.stringify(currentLessons));
-    }
-
-    function toggleDayHours(dayIndex) {
-        let savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-        savedConfig[dayIndex] = (savedConfig[dayIndex] === 5) ? 6 : 5;
-        localStorage.setItem('daysConfig', JSON.stringify(savedConfig));
-        renderGrid();
     }
 
     function highlightCurrentLesson() {
         document.querySelectorAll('.now-active').forEach(el => el.classList.remove('now-active'));
-        const now = new Date();
-        let dayIdx = now.getDay() - 1; 
+        const now = new Date(); let dayIdx = now.getDay() - 1; 
         if (dayIdx < 0 || dayIdx > 5) return;
         const currentMin = now.getHours() * 60 + now.getMinutes();
         const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
         const mode = savedConfig[dayIdx];
-        const base = 8 * 60 + 25; 
-        const dur = mode === 6 ? 50 : 60;
-        const brk = 20;
+        const base = 8 * 60 + 25; const dur = mode === 6 ? 50 : 60; const brk = 20;
 
-        // CHECK INTERVALLO
-        const breakStart = base + (3 * dur);
-        const breakEnd = breakStart + brk;
-        
+        const breakStart = base + (3 * dur); const breakEnd = breakStart + brk;
         if (currentMin >= breakStart && currentMin < breakEnd) {
-            // Calcolo indice: 8 headers + (giorno * 8 celle) + 4 (offset per arrivare all'intervallo)
-            // Struttura riga: [Label, 1, 2, 3, INT, 4, 5, 6] -> INT è indice 4 (partendo da 0)
             const breakIndex = 8 + (dayIdx * 8) + 4; 
             const breakCell = document.getElementById('mainGrid').children[breakIndex];
             if (breakCell) breakCell.classList.add('now-active');
         }
 
-        // CHECK LEZIONI
         for(let i=0; i<mode; i++) {
-            let start = base + (i * dur);
-            if (i >= 3) start += brk;
+            let start = base + (i * dur); if (i >= 3) start += brk;
             if (currentMin >= start && currentMin < start + dur) {
-                // Calcolo indice lezione
                 const gridIndex = 8 + (dayIdx * 8) + (i < 3 ? i + 1 : i + 2);
                 const cell = document.getElementById('mainGrid').children[gridIndex];
                 if(cell) cell.classList.add('now-active');
@@ -410,81 +383,43 @@
         }
     }
 
-    // --- GESTIONE COLORE ---
     function setAccent(hex) {
         document.documentElement.style.setProperty('--accent-color', hex);
         localStorage.setItem('accentColor', hex);
         document.getElementById('colorPicker').value = hex;
         document.getElementById('hexInput').value = hex.toUpperCase();
     }
-
     document.getElementById('colorPicker').addEventListener('input', (e) => setAccent(e.target.value));
     document.getElementById('hexInput').addEventListener('input', (e) => {
-        let val = e.target.value;
-        if (/^#?[0-9A-Fa-f]{6}$/.test(val)) setAccent(val.startsWith('#') ? val : '#'+val);
+        let val = e.target.value; if (/^#?[0-9A-Fa-f]{6}$/.test(val)) setAccent(val.startsWith('#') ? val : '#'+val);
     });
 
-    function exportConfiguration() {
-        const lessons = localStorage.getItem('lessonsData') || JSON.stringify(defaultLessons);
-        const config = localStorage.getItem('daysConfig') || JSON.stringify(defaultHoursConfig);
-        const code = `const defaultHoursConfig = ${config};\nconst defaultLessons = ${lessons};`;
-        navigator.clipboard.writeText(code).then(() => alert("Codice Copiato!"));
-    }
+    function resetData() { if(confirm("Vuoi resettare tutto?")) { localStorage.clear(); location.reload(); } }
 
-    function resetData() {
-        if(confirm("Vuoi resettare tutto?")) { localStorage.clear(); location.reload(); }
-    }
-
-    // --- GESTIONE TEMA 3 STATI ---
     const themes = ['auto', 'light', 'dark'];
     const themeIcons = { 'auto': '🌓 Auto', 'light': '☀️ Light', 'dark': '🌙 Dark' };
-
-    function getSystemTheme() {
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-
+    function getSystemTheme() { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
     function applyTheme() {
         let mode = localStorage.getItem('themeMode') || 'auto';
-        let effectiveTheme = mode;
-
-        if (mode === 'auto') {
-            effectiveTheme = getSystemTheme();
-        }
-
+        let effectiveTheme = (mode === 'auto') ? getSystemTheme() : mode;
         document.body.className = effectiveTheme;
-        const btn = document.getElementById('themeBtn');
-        if(btn) btn.innerText = themeIcons[mode];
-
-        // Barra browser
+        document.getElementById('themeBtn').innerText = themeIcons[mode];
         const metaThemeColor = document.querySelector("meta[name=theme-color]");
-        if (effectiveTheme === 'dark') {
-            metaThemeColor.setAttribute("content", "#121212");
-        } else {
-            metaThemeColor.setAttribute("content", "#f3f3f3");
-        }
+        metaThemeColor.setAttribute("content", effectiveTheme === 'dark' ? "#121212" : "#f3f3f3");
     }
-
     function cycleTheme() {
         let current = localStorage.getItem('themeMode') || 'auto';
         let nextIndex = (themes.indexOf(current) + 1) % themes.length;
-        let nextMode = themes[nextIndex];
-
-        localStorage.setItem('themeMode', nextMode);
+        localStorage.setItem('themeMode', themes[nextIndex]);
         applyTheme();
     }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if ((localStorage.getItem('themeMode') || 'auto') === 'auto') applyTheme(); });
 
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if ((localStorage.getItem('themeMode') || 'auto') === 'auto') {
-            applyTheme();
-        }
-    });
-
-    // --- INIT ---
-    const savedColor = localStorage.getItem('accentColor');
-    if(savedColor) setAccent(savedColor);
-    
+    // INIT
+    const savedColor = localStorage.getItem('accentColor'); if(savedColor) setAccent(savedColor);
     applyTheme(); 
-    renderGrid();
+    syncData(); 
+    renderGrid(); 
     setInterval(highlightCurrentLesson, 60000);
 </script>
 </body>
