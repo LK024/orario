@@ -231,7 +231,7 @@
         <button class="btn" id="themeBtn" onclick="cycleTheme()">🌓 Auto</button>
         <a href="https://docs.google.com/spreadsheets/d/1xEUNMLQwEq2fwvvZ5wKgq4wFBE4T25C1FseqDapnrgk/edit?usp=sharing" target="_blank" class="btn" title="Modifica su Google Sheets">📝 Modifica</a>
         <button class="btn" onclick="syncData(true)" title="Forza Aggiornamento">🔄</button>
-        <button class="btn" onclick="resetData()" style="color:#d13438;">✖</button>
+        
     </div>
 </header>
 
@@ -394,7 +394,7 @@
         let val = e.target.value; if (/^#?[0-9A-Fa-f]{6}$/.test(val)) setAccent(val.startsWith('#') ? val : '#'+val);
     });
 
-    function resetData() { if(confirm("Vuoi resettare tutto?")) { localStorage.clear(); location.reload(); } }
+    
 
     const themes = ['auto', 'light', 'dark'];
     const themeIcons = { 'auto': '🌓 Auto', 'light': '☀️ Light', 'dark': '🌙 Dark' };
