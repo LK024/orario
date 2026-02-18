@@ -8,9 +8,18 @@
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 
 <style>
     /* RESET & BASE */
+    /* GESTIONE MATERIAL ICONS */
+    .material-symbols-rounded {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        font-size: 24px;
+        display: inline-block;
+        vertical-align: middle;
+        line-height: 1;
+    }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
     
     :root {
@@ -120,16 +129,20 @@
         border-radius: 8px; 
         padding: 6px 2px; 
         font-size: 10px; 
-        min-height: 50px; /* Altezza fissa per ordine */
+        min-height: 50px; 
         display: flex; 
-        flex-direction: column;
+        flex-direction: column; 
         align-items: center; 
         justify-content: center; 
         text-align: center; 
         border: 1px solid var(--md-sys-color-outline-variant); 
         line-height: 1.1; 
-        word-break: break-word;
-        overflow: hidden;
+        
+        /* TRONCAMENTO TESTO AGGIUNTO */
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        max-width: 100%; 
     }
     
     /* Quando la card è vuota/buco */
@@ -197,12 +210,23 @@
 
 <header>
     <div class="headline" id="headerTitle">Orario</div>
-    <div class="actions">
-        <button class="icon-btn" onclick="goToToday()" title="Oggi">🎯</button>
-        <button class="icon-btn" onclick="toggleView()" id="viewToggle" title="Vista Recap">📅</button>
-        <div class="color-btn">🎨<input type="color" id="monetPicker" value="#006c4c"></div>
-        <button class="icon-btn" id="themeBtn" onclick="cycleTheme()">🌓</button>
-        <button class="icon-btn" onclick="syncData(true)" title="Forza Aggiornamento">🔄</button>
+<div class="actions">
+        <button class="icon-btn" onclick="goToToday()" title="Oggi">
+            <span class="material-symbols-rounded">today</span>
+        </button>
+        <button class="icon-btn" onclick="toggleView()" id="viewToggle" title="Vista Recap">
+            <span class="material-symbols-rounded">calendar_view_week</span>
+        </button>
+        <div class="color-btn" title="Tema Colore">
+            <span class="material-symbols-rounded">palette</span>
+            <input type="color" id="monetPicker" value="#006c4c">
+        </div>
+        <button class="icon-btn" id="themeBtn" onclick="cycleTheme()" title="Modo Scuro/Chiaro">
+            <span class="material-symbols-rounded">contrast</span>
+        </button>
+        <button class="icon-btn" onclick="syncData(true)" title="Forza Aggiornamento">
+            <span class="material-symbols-rounded">sync</span>
+        </button>
     </div>
 </header>
 
@@ -211,8 +235,9 @@
 <div class="content-area" id="scheduleList"></div>
 <div class="weekly-grid-container" id="weeklyGrid"></div>
 
-<a href="https://docs.google.com/spreadsheets/d/1xEUNMLQwEq2fwvvZ5wKgq4wFBE4T25C1FseqDapnrgk/edit?usp=sharing" target="_blank" class="fab" title="Modifica Foglio">📝</a>
-
+<a href="https://docs.google.com/spreadsheets/d/1xEUNMLQwEq2fwvvZ5wKgq4wFBE4T25C1FseqDapnrgk/edit?usp=sharing" target="_blank" class="fab" title="Modifica Foglio">
+    <span class="material-symbols-rounded">edit_document</span>
+</a>
 <script>
     // --- DATI DEFAULT ---
     const defaultHoursConfig = [5,6,6,5,6,5]; 
@@ -323,6 +348,11 @@
     function toggleView() {
         viewMode = (viewMode === 'daily') ? 'weekly' : 'daily';
         document.getElementById('headerTitle').innerText = (viewMode === 'daily') ? 'Orario' : 'Recap Settimanale';
+        
+        // MODIFICATO: Nomi delle icone Material
+        const iconName = (viewMode === 'daily') ? 'calendar_view_week' : 'view_day';
+        document.querySelector('#viewToggle span').innerText = iconName;
+        
         renderApp();
     }
 
@@ -417,10 +447,14 @@ function renderWeekly() {
                         mini.className = 'mini-card empty';
                         mini.innerHTML = '-';
                     } else {
-                        mini.className = 'mini-card';
-                        // Rimuoviamo i tag <br> per risparmiare spazio verticale nella mini card
-                        mini.innerHTML = content.replace('<br>', ' '); 
-                    }
+                    mini.className = 'mini-card';
+                    
+                    // MODIFICA FONDAMENTALE:
+                    // 1. Usiamo una Regex (/<[^>]*>/g) per cancellare TUTTI i tag HTML (<div>, <span>, <br>)
+                    //    e lasciare solo il testo pulito (es: "Storia 202 Rossi").
+                    // 2. Usiamo .innerText per assicurarci che sia trattato come testo semplice.
+                    mini.innerText = content.replace(/<[^>]*>/g, ' '); 
+                }
                 } else {
                     // Ore oltre l'orario (es. 6a ora se si fanno 5 ore)
                     mini.className = 'mini-card';
@@ -469,12 +503,16 @@ function renderWeekly() {
     }
 
     const themes = ['auto', 'light', 'dark'];
-    const themeIcons = { 'auto': '🌓', 'light': '☀️', 'dark': '🌙' };
+    // MAPPA ICONE INVECE DI EMOJI
+    const themeIcons = { 'auto': 'brightness_auto', 'light': 'light_mode', 'dark': 'dark_mode' };
     function getSystemTheme() { return window.matchMedia('(prefers-color-scheme: dark)').matches; }
-    function applyTheme() {
+function applyTheme() {
         let mode = localStorage.getItem('themeMode') || 'auto';
         if (mode === 'auto') isDark = getSystemTheme(); else isDark = (mode === 'dark');
-        document.getElementById('themeBtn').innerText = themeIcons[mode];
+        
+        // MODIFICATO: Aggiorna il testo dello span interno invece del bottone intero
+        document.querySelector('#themeBtn span').innerText = themeIcons[mode];
+        
         applyMonetTheme(document.getElementById('monetPicker').value);
     }
     function cycleTheme() {
