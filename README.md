@@ -2,6 +2,9 @@
 
 Un'applicazione web leggera, reattiva e completamente personalizzabile per gestire e visualizzare l'orario scolastico o universitario.
 Progettata con un'architettura **Dual-UI**: un'interfaccia dedicata per schermi Desktop (stile Windows 11 Fluent) e una ottimizzata per Mobile (stile Android Material You).
+<img width="1182" height="2560" alt="image" src="https://github.com/user-attachments/assets/448a2166-2713-46ec-8173-267425bd07ff" />
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/775485f9-cf0b-415c-9539-b428c9a3c973" />
+
 
 ## ✨ Caratteristiche Principali
 
