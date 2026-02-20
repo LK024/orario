@@ -204,6 +204,85 @@
     
     .break-indicator.now-active { color: var(--md-sys-color-primary); font-weight: 700; transform: scale(1.02); }
     .break-indicator.now-active .break-line { background: var(--md-sys-color-primary); height: 2px; }
+    /* =========================================
+       MODALITÀ SMARTWATCH (Schermi Rotondi e Ghiera)
+       ========================================= */
+       
+    /* 1. Sblocca la pagina intera per far funzionare la corona hardware */
+    body.watch-mode {
+        display: flex;
+        flex-direction: column;
+        height: auto !important; /* Disabilita l'altezza fissa */
+        overflow-y: auto !important; /* Permette alla pagina intera di scorrere */
+        /* Rimuove lo spazio extra in alto per le notch dei telefoni */
+        grid-template-rows: none; 
+    }
+
+    /* 2. Disabilita lo scorrimento interno (ora scorre il body) */
+    body.watch-mode .content-area {
+        overflow-y: visible !important; 
+        padding: 0 15px 60px 15px; /* Spazio extra per far scorrere l'ultima ora al centro */
+    }
+
+    /* 3. Adattamento Header e Bottoni */
+    body.watch-mode header {
+        height: 50px !important;
+        min-height: 50px !important;
+        padding: 15px 10px 5px 10px;
+        justify-content: center;
+    }
+
+    body.watch-mode .headline {
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    /* Nasconde pulsanti superflui per risparmiare spazio */
+    body.watch-mode .actions .color-btn,
+    body.watch-mode .actions #themeBtn,
+    body.watch-mode .actions #viewToggle {
+        display: none; 
+    }
+
+    /* Nasconde il FAB fluttuante */
+    body.watch-mode .fab {
+        display: none !important;
+    }
+
+    /* 4. Adattamento Margini e Dimensioni Card */
+    body.watch-mode .tabs-wrapper {
+        padding: 0 25px 5px 25px; 
+    }
+    body.watch-mode .tab {
+        padding: 4px 10px;
+        font-size: 11px;
+        border-radius: 10px;
+    }
+
+    body.watch-mode .settings-bar {
+        margin: 0 25px 5px 25px;
+        height: 28px;
+    }
+
+    body.watch-mode .lesson-card {
+        min-height: 55px;
+        border-radius: 12px;
+        margin-bottom: 8px;
+    }
+    body.watch-mode .time-strip { width: 42px; }
+    body.watch-mode .time-text { font-size: 9px; }
+    body.watch-mode .subject { font-size: 13px; }
+    body.watch-mode .info-box { padding: 6px 10px; }
+    body.watch-mode .tag { font-size: 8px; padding: 1px 4px; }
+    
+    body.watch-mode .lesson-card.now-active::after {
+        font-size: 8px;
+        padding: 1px 6px;
+        top: -8px;
+        right: 10px;
+    }
+
 </style>
 </head>
 <body>
@@ -251,6 +330,15 @@
     if (currentDayIndex < 0 || currentDayIndex > 5) currentDayIndex = 0;
     
     let isDark = false, viewMode = 'daily';
+    // --- RILEVAMENTO SMARTWATCH ---
+    // Seleziona dispositivi con "Watch", "Wear" o i Galaxy Watch ("SM-R")
+    const isWatch = /Watch|Wear|SM-R/i.test(navigator.userAgent);
+    if (isWatch) {
+        document.body.classList.add('watch-mode');
+        // Forza sempre la vista giornaliera al polso
+        viewMode = 'daily'; 
+    }
+
 
     // --- SYNC ENGINE ---
     async function syncData(manual = false) {
