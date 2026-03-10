@@ -10,7 +10,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,300,0,0" rel="stylesheet">
 
 <style>
-    :root {
+    /* =========================================
+       1. VARIABILI E COLORI (Divisi per OS)
+       ========================================= */
+
+    /* --- WINDOWS (Fluent) --- */
+    body.windows {
         --accent-color: #0078d4;
         --bg-app: #f3f3f3;
         --bg-surface: rgba(255, 255, 255, 0.85);
@@ -22,10 +27,11 @@
         --tag-aula-text: #004578;
         --tag-prof-bg: #fff4ce;
         --tag-prof-text: #7d6300;
+        --shadow-app: 0 8px 20px rgba(0,0,0,0.05);
         --shadow-card: 0 2px 4px rgba(0,0,0,0.04);
+        font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
     }
-
-    body.dark {
+    body.windows.dark {
         --bg-app: #121212;
         --bg-surface: rgba(30, 30, 30, 0.9);
         --bg-header: #1e1e1e;
@@ -38,207 +44,177 @@
         --tag-prof-text: #fce100;
     }
 
-    * { box-sizing: border-box; }
-
-    /* STILE WINDOWS 11 (Fluent Icons) */
-    .material-symbols-rounded {
-        font-family: 'Material Symbols Rounded';
-        font-weight: normal;
-        font-style: normal;
-        font-size: 18px; /* Icone leggermente più piccole su Desktop */
-        line-height: 1;
-        letter-spacing: normal;
-        text-transform: none;
-        display: inline-block;
-        white-space: nowrap;
-        word-wrap: normal;
-        direction: ltr;
-        vertical-align: text-bottom; /* Allineamento col testo */
-        
-        /* LA MAGIA FLUENT: Icone sottili e vuote */
-        font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20;
+    /* --- macOS (Vibrancy) --- */
+    body.macos {
+        --accent-color: #007aff;
+        --accent-ring: rgba(0, 122, 255, 0.25);
+        --bg-app: #f5f5f7;
+        --bg-surface: rgba(255, 255, 255, 0.65);
+        --bg-header: rgba(255, 255, 255, 0.4);
+        --bg-card: #ffffff;
+        --border-color: rgba(0, 0, 0, 0.08);
+        --text-primary: #1d1d1f;
+        --text-secondary: #86868b;
+        --tag-aula-bg: #e5e5ea;
+        --tag-aula-text: #1d1d1f;
+        --tag-prof-bg: rgba(255, 149, 0, 0.15);
+        --tag-prof-text: #cc7a00;
+        --shadow-app: 0 10px 30px rgba(0,0,0,0.05), 0 1px 8px rgba(0,0,0,0.02);
+        --shadow-card: 0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+        letter-spacing: -0.015em;
+        -webkit-font-smoothing: antialiased;
+    }
+    body.macos.dark {
+        --bg-app: #1e1e1e;
+        --bg-surface: rgba(44, 44, 46, 0.65);
+        --bg-header: rgba(44, 44, 46, 0.4);
+        --bg-card: #2c2c2e;
+        --border-color: rgba(255, 255, 255, 0.08);
+        --text-primary: #f5f5f7;
+        --text-secondary: #98989d;
+        --tag-aula-bg: #3a3a3c;
+        --tag-aula-text: #f5f5f7;
+        --tag-prof-bg: rgba(255, 159, 10, 0.2);
+        --tag-prof-text: #ff9f0a;
+        --shadow-app: 0 10px 30px rgba(0,0,0,0.3);
+        --shadow-card: 0 4px 12px rgba(0,0,0,0.15);
     }
 
+    /* =========================================
+       2. LAYOUT GENERALE (Condiviso)
+       ========================================= */
+    * { box-sizing: border-box; }
+
     body {
-        font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
-        background-color: var(--bg-app);
-        color: var(--text-primary);
-        margin: 0;
-        padding: 15px;
-        height: 100dvh;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        transition: background 0.3s;
+        background-color: var(--bg-app); color: var(--text-primary);
+        margin: 0; padding: 15px; height: 100dvh; overflow: hidden;
+        display: flex; flex-direction: column; transition: background 0.3s;
     }
 
     header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-        flex-shrink: 0;
-        position: relative;
-        z-index: 200;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 10px; flex-shrink: 0; position: relative; z-index: 200;
     }
 
     .title-group h1 { margin: 0; font-size: clamp(18px, 2.5dvh, 22px); font-weight: 600; }
     .controls { display: flex; align-items: center; gap: 8px; }
 
-    .btn {
-        background: var(--bg-surface);
-        border: 1px solid var(--border-color);
-        color: var(--text-primary);
-        padding: 6px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 13px;
-        backdrop-filter: blur(10px);
-        transition: 0.2s;
-        text-decoration: none;
-        display: inline-flex; /* Per allineare icona e testo */
-        align-items: center;
-        gap: 6px; /* Spazio tra icona e testo */
-    }
-    .btn:hover { background: var(--border-color); }
-
     .color-wrapper {
         display: flex; align-items: center; background: var(--bg-surface);
-        border: 1px solid var(--border-color); border-radius: 6px; padding: 2px 6px;
+        border: 1px solid var(--border-color); padding: 2px 6px;
     }
-    input[type="color"] { border: none; width: 20px; height: 20px; cursor: pointer; background: none; padding: 0; }
-    input.hex-input { border: none; background: transparent; color: var(--text-primary); font-family: monospace; width: 65px; font-size: 11px; outline: none; margin-left: 5px; }
+    input[type="color"] { border: none; cursor: pointer; background: none; padding: 0; }
+    input.hex-input { border: none; background: transparent; color: var(--text-primary); width: 65px; font-size: 11px; outline: none; margin-left: 5px; }
+
+    .btn {
+        background: var(--bg-surface); border: 1px solid var(--border-color);
+        color: var(--text-primary); cursor: pointer; font-size: 13px;
+        display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
+    }
 
     .grid-container {
-        flex: 1;
-        overflow: hidden;
-        background: var(--bg-surface);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-        position: relative;
-        z-index: 1;
+        flex: 1; overflow: hidden; background: var(--bg-surface);
+        border: 1px solid var(--border-color); box-shadow: var(--shadow-app);
+        position: relative; z-index: 1;
     }
 
     .schedule-grid {
-        display: grid;
-        grid-template-columns: 120px repeat(3, 1fr) 30px repeat(3, 1fr); 
-        grid-template-rows: 40px repeat(6, 1fr);
-        height: 100%;
-        width: 100%;
+        display: grid; grid-template-columns: 120px repeat(3, 1fr) 30px repeat(3, 1fr); 
+        grid-template-rows: 40px repeat(6, 1fr); height: 100%; width: 100%;
     }
 
     .grid-header {
-        background: var(--bg-header);
-        border-bottom: 1px solid var(--border-color);
+        background: var(--bg-header); border-bottom: 1px solid var(--border-color);
         display: flex; align-items: center; justify-content: center;
         font-weight: 600; color: var(--text-secondary); font-size: 11px; letter-spacing: 0.5px;
     }
 
     .day-row-label {
-        background: var(--bg-header);
-        border-right: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color);
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        font-weight: 700; color: var(--accent-color); font-size: 13px;
+        background: var(--bg-header); border-right: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column;
+        align-items: center; justify-content: center; font-weight: 700; color: var(--text-primary); font-size: 13px;
     }
 
-    .hour-toggle {
-        margin-top: 4px; font-size: 9px; background: var(--bg-app);
-        border: 1px solid var(--border-color); border-radius: 10px; display: flex; cursor: default;
-        opacity: 0.7;
-    }
+    .hour-toggle { margin-top: 4px; font-size: 9px; border: 1px solid var(--border-color); display: flex; cursor: default; }
     .hour-toggle span { padding: 1px 6px; color: var(--text-secondary); }
     .hour-toggle span.active { background: var(--accent-color); color: white; }
 
-    .grid-cell {
-        border-bottom: 1px solid var(--border-color);
-        border-right: 1px solid var(--border-color);
-        padding: 4px;
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        z-index: 1;
-    }
+    .grid-cell { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 4px; position: relative; display: flex; flex-direction: column; z-index: 1; }
+    .break-col { border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
+    .break-text { writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; letter-spacing: 2px; color: var(--text-secondary); font-weight: 600; opacity: 0.4; }
 
-    .grid-cell.now-active, .break-col.now-active {
-        overflow: visible !important;
-        z-index: 100 !important;
-        border: 2px solid var(--accent-color) !important;
-        position: relative; 
-    }
-
-    .break-col {
-        background: repeating-linear-gradient(45deg, var(--bg-app), var(--bg-app) 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px);
-        border-right: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color);
-        display: flex; align-items: center; justify-content: center;
-    }
-    .break-text {
-        writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px;
-        letter-spacing: 2px; color: var(--text-secondary); font-weight: 600; opacity: 0.4;
-    }
-
-    .lesson {
-        flex: 1;
-        background: var(--bg-header);
-        border-radius: 6px;
-        padding: 4px;
-        box-shadow: var(--shadow-card);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        border-left: 3px solid var(--accent-color);
-        height: 100%;
-        overflow: hidden;
-    }
-
-    .subject { 
-        font-size: clamp(14px, 1.8dvh, 18px); 
-        font-weight: 700; 
-        margin-bottom: 2px; 
-        line-height: 1.1;
-    }
-    
+    .lesson { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; overflow: hidden; }
+    .subject { font-size: clamp(14px, 1.8dvh, 18px); font-weight: 700; margin-bottom: 2px; line-height: 1.1; }
     .meta { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; }
-    .tag { font-size: 10px; padding: 0px 4px; border-radius: 3px; font-weight: 600; }
+    .tag { font-size: 10px; padding: 0px 4px; font-weight: 600; }
     .tag.aula { background: var(--tag-aula-bg); color: var(--tag-aula-text); }
     .tag.prof { background: var(--tag-prof-bg); color: var(--tag-prof-text); }
-
-    .time-label {
-        position: absolute; bottom: 2px; font-size: 9px; font-family: monospace;
-        color: var(--text-secondary); opacity: 0.6;
-    }
-    .time-start { left: 5px; }
-    .time-end { right: 5px; }
-
-    .grid-cell.disabled {
-        background-color: rgba(0,0,0,0.02);
-        background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px);
-    }
+    .time-label { position: absolute; bottom: 2px; font-size: 9px; color: var(--text-secondary); opacity: 0.6; }
+    .time-start { left: 5px; } .time-end { right: 5px; }
     .grid-cell.disabled .lesson { display: none; }
+    
+    .grid-cell.now-active, .break-col.now-active { overflow: visible !important; z-index: 100 !important; position: relative; }
 
-    .now-active::after {
-        content: "• ORA"; 
-        position: absolute; 
-        top: -9px; 
-        right: 8px; 
-        background: var(--accent-color); 
-        color: white; 
-        font-size: 9px;
-        padding: 2px 6px; 
-        border-radius: 8px; 
-        font-weight: 800;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        z-index: 101;
-    }
-    .break-col.now-active::after { right: -10px; top: -12px; }
+    /* =========================================
+       3. DETTAGLI WINDOWS (Fluent Design)
+       ========================================= */
+    body.windows .material-symbols-rounded { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20; font-size: 18px; vertical-align: text-bottom; }
+    body.windows .btn { padding: 6px 12px; border-radius: 6px; backdrop-filter: blur(10px); transition: 0.2s; }
+    body.windows .btn:hover { background: var(--border-color); }
+    body.windows .color-wrapper { border-radius: 6px; }
+    body.windows input[type="color"] { width: 20px; height: 20px; }
+    body.windows input.hex-input { font-family: monospace; }
+    body.windows .grid-container { border-radius: 12px; }
+    body.windows .day-row-label { color: var(--accent-color); }
+    body.windows .hour-toggle { background: var(--bg-app); border-radius: 10px; opacity: 0.7; }
+    body.windows .grid-cell { overflow: hidden; }
+    body.windows .break-col { background: repeating-linear-gradient(45deg, var(--bg-app), var(--bg-app) 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px); }
+    body.windows .lesson { background: var(--bg-header); border-radius: 6px; padding: 4px; box-shadow: var(--shadow-card); border-left: 3px solid var(--accent-color); }
+    body.windows .tag { border-radius: 3px; }
+    body.windows .time-label { font-family: monospace; }
+    body.windows .grid-cell.disabled { background-color: rgba(0,0,0,0.02); background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px); }
+    body.windows .grid-cell.now-active, body.windows .break-col.now-active { border: 2px solid var(--accent-color) !important; }
+    body.windows .now-active::after { content: "• ORA"; position: absolute; top: -9px; right: 8px; background: var(--accent-color); color: white; font-size: 9px; padding: 2px 6px; border-radius: 8px; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.2); z-index: 101; }
+    body.windows .break-col.now-active::after { right: -10px; top: -12px; }
+
+    /* =========================================
+       4. DETTAGLI macOS (Vibrancy & Shadows)
+       ========================================= */
+    body.macos .material-symbols-rounded { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; font-size: 17px; vertical-align: text-bottom; }
+    body.macos header { padding: 0 5px; margin-bottom: 16px; }
+    body.macos .btn, body.macos .color-wrapper { border-radius: 8px; font-weight: 500; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: transform 0.1s ease, background 0.2s ease; border-width: 0.5px; }
+    body.macos .btn { padding: 6px 12px; }
+    body.macos .btn:active { transform: scale(0.97); }
+    body.macos .btn:hover { background: var(--bg-header); }
+    body.macos .color-wrapper { padding: 3px 8px; }
+    body.macos input[type="color"] { width: 18px; height: 18px; border-radius: 50%; overflow: hidden; }
+    body.macos input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    body.macos input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(0,0,0,0.1); border-radius: 50%; }
+    body.macos input.hex-input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 500; }
+    body.macos .grid-container { border-radius: 14px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); }
+    body.macos .hour-toggle { background: rgba(0,0,0,0.05); border-radius: 10px; font-weight: 500; }
+    body.macos.dark .hour-toggle { background: rgba(255,255,255,0.05); }
+    body.macos .hour-toggle span { transition: 0.2s; }
+    body.macos .hour-toggle span.active { border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    body.macos .grid-cell { padding: 6px; overflow: visible; }
+    body.macos .break-col { background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.02) 10px, rgba(0,0,0,0.02) 20px); }
+    body.macos.dark .break-col { background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px); }
+    body.macos .lesson { background: var(--bg-card); border-radius: 8px; padding: 6px; box-shadow: var(--shadow-card); border: 1px solid var(--border-color); transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s ease; }
+    body.macos .grid-cell:not(.disabled):hover .lesson { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04); }
+    body.macos.dark .grid-cell:not(.disabled):hover .lesson { box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
+    body.macos .subject { font-weight: 600; }
+    body.macos .tag { padding: 2px 6px; border-radius: 10px; letter-spacing: -0.01em; }
+    body.macos .time-label { bottom: 8px; font-family: ui-monospace, SFMono-Regular, monospace; opacity: 0.8; font-weight: 500; }
+    body.macos .time-start { left: 8px; } body.macos .time-end { right: 8px; }
+    body.macos .grid-cell.disabled { background-color: rgba(0,0,0,0.02); }
+    body.macos.dark .grid-cell.disabled { background-color: rgba(255,255,255,0.01); }
+    body.macos .grid-cell.now-active .lesson { border: 1px solid var(--accent-color); box-shadow: 0 0 0 4px var(--accent-ring), var(--shadow-card); }
+    body.macos .break-col.now-active { box-shadow: inset 0 0 0 2px var(--accent-color); }
+    body.macos .grid-cell.now-active::after { content: "Ora"; position: absolute; top: -6px; right: 4px; background: var(--accent-color); color: white; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; box-shadow: 0 2px 6px rgba(0,0,0,0.15); z-index: 101; }
 </style>
 </head>
-<body class="light">
+<body class="windows light">
 
 <header>
     <div class="title-group">
@@ -250,7 +226,11 @@
             <input type="text" id="hexInput" class="hex-input" value="#0078D4" maxlength="7">
         </div>
         
-        <button class="btn" id="themeBtn" onclick="cycleTheme()">
+        <button class="btn" id="osBtn" onclick="toggleOS()" title="Cambia Stile OS">
+            <span class="material-symbols-rounded">desktop_windows</span> Win
+        </button>
+
+        <button class="btn" id="themeBtn" onclick="cycleTheme()" title="Cambia Tema">
             <span class="material-symbols-rounded">brightness_auto</span> Auto
         </button>
         
@@ -261,7 +241,6 @@
         <button class="btn" onclick="syncData(true)" title="Forza Aggiornamento">
             <span class="material-symbols-rounded">refresh</span>
         </button>
-        
     </div>
 </header>
 
@@ -271,15 +250,12 @@
 
 <script>
     if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) window.location.href = "android.html";
-    
 
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ_6t0reKL-nFDetOjKelXAUJsPYYUmvYbDY-pM3Sz2Sn_Vfi5FQeFrKuq13lWPGFurd8l9Z0mb-jo/pub?output=csv";
 
-    // DATI FALLBACK
     const defaultHoursConfig = [5,6,6,5,6,5];
     const dummyLesson = "Materia<br><div class=\"meta\"><span class=\"tag aula\">Aula</span> <span class=\"tag prof\">Prof</span></div>";
     const defaultLessons = Array(6).fill(Array(6).fill(dummyLesson));
-
     const days = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ", "SABATO"];
 
     // --- SYNC ENGINE ---
@@ -298,11 +274,9 @@
             const csvText = await response.text();
             const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
             
-            // 1. Configurazione Ore
             const configRow = rows[0].split(',');
             const newConfig = configRow.slice(0, 6).map(val => parseInt(val.replace(/['"]+/g, '')) || 5);
             
-            // 2. Lezioni
             let newLessons = [];
             for (let i = 1; i <= 6; i++) {
                 if (!rows[i]) { newLessons.push(["", "", "", "", "", ""]); continue; }
@@ -342,17 +316,15 @@
     }
 
     function minToTime(mins) {
-        let h = Math.floor(mins / 60);
-        let m = mins % 60;
+        let h = Math.floor(mins / 60); let m = mins % 60;
         return `${h}:${m.toString().padStart(2, '0')}`;
     }
 
     function calculateTime(dayHours, hourIndex) {
         let baseMinutes = 8 * 60 + 25; 
         let duration = (dayHours === 6) ? 50 : 60;
-        let breakDuration = 20;
         let currentStart = baseMinutes + (hourIndex * duration);
-        if (hourIndex >= 3) currentStart += breakDuration;
+        if (hourIndex >= 3) currentStart += 20;
         return { start: minToTime(currentStart), end: minToTime(currentStart + duration) };
     }
 
@@ -418,8 +390,13 @@
         }
     }
 
+    // --- COLOR ACCENT ---
     function setAccent(hex) {
-        document.documentElement.style.setProperty('--accent-color', hex);
+        // Applica le variabili direttamente al body per sovrascrivere le classi CSS
+        document.body.style.setProperty('--accent-color', hex);
+        let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+        document.body.style.setProperty('--accent-ring', `rgba(${r}, ${g}, ${b}, 0.25)`);
+        
         localStorage.setItem('accentColor', hex);
         document.getElementById('colorPicker').value = hex;
         document.getElementById('hexInput').value = hex.toUpperCase();
@@ -429,35 +406,61 @@
         let val = e.target.value; if (/^#?[0-9A-Fa-f]{6}$/.test(val)) setAccent(val.startsWith('#') ? val : '#'+val);
     });
 
+    // --- THEME & OS MANAGEMENT ---
     const themes = ['auto', 'light', 'dark'];
     const themeIcons = { 'auto': 'brightness_auto', 'light': 'light_mode', 'dark': 'dark_mode' };
     const themeTexts = { 'auto': 'Auto', 'light': 'Light', 'dark': 'Dark' };
+    
+    let currentOS = localStorage.getItem('osMode') || 'windows';
 
     function getSystemTheme() { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
     
-    function applyTheme() {
+    function applyUI() {
         let mode = localStorage.getItem('themeMode') || 'auto';
         let effectiveTheme = (mode === 'auto') ? getSystemTheme() : mode;
-        document.body.className = effectiveTheme;
         
-        // Aggiorna sia l'icona che il testo
+        // Applica le due classi combinate (es. "windows dark" o "macos light")
+        document.body.className = `${currentOS} ${effectiveTheme}`;
+        
+        // Aggiorna Bottoni
         document.getElementById('themeBtn').innerHTML = `<span class="material-symbols-rounded">${themeIcons[mode]}</span> ${themeTexts[mode]}`;
         
-        const metaThemeColor = document.querySelector("meta[name=theme-color]");
-        metaThemeColor.setAttribute("content", effectiveTheme === 'dark' ? "#121212" : "#f3f3f3");
+        const osBtn = document.getElementById('osBtn');
+        if (currentOS === 'windows') {
+            osBtn.innerHTML = `<span class="material-symbols-rounded">desktop_windows</span> Win`;
+            document.querySelector("meta[name=theme-color]").setAttribute("content", effectiveTheme === 'dark' ? "#121212" : "#f3f3f3");
+        } else {
+            osBtn.innerHTML = `<span class="material-symbols-rounded">desktop_mac</span> Mac`;
+            document.querySelector("meta[name=theme-color]").setAttribute("content", effectiveTheme === 'dark' ? "#1e1e1e" : "#f5f5f7");
+        }
     }
     
     function cycleTheme() {
         let current = localStorage.getItem('themeMode') || 'auto';
         let nextIndex = (themes.indexOf(current) + 1) % themes.length;
         localStorage.setItem('themeMode', themes[nextIndex]);
-        applyTheme();
+        applyUI();
     }
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if ((localStorage.getItem('themeMode') || 'auto') === 'auto') applyTheme(); });
+
+    function toggleOS() {
+        currentOS = (currentOS === 'windows') ? 'macos' : 'windows';
+        localStorage.setItem('osMode', currentOS);
+        
+        // Modifica i colori di base se si cambia OS per la prima volta senza aver toccato il picker
+        if (!localStorage.getItem('accentColor')) {
+            setAccent(currentOS === 'windows' ? "#0078d4" : "#007aff");
+        }
+        applyUI();
+    }
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { 
+        if ((localStorage.getItem('themeMode') || 'auto') === 'auto') applyUI(); 
+    });
 
     // INIT
-    const savedColor = localStorage.getItem('accentColor'); if(savedColor) setAccent(savedColor);
-    applyTheme(); 
+    const savedColor = localStorage.getItem('accentColor') || (currentOS === 'windows' ? "#0078d4" : "#007aff"); 
+    setAccent(savedColor);
+    applyUI(); 
     syncData(); 
     renderGrid(); 
     setInterval(highlightCurrentLesson, 60000);
