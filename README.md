@@ -5,7 +5,7 @@ Progettata con un'architettura **Dual-UI**: un'interfaccia dedicata per schermi 
 
 <img width="1182" height="2560" alt="image" src="https://github.com/user-attachments/assets/448a2166-2713-46ec-8173-267425bd07ff" />
 <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/775485f9-cf0b-415c-9539-b428c9a3c973" />
-<img width="1917" height="1012" alt="Screenshot 2026-03-10 133014" src="https://github.com/user-attachments/assets/0b1b519c-e9b3-4a4f-bd56-1263d2d3add6" />
+<img width="2560" height="1663" alt="image" src="https://raw.githubusercontent.com/LK024/orario/refs/heads/main/photo_2026-03-14%2009.56.47.jpeg" />
 
 ## ✨ Caratteristiche Principali
 
