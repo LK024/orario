@@ -115,29 +115,41 @@
     
     let isDark = false, viewMode = 'daily';
 
+        // --- SYNC ENGINE AGGIORNATO PER IL NUOVO LAYOUT FOGLI ---
     async function syncData(manual = false) {
-        if(manual && !confirm("Scaricare dati aggiornati?")) return;
+        if(SHEET_URL.includes("INSERISCI_QUI")) {
+            if(manual) alert("Configurazione mancante: Inserisci il link CSV!");
+            return;
+        }
+        if(manual && !confirm("Vuoi scaricare l'orario aggiornato da Google Sheets?")) return;
+
         try {
             const response = await fetch(SHEET_URL + "&t=" + Date.now());
             if (!response.ok) throw new Error("Errore rete");
             const csvText = await response.text();
             
+            // Dividiamo in righe e rimuoviamo quelle vuote
             const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
-            const configRow = rows[0].split(',');
-            const newConfig = configRow.slice(0, 5).map(val => parseInt(val.replace(/['"]+/g, '')) || 6);
             
-            let newLessons = Array.from({length: 5}, () => []);
-            for (let i = 1; i <= 7; i++) {
-                if (!rows[i]) {
-                    for (let d = 0; d < 5; d++) newLessons[d].push("");
-                    continue;
-                }
-                let dayCells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                for (let d = 0; d < 5; d++) {
-                    let raw = dayCells[d] || "";
+            let newConfig = [];
+            let newLessons = [];
+
+            // Partiamo da i=1 per SALTARE la riga di intestazione. Leggiamo 5 giorni.
+            for (let i = 1; i <= 5; i++) {
+                if (!rows[i]) break;
+                let cells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                // La colonna B (indice 1) contiene il numero totale di ore per quel giorno
+                let oreGiorno = parseInt(cells[1] ? cells[1].replace(/['"]+/g, '') : '6') || 6;
+                newConfig.push(oreGiorno);
+                
+                let dayLessons = [];
+                // Le lezioni partono dalla colonna C (indice 2) fino alla I (indice 8) -> 7 ore
+                for (let h = 2; h < 9; h++) {
+                    let raw = cells[h] || "";
                     raw = raw.replace(/^"|"$/g, '').trim();
                     if (!raw) {
-                        newLessons[d].push("");
+                        dayLessons.push("");
                     } else {
                         let parts = raw.split('|');
                         let html = `${parts[0].trim()}`;
@@ -147,21 +159,26 @@
                             if (parts[2]) html += `<span class="tag prof">${parts[2].trim()}</span>`;
                             html += `</div>`;
                         }
-                        newLessons[d].push(html);
+                        dayLessons.push(html);
                     }
                 }
+                newLessons.push(dayLessons);
             }
 
             localStorage.setItem('daysConfig', JSON.stringify(newConfig));
             localStorage.setItem('lessonsData', JSON.stringify(newLessons));
-            renderApp();
-            if(manual) alert("Aggiornato!");
+            
+            
+            if (typeof renderApp === "function") renderApp();   // android.html
+            
+            if(manual) alert("Orario aggiornato con successo!");
 
         } catch (e) {
             console.log("Sync fallito:", e);
-            if(manual) alert("Errore aggiornamento (Offline?)");
+            if(manual) alert("Impossibile aggiornare. Controlla la connessione.");
         }
     }
+
 
     function hexToHSL(H) {
         let r = 0, g = 0, b = 0;
