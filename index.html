@@ -165,7 +165,7 @@
             <span class="material-symbols-rounded">edit</span> Modifica
         </a>
         
-        <button class="btn" onclick="(true)" title="Forza Aggiornamento">
+        <button class="btn" onclick="syncData(true)" title="Forza Aggiornamento">
             <span class="material-symbols-rounded">refresh</span>
         </button>
     </div>
@@ -266,7 +266,7 @@
     function renderGrid() {
         const grid = document.getElementById('mainGrid');
         grid.innerHTML = ''; 
-        ["GIORNO", "1ª", "2ª", "3ª", "INT.", "4ª", "5ª", "PRANZO", "6ª", "7ª"].forEach(h => {
+        ["GIORNO", "1ª", "2ª", "3ª", "INT.", "4ª", "5ª", "PRAN.", "6ª", "7ª"].forEach(h => {
             const div = document.createElement('div'); div.className = 'grid-header'; div.innerText = h;
             grid.appendChild(div);
         });
@@ -289,7 +289,7 @@
                 if (i === 5) {
                     const breakCol = document.createElement('div'); 
                     breakCol.className = 'break-col' + (dayIndex !== 4 ? ' disabled' : '');
-                    breakCol.innerHTML = dayIndex === 4 ? '<span class="break-text">PRANZO</span>' : '';
+                    breakCol.innerHTML = dayIndex === 4 ? '<span class="break-text">PRAN.</span>' : '';
                     grid.appendChild(breakCol);
                 }
                 
