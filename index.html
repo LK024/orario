@@ -13,133 +13,64 @@
     /* =========================================
        1. VARIABILI E COLORI (Divisi per OS)
        ========================================= */
-
-    /* --- WINDOWS (Fluent) --- */
     body.windows {
-        --accent-color: #0078d4;
-        --bg-app: #f3f3f3;
-        --bg-surface: rgba(255, 255, 255, 0.85);
-        --bg-header: #ffffff;
-        --border-color: #e5e5e5;
-        --text-primary: #1a1a1a;
-        --text-secondary: #5f5f5f;
-        --tag-aula-bg: #e6f2ff;
-        --tag-aula-text: #004578;
-        --tag-prof-bg: #fff4ce;
-        --tag-prof-text: #7d6300;
-        --shadow-app: 0 8px 20px rgba(0,0,0,0.05);
-        --shadow-card: 0 2px 4px rgba(0,0,0,0.04);
-        font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
+        --accent-color: #0078d4; --bg-app: #f3f3f3; --bg-surface: rgba(255, 255, 255, 0.85);
+        --bg-header: #ffffff; --border-color: #e5e5e5; --text-primary: #1a1a1a;
+        --text-secondary: #5f5f5f; --tag-aula-bg: #e6f2ff; --tag-aula-text: #004578;
+        --tag-prof-bg: #fff4ce; --tag-prof-text: #7d6300; --shadow-app: 0 8px 20px rgba(0,0,0,0.05);
+        --shadow-card: 0 2px 4px rgba(0,0,0,0.04); font-family: "Segoe UI Variable", "Segoe UI", sans-serif;
     }
     body.windows.dark {
-        --bg-app: #121212;
-        --bg-surface: rgba(30, 30, 30, 0.9);
-        --bg-header: #1e1e1e;
-        --border-color: #333333;
-        --text-primary: #ffffff;
-        --text-secondary: #aaaaaa;
-        --tag-aula-bg: #2d3d4d;
-        --tag-aula-text: #96c8fa;
-        --tag-prof-bg: #3d3a2d;
-        --tag-prof-text: #fce100;
+        --bg-app: #121212; --bg-surface: rgba(30, 30, 30, 0.9); --bg-header: #1e1e1e;
+        --border-color: #333333; --text-primary: #ffffff; --text-secondary: #aaaaaa;
+        --tag-aula-bg: #2d3d4d; --tag-aula-text: #96c8fa; --tag-prof-bg: #3d3a2d; --tag-prof-text: #fce100;
     }
 
-    /* --- macOS (Vibrancy) --- */
     body.macos {
-        --accent-color: #007aff;
-        --accent-ring: rgba(0, 122, 255, 0.25);
-        --bg-app: #f5f5f7;
-        --bg-surface: rgba(255, 255, 255, 0.65);
-        --bg-header: rgba(255, 255, 255, 0.4);
-        --bg-card: #ffffff;
-        --border-color: rgba(0, 0, 0, 0.08);
-        --text-primary: #1d1d1f;
-        --text-secondary: #86868b;
-        --tag-aula-bg: #e5e5ea;
-        --tag-aula-text: #1d1d1f;
-        --tag-prof-bg: rgba(255, 149, 0, 0.15);
-        --tag-prof-text: #cc7a00;
+        --accent-color: #007aff; --accent-ring: rgba(0, 122, 255, 0.25); --bg-app: #f5f5f7;
+        --bg-surface: rgba(255, 255, 255, 0.65); --bg-header: rgba(255, 255, 255, 0.4);
+        --bg-card: #ffffff; --border-color: rgba(0, 0, 0, 0.08); --text-primary: #1d1d1f;
+        --text-secondary: #86868b; --tag-aula-bg: #e5e5ea; --tag-aula-text: #1d1d1f;
+        --tag-prof-bg: rgba(255, 149, 0, 0.15); --tag-prof-text: #cc7a00;
         --shadow-app: 0 10px 30px rgba(0,0,0,0.05), 0 1px 8px rgba(0,0,0,0.02);
         --shadow-card: 0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-        letter-spacing: -0.015em;
-        -webkit-font-smoothing: antialiased;
+        letter-spacing: -0.015em; -webkit-font-smoothing: antialiased;
     }
     body.macos.dark {
-        --bg-app: #1e1e1e;
-        --bg-surface: rgba(44, 44, 46, 0.65);
-        --bg-header: rgba(44, 44, 46, 0.4);
-        --bg-card: #2c2c2e;
-        --border-color: rgba(255, 255, 255, 0.08);
-        --text-primary: #f5f5f7;
-        --text-secondary: #98989d;
-        --tag-aula-bg: #3a3a3c;
-        --tag-aula-text: #f5f5f7;
-        --tag-prof-bg: rgba(255, 159, 10, 0.2);
-        --tag-prof-text: #ff9f0a;
-        --shadow-app: 0 10px 30px rgba(0,0,0,0.3);
-        --shadow-card: 0 4px 12px rgba(0,0,0,0.15);
+        --bg-app: #1e1e1e; --bg-surface: rgba(44, 44, 46, 0.65); --bg-header: rgba(44, 44, 46, 0.4);
+        --bg-card: #2c2c2e; --border-color: rgba(255, 255, 255, 0.08); --text-primary: #f5f5f7;
+        --text-secondary: #98989d; --tag-aula-bg: #3a3a3c; --tag-aula-text: #f5f5f7;
+        --tag-prof-bg: rgba(255, 159, 10, 0.2); --tag-prof-text: #ff9f0a;
+        --shadow-app: 0 10px 30px rgba(0,0,0,0.3); --shadow-card: 0 4px 12px rgba(0,0,0,0.15);
     }
 
     /* =========================================
-       2. LAYOUT GENERALE (Condiviso)
+       2. LAYOUT GENERALE
        ========================================= */
     * { box-sizing: border-box; }
-
-    body {
-        background-color: var(--bg-app); color: var(--text-primary);
-        margin: 0; padding: 15px; height: 100dvh; overflow: hidden;
-        display: flex; flex-direction: column; transition: background 0.3s;
-    }
-
-    header {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 10px; flex-shrink: 0; position: relative; z-index: 200;
-    }
-
+    body { background-color: var(--bg-app); color: var(--text-primary); margin: 0; padding: 15px; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; transition: background 0.3s; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-shrink: 0; position: relative; z-index: 200; }
     .title-group h1 { margin: 0; font-size: clamp(18px, 2.5dvh, 22px); font-weight: 600; }
     .controls { display: flex; align-items: center; gap: 8px; }
 
-    .color-wrapper {
-        display: flex; align-items: center; background: var(--bg-surface);
-        border: 1px solid var(--border-color); padding: 2px 6px;
-    }
+    .color-wrapper { display: flex; align-items: center; background: var(--bg-surface); border: 1px solid var(--border-color); padding: 2px 6px; }
     input[type="color"] { border: none; cursor: pointer; background: none; padding: 0; }
     input.hex-input { border: none; background: transparent; color: var(--text-primary); width: 65px; font-size: 11px; outline: none; margin-left: 5px; }
+    .btn { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
 
-    .btn {
-        background: var(--bg-surface); border: 1px solid var(--border-color);
-        color: var(--text-primary); cursor: pointer; font-size: 13px;
-        display: inline-flex; align-items: center; gap: 6px; text-decoration: none;
-    }
-
-    .grid-container {
-        flex: 1; overflow: hidden; background: var(--bg-surface);
-        border: 1px solid var(--border-color); box-shadow: var(--shadow-app);
-        position: relative; z-index: 1;
-    }
-
+    .grid-container { flex: 1; overflow: hidden; background: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: var(--shadow-app); position: relative; z-index: 1; }
     .schedule-grid {
-        display: grid; grid-template-columns: 120px repeat(3, 1fr) 30px repeat(3, 1fr); 
-        grid-template-rows: 40px repeat(6, 1fr); height: 100%; width: 100%;
+        display: grid; 
+        /* 10 Colonne: Giorno, 3 Ore, Int, 2 Ore, Pranzo, 2 Ore */
+        grid-template-columns: 90px repeat(3, 1fr) 25px repeat(2, 1fr) 25px repeat(2, 1fr); 
+        grid-template-rows: 40px repeat(5, 1fr); /* Header + 5 Giorni */
+        height: 100%; width: 100%;
     }
 
-    .grid-header {
-        background: var(--bg-header); border-bottom: 1px solid var(--border-color);
-        display: flex; align-items: center; justify-content: center;
-        font-weight: 600; color: var(--text-secondary); font-size: 11px; letter-spacing: 0.5px;
-    }
-
-    .day-row-label {
-        background: var(--bg-header); border-right: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column;
-        align-items: center; justify-content: center; font-weight: 700; color: var(--text-primary); font-size: 13px;
-    }
-
-    .hour-toggle { margin-top: 4px; font-size: 9px; border: 1px solid var(--border-color); display: flex; cursor: default; }
-    .hour-toggle span { padding: 1px 6px; color: var(--text-secondary); }
-    .hour-toggle span.active { background: var(--accent-color); color: white; }
-
+    .grid-header { background: var(--bg-header); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-secondary); font-size: 11px; letter-spacing: 0.5px; }
+    .day-row-label { background: var(--bg-header); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; color: var(--text-primary); font-size: 13px; }
+    
     .grid-cell { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 4px; position: relative; display: flex; flex-direction: column; z-index: 1; }
     .break-col { border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
     .break-text { writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; letter-spacing: 2px; color: var(--text-secondary); font-weight: 600; opacity: 0.4; }
@@ -152,12 +83,13 @@
     .tag.prof { background: var(--tag-prof-bg); color: var(--tag-prof-text); }
     .time-label { position: absolute; bottom: 2px; font-size: 9px; color: var(--text-secondary); opacity: 0.6; }
     .time-start { left: 5px; } .time-end { right: 5px; }
-    .grid-cell.disabled .lesson { display: none; }
     
+    .grid-cell.disabled .lesson { display: none; }
+    .break-col.disabled { background: transparent !important; }
     .grid-cell.now-active, .break-col.now-active { overflow: visible !important; z-index: 100 !important; position: relative; }
 
     /* =========================================
-       3. DETTAGLI WINDOWS (Fluent Design)
+       3. DETTAGLI WINDOWS (Fluent)
        ========================================= */
     body.windows .material-symbols-rounded { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 20; font-size: 18px; vertical-align: text-bottom; }
     body.windows .btn { padding: 6px 12px; border-radius: 6px; backdrop-filter: blur(10px); transition: 0.2s; }
@@ -167,7 +99,6 @@
     body.windows input.hex-input { font-family: monospace; }
     body.windows .grid-container { border-radius: 12px; }
     body.windows .day-row-label { color: var(--accent-color); }
-    body.windows .hour-toggle { background: var(--bg-app); border-radius: 10px; opacity: 0.7; }
     body.windows .grid-cell { overflow: hidden; }
     body.windows .break-col { background: repeating-linear-gradient(45deg, var(--bg-app), var(--bg-app) 5px, rgba(0,0,0,0.03) 5px, rgba(0,0,0,0.03) 10px); }
     body.windows .lesson { background: var(--bg-header); border-radius: 6px; padding: 4px; box-shadow: var(--shadow-card); border-left: 3px solid var(--accent-color); }
@@ -179,7 +110,7 @@
     body.windows .break-col.now-active::after { right: -10px; top: -12px; }
 
     /* =========================================
-       4. DETTAGLI macOS (Vibrancy & Shadows)
+       4. DETTAGLI macOS (Vibrancy)
        ========================================= */
     body.macos .material-symbols-rounded { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20; font-size: 17px; vertical-align: text-bottom; }
     body.macos header { padding: 0 5px; margin-bottom: 16px; }
@@ -193,10 +124,6 @@
     body.macos input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(0,0,0,0.1); border-radius: 50%; }
     body.macos input.hex-input { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 500; }
     body.macos .grid-container { border-radius: 14px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); }
-    body.macos .hour-toggle { background: rgba(0,0,0,0.05); border-radius: 10px; font-weight: 500; }
-    body.macos.dark .hour-toggle { background: rgba(255,255,255,0.05); }
-    body.macos .hour-toggle span { transition: 0.2s; }
-    body.macos .hour-toggle span.active { border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
     body.macos .grid-cell { padding: 6px; overflow: visible; }
     body.macos .break-col { background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.02) 10px, rgba(0,0,0,0.02) 20px); }
     body.macos.dark .break-col { background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.02) 10px, rgba(255,255,255,0.02) 20px); }
@@ -253,20 +180,19 @@
 
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ_6t0reKL-nFDetOjKelXAUJsPYYUmvYbDY-pM3Sz2Sn_Vfi5FQeFrKuq13lWPGFurd8l9Z0mb-jo/pub?output=csv";
 
-    const defaultHoursConfig = [5,6,6,5,6,5];
-    const dummyLesson = "Materia<br><div class=\"meta\"><span class=\"tag aula\">Aula</span> <span class=\"tag prof\">Prof</span></div>";
-    const defaultLessons = Array(6).fill(Array(6).fill(dummyLesson));
-    const days = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ", "SABATO"];
+    // Impostazioni Default aggiornate a 5 giorni
+    const defaultHoursConfig = [6, 6, 6, 6, 7];
+    const dummyLesson = "Materia<br><div class=\"meta\"><span class=\"tag aula\">Aula</span></div>";
+    const defaultLessons = Array.from({length: 5}, () => Array(7).fill(dummyLesson));
+    const days = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ"];
 
     // --- SYNC ENGINE ---
     async function syncData(manual = false) {
         if(SHEET_URL.includes("INSERISCI_QUI")) {
-            if(manual) alert("Configurazione mancante: Inserisci il link CSV nel file HTML!");
+            if(manual) alert("Configurazione mancante: Inserisci il link CSV!");
             return;
         }
-        if(manual && confirm("Vuoi scaricare l'orario aggiornato da Google Sheets?")) {
-            // Continua
-        } else if (manual) return;
+        if(manual && !confirm("Vuoi scaricare l'orario aggiornato da Google Sheets?")) return;
 
         try {
             const response = await fetch(SHEET_URL + "&t=" + Date.now());
@@ -275,37 +201,37 @@
             const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
             
             const configRow = rows[0].split(',');
-            const newConfig = configRow.slice(0, 6).map(val => parseInt(val.replace(/['"]+/g, '')) || 5);
+            const newConfig = configRow.slice(0, 5).map(val => parseInt(val.replace(/['"]+/g, '')) || 6);
             
-            let newLessons = [];
-            for (let i = 1; i <= 6; i++) {
-                if (!rows[i]) { newLessons.push(["", "", "", "", "", ""]); continue; }
+            // Lettura dinamica fino a 7 ore per 5 giorni (Matrice Day x Hour)
+            let newLessons = Array.from({length: 5}, () => []);
+            for (let i = 1; i <= 7; i++) {
+                if (!rows[i]) {
+                    for (let d = 0; d < 5; d++) newLessons[d].push("");
+                    continue;
+                }
                 let dayCells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                let dayLessons = [];
-                for (let h = 0; h < 6; h++) {
-                    let raw = dayCells[h] || "";
+                for (let d = 0; d < 5; d++) {
+                    let raw = dayCells[d] || "";
                     raw = raw.replace(/^"|"$/g, '').trim();
-                    if (!raw) { dayLessons.push(""); } else {
+                    if (!raw) {
+                        newLessons[d].push("");
+                    } else {
                         let parts = raw.split('|');
-                        let subject = parts[0].trim();
-                        let room = parts[1] ? parts[1].trim() : "";
-                        let prof = parts[2] ? parts[2].trim() : "";
-                        let html = `${subject}`;
-                        if (room || prof) {
+                        let html = `${parts[0].trim()}`;
+                        if (parts[1] || parts[2]) {
                             html += `<br><div class="meta">`;
-                            if (room) html += `<span class="tag aula">${room}</span> `;
-                            if (prof) html += `<span class="tag prof">${prof}</span>`;
+                            if (parts[1]) html += `<span class="tag aula">${parts[1].trim()}</span> `;
+                            if (parts[2]) html += `<span class="tag prof">${parts[2].trim()}</span>`;
                             html += `</div>`;
                         }
-                        dayLessons.push(html);
+                        newLessons[d].push(html);
                     }
                 }
-                newLessons.push(dayLessons);
             }
 
             localStorage.setItem('daysConfig', JSON.stringify(newConfig));
             localStorage.setItem('lessonsData', JSON.stringify(newLessons));
-            console.log("Sync completato.");
             renderGrid();
             if(manual) alert("Orario aggiornato con successo!");
 
@@ -320,18 +246,17 @@
         return `${h}:${m.toString().padStart(2, '0')}`;
     }
 
-    function calculateTime(dayHours, hourIndex) {
-        let baseMinutes = 8 * 60 + 25; 
-        let duration = (dayHours === 6) ? 50 : 60;
-        let currentStart = baseMinutes + (hourIndex * duration);
-        if (hourIndex >= 3) currentStart += 20;
-        return { start: minToTime(currentStart), end: minToTime(currentStart + duration) };
+    function calculateTime(hourIndex, dayIndex) {
+        let currentStart = (8 * 60) + 20 + (hourIndex * 60);
+        if (hourIndex >= 3) currentStart += 20; // Dopo intervallo
+        if (dayIndex === 4 && hourIndex >= 5) currentStart += 35; // Dopo pranzo di venerdì
+        return { start: minToTime(currentStart), end: minToTime(currentStart + 60) };
     }
 
     function renderGrid() {
         const grid = document.getElementById('mainGrid');
         grid.innerHTML = ''; 
-        ["GIORNO", "1ª ORA", "2ª ORA", "3ª ORA", "INT.", "4ª ORA", "5ª ORA", "6ª ORA"].forEach(h => {
+        ["GIORNO", "1ª", "2ª", "3ª", "INT.", "4ª", "5ª", "PRANZO", "6ª", "7ª"].forEach(h => {
             const div = document.createElement('div'); div.className = 'grid-header'; div.innerText = h;
             grid.appendChild(div);
         });
@@ -343,18 +268,25 @@
             const hoursMode = savedConfig[dayIndex];
             const dayLabel = document.createElement('div');
             dayLabel.className = 'day-row-label';
-            dayLabel.innerHTML = `<span>${dayName}</span><div class="hour-toggle"><span class="${hoursMode===5?'active':''}">5h</span><span class="${hoursMode===6?'active':''}">6h</span></div>`;
+            dayLabel.innerHTML = `<span>${dayName}</span>`;
             grid.appendChild(dayLabel);
 
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 7; i++) {
                 if (i === 3) {
                     const breakCol = document.createElement('div'); breakCol.className = 'break-col';
                     breakCol.innerHTML = '<span class="break-text">INT.</span>'; grid.appendChild(breakCol);
                 }
+                if (i === 5) {
+                    const breakCol = document.createElement('div'); 
+                    breakCol.className = 'break-col' + (dayIndex !== 4 ? ' disabled' : '');
+                    breakCol.innerHTML = dayIndex === 4 ? '<span class="break-text">PRANZO</span>' : '';
+                    grid.appendChild(breakCol);
+                }
+                
                 const cell = document.createElement('div'); cell.className = 'grid-cell';
-                const times = calculateTime(hoursMode, i);
-                if (i === 5 && hoursMode === 5) cell.classList.add('disabled');
+                if (i >= hoursMode) cell.classList.add('disabled');
                 else {
+                    const times = calculateTime(i, dayIndex);
                     let content = savedLessons[dayIndex][i] || "";
                     cell.innerHTML = `<div class="lesson">${content}</div><span class="time-label time-start">${times.start}</span><span class="time-label time-end">${times.end}</span>`;
                 }
@@ -367,23 +299,33 @@
     function highlightCurrentLesson() {
         document.querySelectorAll('.now-active').forEach(el => el.classList.remove('now-active'));
         const now = new Date(); let dayIdx = now.getDay() - 1; 
-        if (dayIdx < 0 || dayIdx > 5) return;
+        if (dayIdx < 0 || dayIdx > 4) return;
+        
         const currentMin = now.getHours() * 60 + now.getMinutes();
         const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
         const mode = savedConfig[dayIdx];
-        const base = 8 * 60 + 25; const dur = mode === 6 ? 50 : 60; const brk = 20;
+        const base = 8 * 60 + 20;
 
-        const breakStart = base + (3 * dur); const breakEnd = breakStart + brk;
-        if (currentMin >= breakStart && currentMin < breakEnd) {
-            const breakIndex = 8 + (dayIdx * 8) + 4; 
-            const breakCell = document.getElementById('mainGrid').children[breakIndex];
+        // Check Intervallo
+        if (currentMin >= base + (3*60) && currentMin < base + (3*60) + 20) {
+            const breakCell = document.getElementById('mainGrid').children[10 + (dayIdx * 10) + 4];
             if (breakCell) breakCell.classList.add('now-active');
         }
 
+        // Check Pranzo (Solo Venerdì)
+        if (dayIdx === 4 && currentMin >= base + (5*60) + 20 && currentMin < base + (5*60) + 20 + 35) {
+            const lunchCell = document.getElementById('mainGrid').children[10 + (dayIdx * 10) + 7];
+            if (lunchCell) lunchCell.classList.add('now-active');
+        }
+
+        // Check Lezioni
         for(let i=0; i<mode; i++) {
-            let start = base + (i * dur); if (i >= 3) start += brk;
-            if (currentMin >= start && currentMin < start + dur) {
-                const gridIndex = 8 + (dayIdx * 8) + (i < 3 ? i + 1 : i + 2);
+            let start = base + (i * 60); 
+            if (i >= 3) start += 20;
+            if (dayIdx === 4 && i >= 5) start += 35;
+            
+            if (currentMin >= start && currentMin < start + 60) {
+                const gridIndex = 10 + (dayIdx * 10) + (i < 3 ? i + 1 : (i < 5 ? i + 2 : i + 3));
                 const cell = document.getElementById('mainGrid').children[gridIndex];
                 if(cell) cell.classList.add('now-active');
             }
@@ -392,7 +334,6 @@
 
     // --- COLOR ACCENT ---
     function setAccent(hex) {
-        // Applica le variabili direttamente al body per sovrascrivere le classi CSS
         document.body.style.setProperty('--accent-color', hex);
         let r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
         document.body.style.setProperty('--accent-ring', `rgba(${r}, ${g}, ${b}, 0.25)`);
@@ -410,7 +351,6 @@
     const themes = ['auto', 'light', 'dark'];
     const themeIcons = { 'auto': 'brightness_auto', 'light': 'light_mode', 'dark': 'dark_mode' };
     const themeTexts = { 'auto': 'Auto', 'light': 'Light', 'dark': 'Dark' };
-    
     let currentOS = localStorage.getItem('osMode') || 'windows';
 
     function getSystemTheme() { return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
@@ -419,10 +359,7 @@
         let mode = localStorage.getItem('themeMode') || 'auto';
         let effectiveTheme = (mode === 'auto') ? getSystemTheme() : mode;
         
-        // Applica le due classi combinate (es. "windows dark" o "macos light")
         document.body.className = `${currentOS} ${effectiveTheme}`;
-        
-        // Aggiorna Bottoni
         document.getElementById('themeBtn').innerHTML = `<span class="material-symbols-rounded">${themeIcons[mode]}</span> ${themeTexts[mode]}`;
         
         const osBtn = document.getElementById('osBtn');
@@ -445,11 +382,7 @@
     function toggleOS() {
         currentOS = (currentOS === 'windows') ? 'macos' : 'windows';
         localStorage.setItem('osMode', currentOS);
-        
-        // Modifica i colori di base se si cambia OS per la prima volta senza aver toccato il picker
-        if (!localStorage.getItem('accentColor')) {
-            setAccent(currentOS === 'windows' ? "#0078d4" : "#007aff");
-        }
+        if (!localStorage.getItem('accentColor')) setAccent(currentOS === 'windows' ? "#0078d4" : "#007aff");
         applyUI();
     }
 
