@@ -11,173 +11,56 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
 
 <style>
-    /* RESET & BASE */
-    /* GESTIONE MATERIAL ICONS */
     .material-symbols-rounded {
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        font-size: 24px;
-        display: inline-block;
-        vertical-align: middle;
-        line-height: 1;
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; font-size: 24px;
+        display: inline-block; vertical-align: middle; line-height: 1;
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
     
     :root {
-        --md-sys-color-background: #fbfdf9;
-        --md-sys-color-on-background: #191c1a;
+        --md-sys-color-background: #fbfdf9; --md-sys-color-on-background: #191c1a;
         --safe-top: env(safe-area-inset-top, 0px);
     }
 
     body {
-        font-family: 'Roboto', sans-serif;
-        margin: 0; padding: 0; 
-        height: 100vh;
-        height: 100dvh;
-        display: grid;
+        font-family: 'Roboto', sans-serif; margin: 0; padding: 0; 
+        height: 100vh; height: 100dvh; display: grid;
         grid-template-rows: calc(64px + var(--safe-top)) auto auto 1fr;
         background-color: var(--md-sys-color-background);
         color: var(--md-sys-color-on-background);
-        transition: background-color 0.3s ease;
-        overflow: hidden;
+        transition: background-color 0.3s ease; overflow: hidden;
     }
 
-    /* HEADER */
     header {
-        grid-row: 1;
-        height: calc(64px + var(--safe-top)) !important;
-        min-height: calc(64px + var(--safe-top)) !important;
+        grid-row: 1; height: calc(64px + var(--safe-top)) !important; min-height: calc(64px + var(--safe-top)) !important;
         display: flex; justify-content: space-between; align-items: flex-end;
-        padding: 0 12px 12px 20px;
-        padding-top: var(--safe-top);
-        background-color: var(--md-sys-color-background);
-        z-index: 1000;
-        flex-shrink: 0;
-        transition: background-color 0.3s ease;
+        padding: 0 12px 12px 20px; padding-top: var(--safe-top);
+        background-color: var(--md-sys-color-background); z-index: 1000; flex-shrink: 0; transition: background-color 0.3s ease;
     }
     
     .headline { font-size: 20px; font-weight: 500; color: var(--md-sys-color-on-background); padding-bottom: 2px; }
     .actions { display: flex; gap: 4px; align-items: center; }
 
-    .color-btn {
-        width: 38px; height: 38px; border-radius: 50%; border: none; position: relative; overflow: hidden;
-        background: var(--md-sys-color-secondary-container); display: flex; justify-content: center; align-items: center;
-    }
+    .color-btn { width: 38px; height: 38px; border-radius: 50%; border: none; position: relative; overflow: hidden; background: var(--md-sys-color-secondary-container); display: flex; justify-content: center; align-items: center; }
     .color-btn input[type="color"] { position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; opacity: 0; cursor: pointer; }
-    
-    .icon-btn {
-        background: transparent; color: var(--md-sys-color-on-background);
-        border: none; width: 40px; height: 40px; border-radius: 50%;
-        display: flex; justify-content: center; align-items: center; font-size: 20px;
-    }
+    .icon-btn { background: transparent; color: var(--md-sys-color-on-background); border: none; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
 
-    /* CONTROLLI */
-    .tabs-wrapper {
-        grid-row: 2; padding: 4px 16px 8px 16px; min-height: 48px;
-        display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none;
-    }
+    .tabs-wrapper { grid-row: 2; padding: 4px 16px 8px 16px; min-height: 48px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
     .tabs-wrapper::-webkit-scrollbar { display: none; }
-    
-    .tab {
-        border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface-variant);
-        background: transparent; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 500; white-space: nowrap;
-    }
+    .tab { border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface-variant); background: transparent; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 500; white-space: nowrap; }
     .tab.active { background: var(--md-sys-color-primary); color: white; border-color: transparent; }
 
     .settings-bar { grid-row: 3; margin: 0 16px 8px 16px; height: 32px; display: flex; justify-content: space-between; align-items: center; }
-
     .content-area { grid-row: 4; overflow-y: auto; padding: 0 16px 120px 16px; -webkit-overflow-scrolling: touch; }
 
-    /* NUOVO RECAP ORIZZONTALE */
-    .weekly-grid-container { 
-        grid-row: 2 / span 3; 
-        display: none; 
-        flex-direction: column; 
-        padding: 16px; 
-        gap: 24px; /* Spazio arioso tra i giorni */
-        overflow-y: auto; 
-    }
+    .weekly-grid-container { grid-row: 2 / span 3; display: none; flex-direction: column; padding: 16px; gap: 24px; overflow-y: auto; }
+    .day-group { display: flex; flex-direction: column; gap: 8px; }
+    .day-divider-chip { align-self: flex-start; background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); padding: 6px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .day-lessons-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; } /* 7 ore max */
 
-    .day-group {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
+    .mini-card { background: var(--md-sys-color-surface-container); border-radius: 8px; padding: 6px 2px; font-size: 10px; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 1px solid var(--md-sys-color-outline-variant); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .mini-card.empty { background: transparent; border: 1px dashed var(--md-sys-color-outline-variant); opacity: 0.5; }
 
-    /* IL DIVIDER DEL GIORNO (Rettangolo stondato a sinistra) */
-    .day-divider-chip {
-        align-self: flex-start;
-        background-color: var(--md-sys-color-primary-container);
-        color: var(--md-sys-color-on-primary-container);
-        padding: 6px 16px;
-        border-radius: 12px;
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-
-    /* GRIGLIA ORIZZONTALE DELLE ORE (6 Colonne) */
-    .day-lessons-row {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr); /* 6 celle uguali */
-        gap: 4px;
-    }
-
-    .mini-card { 
-        background: var(--md-sys-color-surface-container); 
-        border-radius: 8px; 
-        padding: 6px 2px; 
-        font-size: 10px; 
-        min-height: 50px; 
-        display: flex; 
-        flex-direction: column; 
-        align-items: center; 
-        justify-content: center; 
-        text-align: center; 
-        border: 1px solid var(--md-sys-color-outline-variant); 
-        line-height: 1.1; 
-        
-        /* TRONCAMENTO TESTO AGGIUNTO */
-        white-space: nowrap; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
-        max-width: 100%; 
-    }
-    
-    /* Quando la card è vuota/buco */
-    .mini-card.empty {
-        background: transparent;
-        border: 1px dashed var(--md-sys-color-outline-variant);
-        opacity: 0.5;
-    }
-    /* INDICATORE 5h/6h (Style Segmented Button) */
-    .duration-switch {
-        display: flex;
-        background-color: var(--md-sys-color-surface-variant); /* Sfondo scuro/chiaro tenue */
-        border-radius: 18px;
-        padding: 4px;
-        gap: 4px;
-    }
-
-    .duration-opt {
-        padding: 4px 12px;
-        border-radius: 14px;
-        font-size: 11px;
-        font-weight: 500;
-        color: var(--md-sys-color-on-surface-variant);
-        opacity: 0.5; /* Spento */
-        transition: all 0.2s ease;
-    }
-
-    .duration-opt.active {
-        background-color: var(--md-sys-color-primary); /* Colore Accento */
-        color: var(--md-sys-color-on-primary); /* Colore Testo su Accento */
-        font-weight: 700;
-        opacity: 1; /* Acceso */
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-    /* DAILY CARDS */
     .lesson-card { display: flex; background: var(--md-sys-color-surface-container); border-radius: 16px; margin-bottom: 10px; overflow: hidden; min-height: 75px; }
     .time-strip { width: 52px; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.03); border-right: 1px solid var(--md-sys-color-outline-variant); }
     .time-text { font-size: 10px; font-weight: 500; color: var(--md-sys-color-on-surface-variant); }
@@ -187,47 +70,26 @@
     .tag { font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 500; }
     .tag.aula { background: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container); }
     .tag.prof { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
-
     .lesson-card.now-active { border: 2.5px solid var(--md-sys-color-primary); background: var(--md-sys-color-background); }
 
-    /* FAB PER MODIFICA FOGLIO */
-    .fab {
-        position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 16px;
-        background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);
-        display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        text-decoration: none;
-    }
+    .fab { position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px; border-radius: 16px; background: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); text-decoration: none; }
 
-    /* INTERVALLO */
-    .break-indicator { display: flex; align-items: center; gap: 8px; margin: 8px 0; color: var(--md-sys-color-outline); font-size: 11px; transition: 0.3s; }
+    .break-indicator { display: flex; align-items: center; gap: 8px; margin: 8px 0; color: var(--md-sys-color-outline); font-size: 11px; transition: 0.3s; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
     .break-line { height: 1px; flex: 1; background: var(--md-sys-color-outline-variant); transition: 0.3s; }
-    
     .break-indicator.now-active { color: var(--md-sys-color-primary); font-weight: 700; transform: scale(1.02); }
     .break-indicator.now-active .break-line { background: var(--md-sys-color-primary); height: 2px; }
-
 </style>
 </head>
 <body>
 
 <header>
     <div class="headline" id="headerTitle">Orario</div>
-<div class="actions">
-        <button class="icon-btn" onclick="goToToday()" title="Oggi">
-            <span class="material-symbols-rounded">today</span>
-        </button>
-        <button class="icon-btn" onclick="toggleView()" id="viewToggle" title="Vista Recap">
-            <span class="material-symbols-rounded">calendar_view_week</span>
-        </button>
-        <div class="color-btn" title="Tema Colore">
-            <span class="material-symbols-rounded">palette</span>
-            <input type="color" id="monetPicker" value="#006c4c">
-        </div>
-        <button class="icon-btn" id="themeBtn" onclick="cycleTheme()" title="Modo Scuro/Chiaro">
-            <span class="material-symbols-rounded">contrast</span>
-        </button>
-        <button class="icon-btn" onclick="syncData(true)" title="Forza Aggiornamento">
-            <span class="material-symbols-rounded">sync</span>
-        </button>
+    <div class="actions">
+        <button class="icon-btn" onclick="goToToday()" title="Oggi"><span class="material-symbols-rounded">today</span></button>
+        <button class="icon-btn" onclick="toggleView()" id="viewToggle" title="Vista Recap"><span class="material-symbols-rounded">calendar_view_week</span></button>
+        <div class="color-btn" title="Tema Colore"><span class="material-symbols-rounded">palette</span><input type="color" id="monetPicker" value="#006c4c"></div>
+        <button class="icon-btn" id="themeBtn" onclick="cycleTheme()" title="Modo Scuro/Chiaro"><span class="material-symbols-rounded">contrast</span></button>
+        <button class="icon-btn" onclick="syncData(true)" title="Forza Aggiornamento"><span class="material-symbols-rounded">sync</span></button>
     </div>
 </header>
 
@@ -240,20 +102,19 @@
     <span class="material-symbols-rounded">edit_document</span>
 </a>
 <script>
-    // --- DATI DEFAULT ---
-    const defaultHoursConfig = [5,6,6,5,6,5]; 
-    const defaultLessons = [["","","","","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>"],["2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab4</span> <span class=\"tag prof\">BONELLI</span></div>","","5E<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>"],["1G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">PETTENATI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab1</span></div>"],["","","","",""],["3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","3E<br><div class=\"meta\"><span class=\"tag aula\">202</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">Lab2</span> <span class=\"tag prof\">BONAVOGLIA</span></div>","5D<br><div class=\"meta\"><span class=\"tag aula\">N2.03</span></div>","",""],["1G<br><div class=\"meta\"><span class=\"tag aula\">1.14</span></div>","2G<br><div class=\"meta\"><span class=\"tag aula\">2.03</span></div>","","3E<br><div class=\"meta\"><span class=\"tag aula\">Lab3</span> <span class=\"tag prof\">BONELLI</span></div>","5E<br><div class=\"meta\"><span class=\"tag aula\">N2.01</span></div>"]];
+    const defaultHoursConfig = [6, 6, 6, 6, 7]; 
+    const dummyLesson = "Materia<br><div class=\"meta\"><span class=\"tag aula\">Aula</span></div>";
+    const defaultLessons = Array.from({length: 5}, () => Array(7).fill(dummyLesson));
 
-    // --- CONFIG REMOTA ---
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ_6t0reKL-nFDetOjKelXAUJsPYYUmvYbDY-pM3Sz2Sn_Vfi5FQeFrKuq13lWPGFurd8l9Z0mb-jo/pub?output=csv";
 
-    const dayNames = ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab"];
+    const dayNames = ["Lun", "Mar", "Mer", "Gio", "Ven"];
+    const fullDayNames = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ"];
     let currentDayIndex = new Date().getDay() - 1; 
-    if (currentDayIndex < 0 || currentDayIndex > 5) currentDayIndex = 0;
+    if (currentDayIndex < 0 || currentDayIndex > 4) currentDayIndex = 0;
     
     let isDark = false, viewMode = 'daily';
 
-    // --- SYNC ENGINE ---
     async function syncData(manual = false) {
         if(manual && !confirm("Scaricare dati aggiornati?")) return;
         try {
@@ -263,32 +124,32 @@
             
             const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
             const configRow = rows[0].split(',');
-            const newConfig = configRow.slice(0, 6).map(val => parseInt(val.replace(/['"]+/g, '')) || 5);
+            const newConfig = configRow.slice(0, 5).map(val => parseInt(val.replace(/['"]+/g, '')) || 6);
             
-            let newLessons = [];
-            for (let i = 1; i <= 6; i++) {
-                if (!rows[i]) { newLessons.push(["", "", "", "", "", ""]); continue; }
+            let newLessons = Array.from({length: 5}, () => []);
+            for (let i = 1; i <= 7; i++) {
+                if (!rows[i]) {
+                    for (let d = 0; d < 5; d++) newLessons[d].push("");
+                    continue;
+                }
                 let dayCells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                let dayLessons = [];
-                for (let h = 0; h < 6; h++) {
-                    let raw = dayCells[h] || "";
+                for (let d = 0; d < 5; d++) {
+                    let raw = dayCells[d] || "";
                     raw = raw.replace(/^"|"$/g, '').trim();
-                    if (!raw) { dayLessons.push(""); } else {
+                    if (!raw) {
+                        newLessons[d].push("");
+                    } else {
                         let parts = raw.split('|');
-                        let subject = parts[0].trim();
-                        let room = parts[1] ? parts[1].trim() : "";
-                        let prof = parts[2] ? parts[2].trim() : "";
-                        let html = `${subject}`;
-                        if (room || prof) {
+                        let html = `${parts[0].trim()}`;
+                        if (parts[1] || parts[2]) {
                             html += `<br><div class="meta">`;
-                            if (room) html += `<span class="tag aula">${room}</span> `;
-                            if (prof) html += `<span class="tag prof">${prof}</span>`;
+                            if (parts[1]) html += `<span class="tag aula">${parts[1].trim()}</span> `;
+                            if (parts[2]) html += `<span class="tag prof">${parts[2].trim()}</span>`;
                             html += `</div>`;
                         }
-                        dayLessons.push(html);
+                        newLessons[d].push(html);
                     }
                 }
-                newLessons.push(dayLessons);
             }
 
             localStorage.setItem('daysConfig', JSON.stringify(newConfig));
@@ -342,18 +203,14 @@
     function goToToday() {
         viewMode = 'daily';
         currentDayIndex = new Date().getDay() - 1;
-        if (currentDayIndex < 0 || currentDayIndex > 5) currentDayIndex = 0;
+        if (currentDayIndex < 0 || currentDayIndex > 4) currentDayIndex = 0;
         renderApp();
     }
 
     function toggleView() {
         viewMode = (viewMode === 'daily') ? 'weekly' : 'daily';
         document.getElementById('headerTitle').innerText = (viewMode === 'daily') ? 'Orario' : 'Recap Settimanale';
-        
-        // MODIFICATO: Nomi delle icone Material
-        const iconName = (viewMode === 'daily') ? 'calendar_view_week' : 'view_day';
-        document.querySelector('#viewToggle span').innerText = iconName;
-        
+        document.querySelector('#viewToggle span').innerText = (viewMode === 'daily') ? 'calendar_view_week' : 'view_day';
         renderApp();
     }
 
@@ -379,92 +236,68 @@
         });
     }
 
-function renderDaily() {
+    function calculateTime(hourIndex, dayIndex) {
+        let currentStart = (8 * 60) + 20 + (hourIndex * 60);
+        if (hourIndex >= 3) currentStart += 20; 
+        if (dayIndex === 4 && hourIndex >= 5) currentStart += 35; 
+        
+        let tS = Math.floor(currentStart/60)+":"+(currentStart%60).toString().padStart(2,'0');
+        let tE = Math.floor((currentStart+60)/60)+":"+((currentStart+60)%60).toString().padStart(2,'0');
+        return { start: tS, end: tE };
+    }
+
+    function renderDaily() {
         const list = document.getElementById('scheduleList'); list.innerHTML = '';
         const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
         const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
         const mode = savedConfig[currentDayIndex];
         
-        // --- INIZIO MODIFICA UI ---
         document.getElementById('settingsBar').innerHTML = `
-            <div style="font-size:18px; font-weight:500; color:var(--md-sys-color-primary); letter-spacing:-0.5px;">
-                ${dayNames[currentDayIndex].toUpperCase()}
-            </div>
-            
-            <div class="duration-switch">
-                <div class="duration-opt ${mode===5 ? 'active' : ''}">5h</div>
-                <div class="duration-opt ${mode===6 ? 'active' : ''}">6h</div>
-            </div>
-        `;
-        // --- FINE MODIFICA UI ---
+            <div style="font-size:16px; font-weight:700; color:var(--md-sys-color-primary); letter-spacing:0.5px;">
+                ${fullDayNames[currentDayIndex]}
+            </div>`;
 
         for(let i=0; i<mode; i++) {
             if(i===3) list.innerHTML += `<div class="break-indicator" id="dailyBreak"><div class="break-line"></div>Intervallo<div class="break-line"></div></div>`;
-            const base = 8*60+25, dur = mode===6?50:60;
-            let start = base + (i*dur); if(i>=3) start += 20;
-            const tS = Math.floor(start/60)+":"+(start%60).toString().padStart(2,'0'), tE = Math.floor((start+dur)/60)+":"+((start+dur)%60).toString().padStart(2,'0');
+            if(currentDayIndex===4 && i===5) list.innerHTML += `<div class="break-indicator" id="lunchBreak"><div class="break-line"></div>Pranzo<div class="break-line"></div></div>`;
+            
+            const times = calculateTime(i, currentDayIndex);
             const card = document.createElement('div'); card.className = 'lesson-card'; card.id = `lesson-${currentDayIndex}-${i}`;
-            card.innerHTML = `<div class="time-strip"><div class="time-text">${tS}</div><div class="time-text">${tE}</div></div><div class="info-box">${savedLessons[currentDayIndex][i] || 'Libera'}</div>`;
+            card.innerHTML = `<div class="time-strip"><div class="time-text">${times.start}</div><div class="time-text">${times.end}</div></div><div class="info-box">${savedLessons[currentDayIndex][i] || 'Libera'}</div>`;
             list.appendChild(card);
         }
         highlightCurrentLesson();
     }
 
-function renderWeekly() {
+    function renderWeekly() {
         const grid = document.getElementById('weeklyGrid'); 
-        grid.innerHTML = '';
-        
-        // Impostiamo il display flex column invece che row (sovrascrive stile inline se c'era)
-        grid.style.display = 'flex';
-        grid.style.flexDirection = 'column';
+        grid.innerHTML = ''; grid.style.display = 'flex'; grid.style.flexDirection = 'column';
 
         const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
         const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-        
-        // Nomi completi per il divider
-        const fullDayNames = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ", "SABATO"];
 
         dayNames.forEach((shortName, dIdx) => {
             const mode = savedConfig[dIdx];
-            
-            // 1. Creiamo il blocco del giorno
-            const dayGroup = document.createElement('div');
-            dayGroup.className = 'day-group';
-            
-            // 2. Creiamo il "Divider" (Nome Giorno)
+            const dayGroup = document.createElement('div'); dayGroup.className = 'day-group';
             dayGroup.innerHTML = `<div class="day-divider-chip">${fullDayNames[dIdx]}</div>`;
             
-            // 3. Creiamo la riga delle lezioni
-            const row = document.createElement('div');
-            row.className = 'day-lessons-row';
-            
-            for(let i=0; i<6; i++) {
+            const row = document.createElement('div'); row.className = 'day-lessons-row';
+            for(let i=0; i<7; i++) {
                 const mini = document.createElement('div'); 
-                
-                // Gestione stile celle vuote o piene
                 if(i < mode) {
                     let content = savedLessons[dIdx][i] || '';
                     if(content === '') {
-                        mini.className = 'mini-card empty';
-                        mini.innerHTML = '-';
+                        mini.className = 'mini-card empty'; mini.innerHTML = '-';
                     } else {
-                    mini.className = 'mini-card';
-                    // RIPRISTINATO: Usa innerHTML per mantenere i badge colorati.
-                    // Rimuoviamo solo <br> per compattare, ma lasciamo i <div> e <span>
-                    mini.innerHTML = content.replace('<br>', ''); 
-                }
+                        mini.className = 'mini-card';
+                        mini.innerHTML = content.replace('<br>', ''); 
+                    }
                 } else {
-                    // Ore oltre l'orario (es. 6a ora se si fanno 5 ore)
-                    mini.className = 'mini-card';
-                    mini.style.opacity = '0'; // Invisibile ma occupa spazio per allineamento
-                    mini.style.border = 'none';
-                    mini.style.background = 'transparent';
+                    mini.className = 'mini-card'; mini.style.opacity = '0'; mini.style.border = 'none'; mini.style.background = 'transparent';
                 }
                 row.appendChild(mini);
             }
-            
-            dayGroup.appendChild(row);
-            grid.appendChild(dayGroup);
+            dayGroup.appendChild(row); grid.appendChild(dayGroup);
         });
     }
 
@@ -472,53 +305,50 @@ function renderWeekly() {
         document.querySelectorAll('.now-active').forEach(e => e.classList.remove('now-active'));
         const now = new Date(), d = now.getDay()-1, m = now.getHours()*60+now.getMinutes();
         if(d !== currentDayIndex || viewMode !== 'daily') return;
-        const conf = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig, mode = conf[d], base = 8*60+25, dur = mode===6?50:60;
+        const conf = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig, mode = conf[d];
+        const base = 8 * 60 + 20;
 
-        const breakStart = base + (3 * dur); const breakEnd = breakStart + 20;
+        const breakStart = base + (3 * 60); 
         const breakEl = document.getElementById('dailyBreak');
-        if (breakEl && m >= breakStart && m < breakEnd) {
-             breakEl.classList.add('now-active');
-             breakEl.scrollIntoView({behavior:'smooth', block:'center'});
+        if (breakEl && m >= breakStart && m < breakStart + 20) {
+             breakEl.classList.add('now-active'); breakEl.scrollIntoView({behavior:'smooth', block:'center'});
+        }
+
+        const lunchStart = base + (5 * 60) + 20;
+        const lunchEl = document.getElementById('lunchBreak');
+        if (lunchEl && m >= lunchStart && m < lunchStart + 35) {
+             lunchEl.classList.add('now-active'); lunchEl.scrollIntoView({behavior:'smooth', block:'center'});
         }
 
         for(let i=0; i<mode; i++) {
-            let s = base+(i*dur); if(i>=3) s+=20;
-            if(m >= s && m < s+dur) {
+            let start = base + (i * 60); if (i >= 3) start += 20;
+            if (currentDayIndex === 4 && i >= 5) start += 35;
+            
+            if(m >= start && m < start + 60) {
                 const el = document.getElementById(`lesson-${d}-${i}`);
                 if(el) { el.classList.add('now-active'); el.scrollIntoView({behavior:'smooth', block:'center'}); }
             }
         }
     }
 
-    function toggleTheme() { isDark = !isDark; localStorage.setItem('isDark', isDark); applyMonetTheme(document.getElementById('monetPicker').value); }
-    document.getElementById('monetPicker').oninput = (e) => { applyMonetTheme(e.target.value); localStorage.setItem('monetColor', e.target.value); };
-    
-    function fixLayout() {
-        window.dispatchEvent(new Event('resize'));
-        document.body.style.display = 'none';
-        document.body.offsetHeight;
-        document.body.style.display = 'grid';
-    }
-
     const themes = ['auto', 'light', 'dark'];
-    // MAPPA ICONE INVECE DI EMOJI
     const themeIcons = { 'auto': 'brightness_auto', 'light': 'light_mode', 'dark': 'dark_mode' };
     function getSystemTheme() { return window.matchMedia('(prefers-color-scheme: dark)').matches; }
-function applyTheme() {
+    
+    function applyTheme() {
         let mode = localStorage.getItem('themeMode') || 'auto';
         if (mode === 'auto') isDark = getSystemTheme(); else isDark = (mode === 'dark');
-        
-        // MODIFICATO: Aggiorna il testo dello span interno invece del bottone intero
         document.querySelector('#themeBtn span').innerText = themeIcons[mode];
-        
         applyMonetTheme(document.getElementById('monetPicker').value);
     }
+    
     function cycleTheme() {
         let current = localStorage.getItem('themeMode') || 'auto';
         let nextIndex = (themes.indexOf(current) + 1) % themes.length;
         localStorage.setItem('themeMode', themes[nextIndex]);
         applyTheme();
     }
+    
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
         if ((localStorage.getItem('themeMode') || 'auto') === 'auto') { isDark = e.matches; applyMonetTheme(document.getElementById('monetPicker').value); }
     });
@@ -530,7 +360,7 @@ function applyTheme() {
     syncData(); 
     renderApp(); 
     setInterval(highlightCurrentLesson, 60000);
-    window.onload = () => setTimeout(fixLayout, 300);
+    window.onload = () => { window.dispatchEvent(new Event('resize')); document.body.style.display = 'none'; document.body.offsetHeight; document.body.style.display = 'grid'; };
 </script>
 </body>
 </html>
