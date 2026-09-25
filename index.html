@@ -165,7 +165,7 @@
             <span class="material-symbols-rounded">edit</span> Modifica
         </a>
         
-        <button class="btn" onclick="syncData(true)" title="Forza Aggiornamento">
+        <button class="btn" onclick="(true)" title="Forza Aggiornamento">
             <span class="material-symbols-rounded">refresh</span>
         </button>
     </div>
@@ -187,6 +187,7 @@
     const days = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ"];
 
     // --- SYNC ENGINE ---
+        // --- SYNC ENGINE AGGIORNATO PER IL NUOVO LAYOUT FOGLI ---
     async function syncData(manual = false) {
         if(SHEET_URL.includes("INSERISCI_QUI")) {
             if(manual) alert("Configurazione mancante: Inserisci il link CSV!");
@@ -198,24 +199,29 @@
             const response = await fetch(SHEET_URL + "&t=" + Date.now());
             if (!response.ok) throw new Error("Errore rete");
             const csvText = await response.text();
+            
+            // Dividiamo in righe e rimuoviamo quelle vuote
             const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
             
-            const configRow = rows[0].split(',');
-            const newConfig = configRow.slice(0, 5).map(val => parseInt(val.replace(/['"]+/g, '')) || 6);
-            
-            // Lettura dinamica fino a 7 ore per 5 giorni (Matrice Day x Hour)
-            let newLessons = Array.from({length: 5}, () => []);
-            for (let i = 1; i <= 7; i++) {
-                if (!rows[i]) {
-                    for (let d = 0; d < 5; d++) newLessons[d].push("");
-                    continue;
-                }
-                let dayCells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                for (let d = 0; d < 5; d++) {
-                    let raw = dayCells[d] || "";
+            let newConfig = [];
+            let newLessons = [];
+
+            // Partiamo da i=1 per SALTARE la riga di intestazione. Leggiamo 5 giorni.
+            for (let i = 1; i <= 5; i++) {
+                if (!rows[i]) break;
+                let cells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                // La colonna B (indice 1) contiene il numero totale di ore per quel giorno
+                let oreGiorno = parseInt(cells[1] ? cells[1].replace(/['"]+/g, '') : '6') || 6;
+                newConfig.push(oreGiorno);
+                
+                let dayLessons = [];
+                // Le lezioni partono dalla colonna C (indice 2) fino alla I (indice 8) -> 7 ore
+                for (let h = 2; h < 9; h++) {
+                    let raw = cells[h] || "";
                     raw = raw.replace(/^"|"$/g, '').trim();
                     if (!raw) {
-                        newLessons[d].push("");
+                        dayLessons.push("");
                     } else {
                         let parts = raw.split('|');
                         let html = `${parts[0].trim()}`;
@@ -225,14 +231,17 @@
                             if (parts[2]) html += `<span class="tag prof">${parts[2].trim()}</span>`;
                             html += `</div>`;
                         }
-                        newLessons[d].push(html);
+                        dayLessons.push(html);
                     }
                 }
+                newLessons.push(dayLessons);
             }
 
             localStorage.setItem('daysConfig', JSON.stringify(newConfig));
             localStorage.setItem('lessonsData', JSON.stringify(newLessons));
-            renderGrid();
+            
+            if (typeof renderGrid === "function") renderGrid(); // index.html
+            
             if(manual) alert("Orario aggiornato con successo!");
 
         } catch (e) {
@@ -240,6 +249,7 @@
             if(manual) alert("Impossibile aggiornare. Controlla la connessione.");
         }
     }
+
 
     function minToTime(mins) {
         let h = Math.floor(mins / 60); let m = mins % 60;
