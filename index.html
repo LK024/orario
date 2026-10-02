@@ -60,15 +60,14 @@
     .btn { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
 
     .grid-container { flex: 1; overflow: hidden; background: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: var(--shadow-app); position: relative; z-index: 1; }
-    .schedule-grid { display: flex; flex-direction: column; height: 100%; width: 100%; }
     
-    .day-row { flex: 1; display: grid; }
-    .day-row:not(:last-child) { border-bottom: 1px solid var(--border-color); }
-
-    .day-row-label { background: var(--bg-header); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; color: var(--text-primary); font-size: 13px; }
+    .schedule-grid { display: grid; height: 100%; width: 100%; }
     
-    .grid-cell { border-right: 1px solid var(--border-color); padding: 4px; position: relative; display: flex; flex-direction: column; z-index: 1; }
-    .break-col { border-right: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
+    .grid-header { background: var(--bg-header); border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-secondary); font-size: 11px; letter-spacing: 0.5px; }
+    .day-row-label { background: var(--bg-header); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; color: var(--text-primary); font-size: 13px; }
+    
+    .grid-cell { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 4px; position: relative; display: flex; flex-direction: column; z-index: 1; }
+    .break-col { border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
     .break-text { writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; letter-spacing: 2px; color: var(--text-secondary); font-weight: 600; opacity: 0.4; }
 
     .lesson { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; overflow: hidden; }
@@ -274,25 +273,40 @@
         let savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
         let savedConfig = JSON.parse(localStorage.getItem('daysConfigObj')) || defaultDaysConfig;
 
+        // 1. Scansiona l'intera settimana per trovare la posizione di tutte le pause globali
+        let breakPositions = new Set([3]); // Intervallo fisso dopo la 3ª ora
+        savedConfig.forEach(conf => {
+            if (conf.lunchAfter > 0) breakPositions.add(conf.lunchAfter);
+        });
+
+        // 2. Costruisci il layout master delle colonne unificato
+        let cols = "90px ";
+        for (let i = 1; i <= 7; i++) {
+            cols += "1fr ";
+            if (breakPositions.has(i)) cols += "25px ";
+        }
+        grid.style.gridTemplateColumns = cols;
+        grid.style.gridTemplateRows = `40px repeat(5, 1fr)`;
+
+        // 3. Genera l'Header dinamico
+        let hDiv = document.createElement('div'); hDiv.className = 'grid-header'; hDiv.innerText = "GIORNO"; grid.appendChild(hDiv);
+        for (let i = 1; i <= 7; i++) {
+            let col = document.createElement('div'); col.className = 'grid-header'; col.innerText = i + "ª"; grid.appendChild(col);
+            if (breakPositions.has(i)) {
+                let bCol = document.createElement('div'); bCol.className = 'grid-header'; 
+                bCol.innerText = (i === 3) ? "INT." : "PRAN."; 
+                grid.appendChild(bCol);
+            }
+        }
+
+        // 4. Popola la griglia per ogni giorno
         days.forEach((dayName, dayIndex) => {
             const conf = savedConfig[dayIndex];
-            
-            // Generazione colonne dinamiche per il CSS Grid
-            let cols = "90px ";
-            for(let i=0; i<7; i++) {
-                cols += "1fr ";
-                if (i === 2) cols += "25px "; 
-                if (conf.lunchAfter > 0 && i === conf.lunchAfter - 1) cols += "25px "; 
-            }
-
-            const row = document.createElement('div');
-            row.className = 'day-row';
-            row.style.gridTemplateColumns = cols;
             
             const dayLabel = document.createElement('div');
             dayLabel.className = 'day-row-label';
             dayLabel.innerHTML = `<span>${dayName}</span>`;
-            row.appendChild(dayLabel);
+            grid.appendChild(dayLabel);
 
             for (let i = 0; i < 7; i++) {
                 const times = calculateTime(i, conf);
@@ -307,25 +321,25 @@
                     let content = savedLessons[dayIndex][i] || "";
                     cell.innerHTML = `<div class="lesson">${content}</div><span class="time-label time-start">${times.start}</span><span class="time-label time-end">${times.end}</span>`;
                 }
-                row.appendChild(cell);
+                grid.appendChild(cell);
 
-                // Inserimento colonne per le pause
-                if (i === 2) {
+                // Inserisce i divisori pausa rispettando la griglia globale
+                if (breakPositions.has(i + 1)) {
                     const breakCol = document.createElement('div'); 
                     breakCol.className = 'break-col';
-                    breakCol.id = `desk-int-${dayIndex}`;
-                    breakCol.innerHTML = '<span class="break-text">INT.</span>'; 
-                    row.appendChild(breakCol);
-                }
-                if (conf.lunchAfter > 0 && i === conf.lunchAfter - 1) {
-                    const breakCol = document.createElement('div'); 
-                    breakCol.className = 'break-col';
-                    breakCol.id = `desk-lunch-${dayIndex}`;
-                    breakCol.innerHTML = '<span class="break-text">PRAN.</span>'; 
-                    row.appendChild(breakCol);
+                    
+                    if (i + 1 === 3) {
+                        breakCol.id = `desk-int-${dayIndex}`;
+                        breakCol.innerHTML = '<span class="break-text">INT.</span>';
+                    } else if (conf.lunchAfter === i + 1) {
+                        breakCol.id = `desk-lunch-${dayIndex}`;
+                        breakCol.innerHTML = '<span class="break-text">PRAN.</span>';
+                    } else {
+                        breakCol.classList.add('disabled'); // Spazio invisibile per allineamento
+                    }
+                    grid.appendChild(breakCol);
                 }
             }
-            grid.appendChild(row);
         });
         highlightCurrentLesson();
     }
