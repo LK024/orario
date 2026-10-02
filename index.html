@@ -60,19 +60,15 @@
     .btn { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
 
     .grid-container { flex: 1; overflow: hidden; background: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: var(--shadow-app); position: relative; z-index: 1; }
-    .schedule-grid {
-        display: grid; 
-        /* 10 Colonne: Giorno, 3 Ore, Int, 2 Ore, Pranzo, 2 Ore */
-        grid-template-columns: 90px repeat(3, 1fr) 25px repeat(2, 1fr) 25px repeat(2, 1fr); 
-        grid-template-rows: 40px repeat(5, 1fr); /* Header + 5 Giorni */
-        height: 100%; width: 100%;
-    }
-
-    .grid-header { background: var(--bg-header); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-secondary); font-size: 11px; letter-spacing: 0.5px; }
-    .day-row-label { background: var(--bg-header); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; color: var(--text-primary); font-size: 13px; }
+    .schedule-grid { display: flex; flex-direction: column; height: 100%; width: 100%; }
     
-    .grid-cell { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 4px; position: relative; display: flex; flex-direction: column; z-index: 1; }
-    .break-col { border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
+    .day-row { flex: 1; display: grid; }
+    .day-row:not(:last-child) { border-bottom: 1px solid var(--border-color); }
+
+    .day-row-label { background: var(--bg-header); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; color: var(--text-primary); font-size: 13px; }
+    
+    .grid-cell { border-right: 1px solid var(--border-color); padding: 4px; position: relative; display: flex; flex-direction: column; z-index: 1; }
+    .break-col { border-right: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
     .break-text { writing-mode: vertical-rl; text-orientation: mixed; font-size: 9px; letter-spacing: 2px; color: var(--text-secondary); font-weight: 600; opacity: 0.4; }
 
     .lesson { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; overflow: hidden; }
@@ -180,14 +176,19 @@
 
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ_6t0reKL-nFDetOjKelXAUJsPYYUmvYbDY-pM3Sz2Sn_Vfi5FQeFrKuq13lWPGFurd8l9Z0mb-jo/pub?output=csv";
 
-    // Impostazioni Default aggiornate a 5 giorni
-    const defaultHoursConfig = [6, 6, 6, 6, 7];
+    // Configurazione Default a oggetti
+    const defaultDaysConfig = [
+        { total: 6, duration: 60, lunchDur: 0, lunchAfter: 0 },
+        { total: 6, duration: 60, lunchDur: 0, lunchAfter: 0 },
+        { total: 6, duration: 60, lunchDur: 0, lunchAfter: 0 },
+        { total: 6, duration: 60, lunchDur: 0, lunchAfter: 0 },
+        { total: 7, duration: 60, lunchDur: 60, lunchAfter: 5 }
+    ];
     const dummyLesson = "Materia<br><div class=\"meta\"><span class=\"tag aula\">Aula</span></div>";
     const defaultLessons = Array.from({length: 5}, () => Array(7).fill(dummyLesson));
     const days = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ"];
 
-    // --- SYNC ENGINE ---
-        // --- SYNC ENGINE AGGIORNATO PER IL NUOVO LAYOUT FOGLI ---
+    // --- SYNC ENGINE TOTALMENTE DINAMICO ---
     async function syncData(manual = false) {
         if(SHEET_URL.includes("INSERISCI_QUI")) {
             if(manual) alert("Configurazione mancante: Inserisci il link CSV!");
@@ -200,24 +201,25 @@
             if (!response.ok) throw new Error("Errore rete");
             const csvText = await response.text();
             
-            // Dividiamo in righe e rimuoviamo quelle vuote
             const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
-            
             let newConfig = [];
             let newLessons = [];
 
-            // Partiamo da i=1 per SALTARE la riga di intestazione. Leggiamo 5 giorni.
+            // Leggiamo i 5 giorni saltando la riga 0 di intestazione
             for (let i = 1; i <= 5; i++) {
                 if (!rows[i]) break;
                 let cells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 
-                // La colonna B (indice 1) contiene il numero totale di ore per quel giorno
-                let oreGiorno = parseInt(cells[1] ? cells[1].replace(/['"]+/g, '') : '6') || 6;
-                newConfig.push(oreGiorno);
+                let total = parseInt(cells[1] ? cells[1].replace(/['"]+/g, '') : '6') || 6;
+                let duration = parseInt(cells[2] ? cells[2].replace(/['"]+/g, '') : '60') || 60;
+                let lunchDur = parseInt(cells[3] ? cells[3].replace(/['"]+/g, '') : '0') || 0;
+                let lunchAfter = parseInt(cells[4] ? cells[4].replace(/['"]+/g, '') : '0') || 0;
+                
+                newConfig.push({ total, duration, lunchDur, lunchAfter });
                 
                 let dayLessons = [];
-                // Le lezioni partono dalla colonna C (indice 2) fino alla I (indice 8) -> 7 ore
-                for (let h = 2; h < 9; h++) {
+                // Le materie iniziano alla Colonna F (indice 5) fino alla L (indice 11)
+                for (let h = 5; h < 12; h++) {
                     let raw = cells[h] || "";
                     raw = raw.replace(/^"|"$/g, '').trim();
                     if (!raw) {
@@ -237,11 +239,10 @@
                 newLessons.push(dayLessons);
             }
 
-            localStorage.setItem('daysConfig', JSON.stringify(newConfig));
+            localStorage.setItem('daysConfigObj', JSON.stringify(newConfig));
             localStorage.setItem('lessonsData', JSON.stringify(newLessons));
             
-            if (typeof renderGrid === "function") renderGrid(); // index.html
-            
+            if (typeof renderGrid === "function") renderGrid(); 
             if(manual) alert("Orario aggiornato con successo!");
 
         } catch (e) {
@@ -250,58 +251,81 @@
         }
     }
 
-
     function minToTime(mins) {
         let h = Math.floor(mins / 60); let m = mins % 60;
         return `${h}:${m.toString().padStart(2, '0')}`;
     }
 
-    function calculateTime(hourIndex, dayIndex) {
-        let currentStart = (8 * 60) + 20 + (hourIndex * 60);
-        if (hourIndex >= 3) currentStart += 20; // Dopo intervallo
-        if (dayIndex === 4 && hourIndex >= 5) currentStart += 35; // Dopo pranzo di venerdì
-        return { start: minToTime(currentStart), end: minToTime(currentStart + 60) };
+    function calculateTime(hourIndex, config) {
+        let currentStart = 8 * 60 + 20; // Partenza 8:20
+        for (let i = 0; i < hourIndex; i++) {
+            currentStart += config.duration;
+            if (i === 2) currentStart += 20; // Pausa 20m dopo la 3ª ora
+            if (config.lunchAfter > 0 && i === config.lunchAfter - 1) currentStart += config.lunchDur;
+        }
+        let currentEnd = currentStart + config.duration;
+        return { start: minToTime(currentStart), end: minToTime(currentEnd) };
     }
 
     function renderGrid() {
         const grid = document.getElementById('mainGrid');
         grid.innerHTML = ''; 
-        ["GIORNO", "1ª", "2ª", "3ª", "INT.", "4ª", "5ª", "PRAN.", "6ª", "7ª"].forEach(h => {
-            const div = document.createElement('div'); div.className = 'grid-header'; div.innerText = h;
-            grid.appendChild(div);
-        });
 
         let savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
-        let savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
+        let savedConfig = JSON.parse(localStorage.getItem('daysConfigObj')) || defaultDaysConfig;
 
         days.forEach((dayName, dayIndex) => {
-            const hoursMode = savedConfig[dayIndex];
+            const conf = savedConfig[dayIndex];
+            
+            // Generazione colonne dinamiche per il CSS Grid
+            let cols = "90px ";
+            for(let i=0; i<7; i++) {
+                cols += "1fr ";
+                if (i === 2) cols += "25px "; 
+                if (conf.lunchAfter > 0 && i === conf.lunchAfter - 1) cols += "25px "; 
+            }
+
+            const row = document.createElement('div');
+            row.className = 'day-row';
+            row.style.gridTemplateColumns = cols;
+            
             const dayLabel = document.createElement('div');
             dayLabel.className = 'day-row-label';
             dayLabel.innerHTML = `<span>${dayName}</span>`;
-            grid.appendChild(dayLabel);
+            row.appendChild(dayLabel);
 
             for (let i = 0; i < 7; i++) {
-                if (i === 3) {
-                    const breakCol = document.createElement('div'); breakCol.className = 'break-col';
-                    breakCol.innerHTML = '<span class="break-text">INT.</span>'; grid.appendChild(breakCol);
-                }
-                if (i === 5) {
-                    const breakCol = document.createElement('div'); 
-                    breakCol.className = 'break-col' + (dayIndex !== 4 ? ' disabled' : '');
-                    breakCol.innerHTML = dayIndex === 4 ? '<span class="break-text">PRAN.</span>' : '';
-                    grid.appendChild(breakCol);
-                }
+                const times = calculateTime(i, conf);
                 
-                const cell = document.createElement('div'); cell.className = 'grid-cell';
-                if (i >= hoursMode) cell.classList.add('disabled');
-                else {
-                    const times = calculateTime(i, dayIndex);
+                const cell = document.createElement('div'); 
+                cell.className = 'grid-cell';
+                cell.id = `desk-lesson-${dayIndex}-${i}`;
+                
+                if (i >= conf.total) {
+                    cell.classList.add('disabled');
+                } else {
                     let content = savedLessons[dayIndex][i] || "";
                     cell.innerHTML = `<div class="lesson">${content}</div><span class="time-label time-start">${times.start}</span><span class="time-label time-end">${times.end}</span>`;
                 }
-                grid.appendChild(cell);
+                row.appendChild(cell);
+
+                // Inserimento colonne per le pause
+                if (i === 2) {
+                    const breakCol = document.createElement('div'); 
+                    breakCol.className = 'break-col';
+                    breakCol.id = `desk-int-${dayIndex}`;
+                    breakCol.innerHTML = '<span class="break-text">INT.</span>'; 
+                    row.appendChild(breakCol);
+                }
+                if (conf.lunchAfter > 0 && i === conf.lunchAfter - 1) {
+                    const breakCol = document.createElement('div'); 
+                    breakCol.className = 'break-col';
+                    breakCol.id = `desk-lunch-${dayIndex}`;
+                    breakCol.innerHTML = '<span class="break-text">PRAN.</span>'; 
+                    row.appendChild(breakCol);
+                }
             }
+            grid.appendChild(row);
         });
         highlightCurrentLesson();
     }
@@ -312,32 +336,35 @@
         if (dayIdx < 0 || dayIdx > 4) return;
         
         const currentMin = now.getHours() * 60 + now.getMinutes();
-        const savedConfig = JSON.parse(localStorage.getItem('daysConfig')) || defaultHoursConfig;
-        const mode = savedConfig[dayIdx];
-        const base = 8 * 60 + 20;
+        const savedConfig = JSON.parse(localStorage.getItem('daysConfigObj')) || defaultDaysConfig;
+        const conf = savedConfig[dayIdx];
+        
+        let startAcc = 8 * 60 + 20;
 
-        // Check Intervallo
-        if (currentMin >= base + (3*60) && currentMin < base + (3*60) + 20) {
-            const breakCell = document.getElementById('mainGrid').children[10 + (dayIdx * 10) + 4];
-            if (breakCell) breakCell.classList.add('now-active');
-        }
-
-        // Check Pranzo (Solo Venerdì)
-        if (dayIdx === 4 && currentMin >= base + (5*60) + 20 && currentMin < base + (5*60) + 20 + 35) {
-            const lunchCell = document.getElementById('mainGrid').children[10 + (dayIdx * 10) + 7];
-            if (lunchCell) lunchCell.classList.add('now-active');
-        }
-
-        // Check Lezioni
-        for(let i=0; i<mode; i++) {
-            let start = base + (i * 60); 
-            if (i >= 3) start += 20;
-            if (dayIdx === 4 && i >= 5) start += 35;
+        for(let i=0; i<conf.total; i++) {
+            let start = startAcc;
+            let end = start + conf.duration;
             
-            if (currentMin >= start && currentMin < start + 60) {
-                const gridIndex = 10 + (dayIdx * 10) + (i < 3 ? i + 1 : (i < 5 ? i + 2 : i + 3));
-                const cell = document.getElementById('mainGrid').children[gridIndex];
+            if (currentMin >= start && currentMin < end) {
+                const cell = document.getElementById(`desk-lesson-${dayIdx}-${i}`);
                 if(cell) cell.classList.add('now-active');
+            }
+            startAcc += conf.duration;
+
+            if (i === 2) {
+                if (currentMin >= startAcc && currentMin < startAcc + 20) {
+                    const b = document.getElementById(`desk-int-${dayIdx}`);
+                    if(b) b.classList.add('now-active');
+                }
+                startAcc += 20;
+            }
+
+            if (conf.lunchAfter > 0 && i === conf.lunchAfter - 1) {
+                if (currentMin >= startAcc && currentMin < startAcc + conf.lunchDur) {
+                    const b = document.getElementById(`desk-lunch-${dayIdx}`);
+                    if(b) b.classList.add('now-active');
+                }
+                startAcc += conf.lunchDur;
             }
         }
     }
