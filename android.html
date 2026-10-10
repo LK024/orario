@@ -28,16 +28,16 @@
 
     .tabs-wrapper { grid-row: 2; padding: 4px 16px 8px 16px; min-height: 48px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
     .tabs-wrapper::-webkit-scrollbar { display: none; }
-    .tab { border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface-variant); background: transparent; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 500; white-space: nowrap; }
+    .tab { border: 1px solid var(--md-sys-color-outline); color: var(--md-sys-color-on-surface-variant); background: transparent; padding: 8px 16px; border-radius: 12px; font-size: 13px; font-weight: 500; white-space: nowrap; text-transform: capitalize; }
     .tab.active { background: var(--md-sys-color-primary); color: white; border-color: transparent; }
 
     .settings-bar { grid-row: 3; margin: 0 16px 8px 16px; height: 32px; display: flex; justify-content: space-between; align-items: center; }
-    .content-area { grid-row: 4; overflow-y: hidden; padding: 0 16px 120px 16px; }
+    .content-area { grid-row: 4; overflow-y: auto; padding: 0 16px 120px 16px; -webkit-overflow-scrolling: touch; }
     
     .weekly-grid-container { grid-row: 2 / span 3; display: none; flex-direction: column; padding: 16px; gap: 24px; overflow-y: auto; }
     .day-group { display: flex; flex-direction: column; gap: 8px; }
     .day-divider-chip { align-self: flex-start; background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container); padding: 6px 16px; border-radius: 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-    .day-lessons-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; } 
+    .day-lessons-row { display: grid; gap: 4px; } 
 
     .mini-card { background: var(--md-sys-color-surface-container); border-radius: 8px; padding: 6px 2px; font-size: 10px; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; border: 1px solid var(--md-sys-color-outline-variant); line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
     .mini-card.empty { background: transparent; border: 1px dashed var(--md-sys-color-outline-variant); opacity: 0.5; }
@@ -85,24 +85,23 @@
 <script>
     const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTZ_6t0reKL-nFDetOjKelXAUJsPYYUmvYbDY-pM3Sz2Sn_Vfi5FQeFrKuq13lWPGFurd8l9Z0mb-jo/pub?output=csv";
 
-    const defaultDaysConfig = [
-        { total: 6, duration: 60, lunchDur: 0, lunchAfter: 0 },
-        { total: 6, duration: 60, lunchDur: 0, lunchAfter: 0 },
-        { total: 6, duration: 60, lunchDur: 0, lunchAfter: 0 },
-        { total: 6, duration: 60, lunchDur: 0, lunchAfter: 0 },
-        { total: 7, duration: 60, lunchDur: 60, lunchAfter: 5 }
-    ];
+    const defaultDays = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ"];
     const dummyLesson = "Materia<br><div class=\"meta\"><span class=\"tag aula\">Aula</span></div>";
-    const defaultLessons = Array.from({length: 5}, () => Array(7).fill(dummyLesson));
+    const defaultLessons = Array.from({length: 5}, () => Array(9).fill(dummyLesson));
+    const defaultDaysConfig = [
+        { total: 6, lunchDur: 0, lunchAfter: 0, durations: [60,60,60,50,50,50,0,0,0] },
+        { total: 6, lunchDur: 0, lunchAfter: 0, durations: [60,60,60,50,50,50,0,0,0] },
+        { total: 6, lunchDur: 0, lunchAfter: 0, durations: [60,60,60,50,50,50,0,0,0] },
+        { total: 6, lunchDur: 0, lunchAfter: 0, durations: [60,60,60,50,50,50,0,0,0] },
+        { total: 7, lunchDur: 35, lunchAfter: 6, durations: [60,50,50,50,50,50,50,0,0] }
+    ];
 
-    const dayNames = ["Lun", "Mar", "Mer", "Gio", "Ven"];
-    const fullDayNames = ["LUNEDÌ", "MARTEDÌ", "MERCOLEDÌ", "GIOVEDÌ", "VENERDÌ"];
+    let savedDays = JSON.parse(localStorage.getItem('daysList')) || defaultDays;
     let currentDayIndex = new Date().getDay() - 1; 
-    if (currentDayIndex < 0 || currentDayIndex > 4) currentDayIndex = 0;
+    if (currentDayIndex < 0 || currentDayIndex >= savedDays.length) currentDayIndex = 0;
     
     let isDark = false, viewMode = 'daily';
 
-    // --- SYNC ENGINE TOTALMENTE DINAMICO ---
     async function syncData(manual = false) {
         if(SHEET_URL.includes("INSERISCI_QUI")) {
             if(manual) alert("Configurazione mancante: Inserisci il link CSV!");
@@ -116,22 +115,29 @@
             const csvText = await response.text();
             
             const rows = csvText.split('\n').map(row => row.trim()).filter(row => row.length > 0);
-            let newConfig = [];
-            let newLessons = [];
+            
+            let block2Index = -1;
+            for(let i=1; i<rows.length; i++) {
+                let cols = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                let firstCol = cols[0] ? cols[0].replace(/['"]+/g, '').trim().toLowerCase() : "";
+                if(firstCol === "giorno" && cols.length > 2) {
+                    block2Index = i;
+                    break;
+                }
+            }
 
-            for (let i = 1; i <= 5; i++) {
-                if (!rows[i]) break;
+            let newDays = [];
+            let newLessons = [];
+            let newConfig = [];
+
+            for(let i=1; i<block2Index; i++) {
                 let cells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                let dayName = cells[0] ? cells[0].replace(/['"]+/g, '').trim() : "";
+                if(!dayName) continue;
                 
-                let total = parseInt(cells[1] ? cells[1].replace(/['"]+/g, '') : '6') || 6;
-                let duration = parseInt(cells[2] ? cells[2].replace(/['"]+/g, '') : '60') || 60;
-                let lunchDur = parseInt(cells[3] ? cells[3].replace(/['"]+/g, '') : '0') || 0;
-                let lunchAfter = parseInt(cells[4] ? cells[4].replace(/['"]+/g, '') : '0') || 0;
-                
-                newConfig.push({ total, duration, lunchDur, lunchAfter });
-                
+                newDays.push(dayName);
                 let dayLessons = [];
-                for (let h = 5; h < 12; h++) {
+                for(let h=1; h<=9; h++) {
                     let raw = cells[h] || "";
                     raw = raw.replace(/^"|"$/g, '').trim();
                     if (!raw) {
@@ -151,6 +157,23 @@
                 newLessons.push(dayLessons);
             }
 
+            for(let i = block2Index + 1; i < rows.length; i++) {
+                let cells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                let dayName = cells[0] ? cells[0].replace(/['"]+/g, '').trim() : "";
+                if(!dayName) continue;
+
+                let total = parseInt(cells[1] ? cells[1].replace(/['"]+/g, '') : '0') || 0;
+                let lunchDur = parseInt(cells[2] ? cells[2].replace(/['"]+/g, '') : '0') || 0;
+                let lunchAfter = parseInt(cells[3] ? cells[3].replace(/['"]+/g, '') : '0') || 0;
+                
+                let durations = [];
+                for(let h=4; h<=12; h++) {
+                    durations.push(parseInt(cells[h] ? cells[h].replace(/['"]+/g, '') : '0') || 0);
+                }
+                newConfig.push({ total, lunchDur, lunchAfter, durations });
+            }
+
+            localStorage.setItem('daysList', JSON.stringify(newDays));
             localStorage.setItem('daysConfigObj', JSON.stringify(newConfig));
             localStorage.setItem('lessonsData', JSON.stringify(newLessons));
             
@@ -163,6 +186,173 @@
         }
     }
 
+    function minToTime(mins) {
+        let h = Math.floor(mins / 60); let m = mins % 60;
+        return `${h}:${m.toString().padStart(2, '0')}`;
+    }
+
+    function calculateTime(hourIndex, config) {
+        let currentStart = 8 * 60 + 20; 
+        for (let i = 0; i < hourIndex; i++) {
+            currentStart += config.durations[i];
+            if (i === 2) currentStart += 20; 
+            if (config.lunchAfter > 0 && i === config.lunchAfter - 1) currentStart += config.lunchDur;
+        }
+        let currentEnd = currentStart + config.durations[hourIndex];
+        return { start: minToTime(currentStart), end: minToTime(currentEnd) };
+    }
+
+    function goToToday() {
+        viewMode = 'daily';
+        const dList = JSON.parse(localStorage.getItem('daysList')) || defaultDays;
+        currentDayIndex = new Date().getDay() - 1;
+        if (currentDayIndex < 0 || currentDayIndex >= dList.length) currentDayIndex = 0;
+        renderApp();
+    }
+
+    function toggleView() {
+        viewMode = (viewMode === 'daily') ? 'weekly' : 'daily';
+        document.getElementById('headerTitle').innerText = (viewMode === 'daily') ? 'Orario' : 'Recap Settimanale';
+        document.querySelector('#viewToggle span').innerText = (viewMode === 'daily') ? 'calendar_view_week' : 'view_day';
+        renderApp();
+    }
+
+    function renderApp() {
+        const tabs = document.getElementById('dayTabs'), settings = document.getElementById('settingsBar');
+        const list = document.getElementById('scheduleList'), grid = document.getElementById('weeklyGrid');
+        if (viewMode === 'daily') {
+            tabs.style.display = 'flex'; settings.style.display = 'flex'; list.style.display = 'block'; grid.style.display = 'none';
+            renderTabs(); renderDaily();
+        } else {
+            tabs.style.display = 'none'; settings.style.display = 'none'; list.style.display = 'none'; grid.style.display = 'flex';
+            renderWeekly();
+        }
+    }
+
+    function renderTabs() {
+        const dList = JSON.parse(localStorage.getItem('daysList')) || defaultDays;
+        const cont = document.getElementById('dayTabs'); cont.innerHTML = '';
+        dList.forEach((name, i) => {
+            const b = document.createElement('button');
+            b.className = `tab ${i===currentDayIndex?'active':''}`;
+            b.innerText = name.substring(0,3).toLowerCase();
+            b.onclick = () => { currentDayIndex = i; renderApp(); };
+            cont.appendChild(b);
+        });
+    }
+
+    function renderDaily() {
+        const list = document.getElementById('scheduleList'); list.innerHTML = '';
+        const dList = JSON.parse(localStorage.getItem('daysList')) || defaultDays;
+        const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
+        const savedConfig = JSON.parse(localStorage.getItem('daysConfigObj')) || defaultDaysConfig;
+        
+        if(currentDayIndex >= dList.length) currentDayIndex = 0;
+        const conf = savedConfig[currentDayIndex];
+        
+        document.getElementById('settingsBar').innerHTML = `
+            <div style="font-size:16px; font-weight:700; color:var(--md-sys-color-primary); letter-spacing:0.5px; text-transform:uppercase;">
+                ${dList[currentDayIndex]}
+            </div>`;
+
+        for(let i=0; i < conf.total; i++) {
+            const times = calculateTime(i, conf);
+            
+            const card = document.createElement('div'); 
+            card.className = 'lesson-card'; 
+            card.id = `lesson-${currentDayIndex}-${i}`;
+            card.innerHTML = `<div class="time-strip"><div class="time-text">${times.start}</div><div class="time-text">${times.end}</div></div><div class="info-box">${savedLessons[currentDayIndex][i] || 'Libera'}</div>`;
+            list.appendChild(card);
+
+            if(i === 2) {
+                list.insertAdjacentHTML('beforeend', `<div class="break-indicator" id="dailyBreak"><div class="break-line"></div>Intervallo<div class="break-line"></div></div>`);
+            }
+            if(conf.lunchAfter > 0 && i === conf.lunchAfter - 1) {
+                list.insertAdjacentHTML('beforeend', `<div class="break-indicator" id="lunchBreak"><div class="break-line"></div>Pranzo<div class="break-line"></div></div>`);
+            }
+        }
+        highlightCurrentLesson();
+    }
+
+    function renderWeekly() {
+        const grid = document.getElementById('weeklyGrid'); 
+        grid.innerHTML = ''; grid.style.display = 'flex'; grid.style.flexDirection = 'column';
+
+        const dList = JSON.parse(localStorage.getItem('daysList')) || defaultDays;
+        const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
+        const savedConfig = JSON.parse(localStorage.getItem('daysConfigObj')) || defaultDaysConfig;
+
+        let maxHours = Math.max(...savedConfig.map(c => c.total));
+        if(!isFinite(maxHours) || maxHours < 1) maxHours = 6;
+
+        dList.forEach((dayName, dIdx) => {
+            const conf = savedConfig[dIdx];
+            const dayGroup = document.createElement('div'); dayGroup.className = 'day-group';
+            dayGroup.innerHTML = `<div class="day-divider-chip">${dayName}</div>`;
+            
+            const row = document.createElement('div'); 
+            row.className = 'day-lessons-row';
+            row.style.gridTemplateColumns = `repeat(${maxHours}, 1fr)`;
+
+            for(let i=0; i<maxHours; i++) {
+                const mini = document.createElement('div'); 
+                if(i < conf.total) {
+                    let content = savedLessons[dIdx][i] || '';
+                    if(content === '') {
+                        mini.className = 'mini-card empty'; mini.innerHTML = '-';
+                    } else {
+                        mini.className = 'mini-card';
+                        mini.innerHTML = content.replace('<br>', ''); 
+                    }
+                } else {
+                    mini.className = 'mini-card'; mini.style.opacity = '0'; mini.style.border = 'none'; mini.style.background = 'transparent';
+                }
+                row.appendChild(mini);
+            }
+            dayGroup.appendChild(row); grid.appendChild(dayGroup);
+        });
+    }
+
+    function highlightCurrentLesson() {
+        document.querySelectorAll('.now-active').forEach(e => e.classList.remove('now-active'));
+        const dList = JSON.parse(localStorage.getItem('daysList')) || defaultDays;
+        const now = new Date(); let dayIdx = now.getDay() - 1; 
+        if (dayIdx < 0 || dayIdx >= dList.length || viewMode !== 'daily') return;
+        if (dayIdx !== currentDayIndex) return;
+        
+        const currentMin = now.getHours() * 60 + now.getMinutes();
+        const savedConfig = JSON.parse(localStorage.getItem('daysConfigObj')) || defaultDaysConfig;
+        const conf = savedConfig[dayIdx];
+        
+        let startAcc = 8 * 60 + 20;
+
+        for(let i=0; i < conf.total; i++) {
+            let start = startAcc;
+            let end = start + conf.durations[i];
+            
+            if(currentMin >= start && currentMin < end) {
+                const el = document.getElementById(`lesson-${dayIdx}-${i}`);
+                if(el) el.classList.add('now-active');
+            }
+            startAcc += conf.durations[i];
+
+            if (i === 2) {
+                if (currentMin >= startAcc && currentMin < startAcc + 20) {
+                    const el = document.getElementById('dailyBreak');
+                    if(el) el.classList.add('now-active');
+                }
+                startAcc += 20;
+            }
+
+            if (conf.lunchAfter > 0 && i === conf.lunchAfter - 1) {
+                if (currentMin >= startAcc && currentMin < startAcc + conf.lunchDur) {
+                    const el = document.getElementById('lunchBreak');
+                    if(el) el.classList.add('now-active');
+                }
+                startAcc += conf.lunchDur;
+            }
+        }
+    }
 
     function hexToHSL(H) {
         let r = 0, g = 0, b = 0;
@@ -199,161 +389,6 @@
         root.style.setProperty('--md-sys-color-outline', `hsl(${h}, 5%, 50%)`);
         root.style.setProperty('--md-sys-color-outline-variant', `hsl(${h}, 5%, ${isDark ? 30 : 85}%)`);
         document.querySelector('meta[name="theme-color"]').content = `hsl(${h}, 5%, ${l_bg}%)`;
-    }
-
-    function goToToday() {
-        viewMode = 'daily';
-        currentDayIndex = new Date().getDay() - 1;
-        if (currentDayIndex < 0 || currentDayIndex > 4) currentDayIndex = 0;
-        renderApp();
-    }
-
-    function toggleView() {
-        viewMode = (viewMode === 'daily') ? 'weekly' : 'daily';
-        document.getElementById('headerTitle').innerText = (viewMode === 'daily') ? 'Orario' : 'Recap Settimanale';
-        document.querySelector('#viewToggle span').innerText = (viewMode === 'daily') ? 'calendar_view_week' : 'view_day';
-        renderApp();
-    }
-
-    function renderApp() {
-        const tabs = document.getElementById('dayTabs'), settings = document.getElementById('settingsBar');
-        const list = document.getElementById('scheduleList'), grid = document.getElementById('weeklyGrid');
-        if (viewMode === 'daily') {
-            tabs.style.display = 'flex'; settings.style.display = 'flex'; list.style.display = 'block'; grid.style.display = 'none';
-            renderTabs(); renderDaily();
-        } else {
-            tabs.style.display = 'none'; settings.style.display = 'none'; list.style.display = 'none'; grid.style.display = 'flex';
-            renderWeekly();
-        }
-    }
-
-    function renderTabs() {
-        const cont = document.getElementById('dayTabs'); cont.innerHTML = '';
-        dayNames.forEach((name, i) => {
-            const b = document.createElement('button');
-            b.className = `tab ${i===currentDayIndex?'active':''}`;
-            b.innerText = name; b.onclick = () => { currentDayIndex = i; renderApp(); };
-            cont.appendChild(b);
-        });
-    }
-
-    function minToTime(mins) {
-        let h = Math.floor(mins / 60); let m = mins % 60;
-        return `${h}:${m.toString().padStart(2, '0')}`;
-    }
-
-    function calculateTime(hourIndex, config) {
-        let currentStart = 8 * 60 + 20; 
-        for (let i = 0; i < hourIndex; i++) {
-            currentStart += config.duration;
-            if (i === 2) currentStart += 20; 
-            if (config.lunchAfter > 0 && i === config.lunchAfter - 1) currentStart += config.lunchDur;
-        }
-        let currentEnd = currentStart + config.duration;
-        return { start: minToTime(currentStart), end: minToTime(currentEnd) };
-    }
-
-    function renderDaily() {
-        const list = document.getElementById('scheduleList'); list.innerHTML = '';
-        const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
-        const savedConfig = JSON.parse(localStorage.getItem('daysConfigObj')) || defaultDaysConfig;
-        const conf = savedConfig[currentDayIndex];
-        
-        document.getElementById('settingsBar').innerHTML = `
-            <div style="font-size:16px; font-weight:700; color:var(--md-sys-color-primary); letter-spacing:0.5px;">
-                ${fullDayNames[currentDayIndex]}
-            </div>
-            <div style="font-size:12px; font-weight:500; color:var(--md-sys-color-on-surface-variant);">
-                Ore da ${conf.duration}m
-            </div>`;
-
-        for(let i=0; i < conf.total; i++) {
-            const times = calculateTime(i, conf);
-            
-            const card = document.createElement('div'); 
-            card.className = 'lesson-card'; 
-            card.id = `lesson-${currentDayIndex}-${i}`;
-            card.innerHTML = `<div class="time-strip"><div class="time-text">${times.start}</div><div class="time-text">${times.end}</div></div><div class="info-box">${savedLessons[currentDayIndex][i] || 'Libera'}</div>`;
-            list.appendChild(card);
-
-            if(i === 2) {
-                list.insertAdjacentHTML('beforeend', `<div class="break-indicator" id="dailyBreak"><div class="break-line"></div>Intervallo<div class="break-line"></div></div>`);
-            }
-            if(conf.lunchAfter > 0 && i === conf.lunchAfter - 1) {
-                list.insertAdjacentHTML('beforeend', `<div class="break-indicator" id="lunchBreak"><div class="break-line"></div>Pranzo<div class="break-line"></div></div>`);
-            }
-        }
-        highlightCurrentLesson();
-    }
-
-    function renderWeekly() {
-        const grid = document.getElementById('weeklyGrid'); 
-        grid.innerHTML = ''; grid.style.display = 'flex'; grid.style.flexDirection = 'column';
-
-        const savedLessons = JSON.parse(localStorage.getItem('lessonsData')) || defaultLessons;
-        const savedConfig = JSON.parse(localStorage.getItem('daysConfigObj')) || defaultDaysConfig;
-
-        dayNames.forEach((shortName, dIdx) => {
-            const conf = savedConfig[dIdx];
-            const dayGroup = document.createElement('div'); dayGroup.className = 'day-group';
-            dayGroup.innerHTML = `<div class="day-divider-chip">${fullDayNames[dIdx]}</div>`;
-            
-            const row = document.createElement('div'); row.className = 'day-lessons-row';
-            for(let i=0; i<7; i++) {
-                const mini = document.createElement('div'); 
-                if(i < conf.total) {
-                    let content = savedLessons[dIdx][i] || '';
-                    if(content === '') {
-                        mini.className = 'mini-card empty'; mini.innerHTML = '-';
-                    } else {
-                        mini.className = 'mini-card';
-                        mini.innerHTML = content.replace('<br>', ''); 
-                    }
-                } else {
-                    mini.className = 'mini-card'; mini.style.opacity = '0'; mini.style.border = 'none'; mini.style.background = 'transparent';
-                }
-                row.appendChild(mini);
-            }
-            dayGroup.appendChild(row); grid.appendChild(dayGroup);
-        });
-    }
-
-    function highlightCurrentLesson() {
-        document.querySelectorAll('.now-active').forEach(e => e.classList.remove('now-active'));
-        const now = new Date(), d = now.getDay()-1, m = now.getHours()*60+now.getMinutes();
-        if(d !== currentDayIndex || viewMode !== 'daily') return;
-        
-        const savedConfig = JSON.parse(localStorage.getItem('daysConfigObj')) || defaultDaysConfig;
-        const conf = savedConfig[d];
-        
-        let startAcc = 8 * 60 + 20;
-
-        for(let i=0; i < conf.total; i++) {
-            let start = startAcc;
-            let end = start + conf.duration;
-            
-            if(m >= start && m < end) {
-                const el = document.getElementById(`lesson-${d}-${i}`);
-                if(el) el.classList.add('now-active');
-            }
-            startAcc += conf.duration;
-
-            if (i === 2) {
-                if (m >= startAcc && m < startAcc + 20) {
-                    const el = document.getElementById('dailyBreak');
-                    if(el) el.classList.add('now-active');
-                }
-                startAcc += 20;
-            }
-
-            if (conf.lunchAfter > 0 && i === conf.lunchAfter - 1) {
-                if (m >= startAcc && m < startAcc + conf.lunchDur) {
-                    const el = document.getElementById('lunchBreak');
-                    if(el) el.classList.add('now-active');
-                }
-                startAcc += conf.lunchDur;
-            }
-        }
     }
 
     const themes = ['auto', 'light', 'dark'];
