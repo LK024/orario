@@ -419,7 +419,19 @@
     applyTheme();
     syncData(); 
     renderApp(); 
-    setInterval(highlightCurrentLesson, 60000);
+    // EVIDENZIAZIONE ORA CORRENTE
+    // Timer più frequente + ricalcolo immediato al ritorno/risveglio (sleep del Mac, app in background)
+    setInterval(highlightCurrentLesson, 15000);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') highlightCurrentLesson();
+    });
+    window.addEventListener('focus', highlightCurrentLesson);
+    window.addEventListener('pageshow', highlightCurrentLesson);
+
+    // SERVICE WORKER
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW non registrato:', err));
+    }
     window.onload = () => { window.dispatchEvent(new Event('resize')); document.body.style.display = 'none'; document.body.offsetHeight; document.body.style.display = 'grid'; };
 </script>
 </body>
