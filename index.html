@@ -59,9 +59,20 @@
     input.hex-input { border: none; background: transparent; color: var(--text-primary); width: 65px; font-size: 11px; outline: none; margin-left: 5px; }
     .btn { background: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
 
-    .grid-container { flex: 1; overflow: hidden; background: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: var(--shadow-app); position: relative; z-index: 1; }
+    /* Area disponibile: ne misuriamo la dimensione (container query) per calcolare il lato dei riquadri */
+    .grid-area { flex: 1; min-height: 0; display: flex; overflow: auto; container-type: size; }
+    .grid-container { flex: none; margin: auto; overflow: hidden; background: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: var(--shadow-app); position: relative; z-index: 1; }
     
-    .schedule-grid { display: grid; height: 100%; width: 100%; }
+    /* Lato del riquadro = il più grande che entra sia in larghezza che in altezza (minimo 60px).
+       Sottratti: colonna giorno (90px), colonne pausa (25px ciascuna), riga intestazione (40px), bordo + margine di sicurezza (4px).
+       --cols, --breaks e --rows vengono impostate da renderGrid(). */
+    .schedule-grid {
+        display: grid;
+        --cell: max(60px, min(
+            (100cqw - 90px - var(--breaks, 2) * 25px - 4px) / var(--cols, 9),
+            (100cqh - 40px - 4px) / var(--rows, 5)
+        ));
+    }
 
     .grid-header { background: var(--bg-header); border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-secondary); font-size: 11px; letter-spacing: 0.5px; }
     .day-row-label { background: var(--bg-header); border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; color: var(--text-primary); font-size: 13px; }
@@ -166,8 +177,10 @@
     </div>
 </header>
 
-<div class="grid-container">
-    <div class="schedule-grid" id="mainGrid"></div>
+<div class="grid-area">
+    <div class="grid-container">
+        <div class="schedule-grid" id="mainGrid"></div>
+    </div>
 </div>
 
 <script>
@@ -304,12 +317,17 @@
         savedConfig.forEach(c => { if(c.lunchAfter > 0) breakPositions.add(c.lunchAfter); });
 
         let cols = "90px ";
+        let breakCount = 0;
         for (let i = 1; i <= maxHours; i++) {
-            cols += "1fr ";
-            if (breakPositions.has(i)) cols += "25px ";
+            cols += "var(--cell) ";
+            if (breakPositions.has(i)) { cols += "25px "; breakCount++; }
         }
         grid.style.gridTemplateColumns = cols;
-        grid.style.gridTemplateRows = `40px repeat(${savedDays.length}, 1fr)`;
+        grid.style.gridTemplateRows = `40px repeat(${savedDays.length}, var(--cell))`;
+        // Dati per il calcolo del lato dei riquadri (vedi --cell nel CSS)
+        grid.style.setProperty('--cols', maxHours);
+        grid.style.setProperty('--breaks', breakCount);
+        grid.style.setProperty('--rows', savedDays.length);
 
         let hDiv = document.createElement('div'); hDiv.className = 'grid-header'; hDiv.innerText = "GIORNO"; grid.appendChild(hDiv);
         for (let i = 1; i <= maxHours; i++) {
@@ -466,13 +484,20 @@
     setAccent(savedColor);
     applyUI(); 
     syncData(); 
-    setInterval(highlightCurrentLesson, 60000);
-
-    // FIX RISVEGLIO: Aggiorna l'evidenziazione istantaneamente all'apertura del Mac/App
+    renderGrid(); 
+    // EVIDENZIAZIONE ORA CORRENTE
+    // Timer più frequente + ricalcolo immediato al ritorno/risveglio (sleep del Mac, app in background)
+    setInterval(highlightCurrentLesson, 15000);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') highlightCurrentLesson();
     });
     window.addEventListener('focus', highlightCurrentLesson);
+    window.addEventListener('pageshow', highlightCurrentLesson);
+
+    // SERVICE WORKER
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW non registrato:', err));
+    }
 </script>
 </body>
 </html>
