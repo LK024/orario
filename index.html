@@ -466,8 +466,13 @@
     setAccent(savedColor);
     applyUI(); 
     syncData(); 
-    renderGrid(); 
     setInterval(highlightCurrentLesson, 60000);
+
+    // FIX RISVEGLIO: Aggiorna l'evidenziazione istantaneamente all'apertura del Mac/App
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') highlightCurrentLesson();
+    });
+    window.addEventListener('focus', highlightCurrentLesson);
 </script>
 </body>
 </html>
