@@ -15,8 +15,10 @@ import java.util.concurrent.TimeUnit
 class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        val repository = (applicationContext as OrarioApplication).scheduleRepository
-        return if (repository.sync() == SyncResult.Failed) Result.retry() else Result.success()
+        val app = applicationContext as OrarioApplication
+        val schedule = app.scheduleRepository.sync()
+        val substitutions = app.overridesRepository.sync()
+        return if (schedule == SyncResult.Failed || substitutions == SyncResult.Failed) Result.retry() else Result.success()
     }
 
     companion object {

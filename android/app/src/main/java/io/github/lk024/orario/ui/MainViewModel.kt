@@ -97,7 +97,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun sync(): SyncResult {
         _syncing.value = true
-        return schedules.sync().also { _syncing.value = false }
+        val schedule = schedules.sync()
+        val substitutions = overridesRepository.sync()
+        _syncing.value = false
+        // Le supplenze arrivate dal foglio contano come aggiornamento; il fallimento è quello dell'orario
+        return if (schedule == SyncResult.Unchanged && substitutions == SyncResult.Updated) SyncResult.Updated else schedule
     }
 
     /** Supplenza ([lesson] non nullo) o ora libera ([lesson] nullo), solo per [date]. */
@@ -105,6 +109,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val key = OverrideKey(date, hour)
         val previous = overrides.value[key]
         overridesRepository.set(Override.of(date, hour, lesson))
+        launch { overridesRepository.sync() }
         if (lesson == null) {
             _messages.send(UiMessage("Ora libera solo per questo giorno", "Annulla") { restore(key, previous) })
         }
@@ -114,11 +119,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val key = OverrideKey(date, hour)
         val previous = overrides.value[key] ?: return@launch
         overridesRepository.remove(key)
+        launch { overridesRepository.sync() }
         _messages.send(UiMessage("Orario ripristinato", "Annulla") { restore(key, previous) })
     }
 
     private fun restore(key: OverrideKey, previous: Override?) = viewModelScope.launch {
         if (previous != null) overridesRepository.set(previous) else overridesRepository.remove(key)
+        overridesRepository.sync()
     }
 
     fun setManualReminder(reminder: ManualReminder) = viewModelScope.launch { remindersRepository.set(reminder) }

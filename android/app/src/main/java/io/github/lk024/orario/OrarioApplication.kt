@@ -6,6 +6,7 @@ import io.github.lk024.orario.data.Reminder
 import io.github.lk024.orario.data.RemindersRepository
 import io.github.lk024.orario.data.ScheduleRepository
 import io.github.lk024.orario.data.SettingsRepository
+import io.github.lk024.orario.data.SubstitutionsApi
 import io.github.lk024.orario.data.SyncWorker
 import io.github.lk024.orario.data.computeReminders
 import io.github.lk024.orario.notify.ReminderScheduler
@@ -23,7 +24,9 @@ class OrarioApplication : Application() {
 
     val scheduleRepository by lazy { ScheduleRepository(filesDir, BuildConfig.SHEET_CSV_URL) }
     val settingsRepository by lazy { SettingsRepository(this) }
-    val overridesRepository by lazy { OverridesRepository(filesDir) }
+    val overridesRepository by lazy {
+        OverridesRepository(filesDir, SubstitutionsApi(BuildConfig.SYNC_URL, BuildConfig.SYNC_TOKEN))
+    }
     val remindersRepository by lazy { RemindersRepository(filesDir) }
 
     override fun onCreate() {

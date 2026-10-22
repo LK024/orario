@@ -1,4 +1,10 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
+
+// Valori personali fuori da git (es. la chiave della sincronizzazione supplenze)
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
 
 plugins {
     alias(libs.plugins.android.application)
@@ -21,6 +27,8 @@ android {
 
         buildConfigField("String", "SHEET_CSV_URL", "\"${property("orario.sheetCsvUrl")}\"")
         buildConfigField("String", "SHEET_EDIT_URL", "\"${property("orario.sheetEditUrl")}\"")
+        buildConfigField("String", "SYNC_URL", "\"${localProperties.getProperty("orario.syncUrl", "")}\"")
+        buildConfigField("String", "SYNC_TOKEN", "\"${localProperties.getProperty("orario.syncToken", "")}\"")
     }
 
     buildTypes {
