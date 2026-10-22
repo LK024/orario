@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calendario: corpo con cinque caselle vuote e una piena (la lezione in corso) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M37,34H71A7,7 0,0 1,78 41V71A7,7 0,0 1,71 78H37A7,7 0,0 1,30 71V41A7,7 0,0 1,37 34Z
+            M38,48H44A2,2 0,0 1,46 50V55A2,2 0,0 1,44 57H38A2,2 0,0 1,36 55V50A2,2 0,0 1,38 48Z
+            M64,48H70A2,2 0,0 1,72 50V55A2,2 0,0 1,70 57H64A2,2 0,0 1,62 55V50A2,2 0,0 1,64 48Z
+            M38,61H44A2,2 0,0 1,46 63V68A2,2 0,0 1,44 70H38A2,2 0,0 1,36 68V63A2,2 0,0 1,38 61Z
+            M51,61H57A2,2 0,0 1,59 63V68A2,2 0,0 1,57 70H51A2,2 0,0 1,49 68V63A2,2 0,0 1,51 61Z
+            M64,61H70A2,2 0,0 1,72 63V68A2,2 0,0 1,70 70H64A2,2 0,0 1,62 68V63A2,2 0,0 1,64 61Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M42,28A2,2 0,0 1,44 30V36A2,2 0,0 1,40 36V30A2,2 0,0 1,42 28Z
+            M66,28A2,2 0,0 1,68 30V36A2,2 0,0 1,64 36V30A2,2 0,0 1,66 28Z" />
+</vector>
