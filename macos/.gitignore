@@ -1,0 +1,8 @@
+xcuserdata/
+*.xcuserstate
+build/
+.build/
+DerivedData/
+.swiftpm/
+# Chiave della sincronizzazione supplenze: non va mai su git
+Orario/Secrets.plist
