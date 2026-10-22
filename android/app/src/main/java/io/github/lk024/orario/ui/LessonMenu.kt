@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.EventBusy
+import androidx.compose.material.icons.rounded.NotificationAdd
+import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.Restore
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.DropdownMenuItem
@@ -50,6 +52,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import io.github.lk024.orario.data.Lesson
 import io.github.lk024.orario.data.LessonSlot
+import io.github.lk024.orario.data.ManualReminder
 import io.github.lk024.orario.data.Override
 import java.time.LocalDate
 import kotlin.math.roundToInt
@@ -61,6 +64,7 @@ data class LessonMenuTarget(
     val slot: LessonSlot,
     val original: Lesson?,
     val override: Override?,
+    val reminder: ManualReminder?,
     val active: Boolean,
     val minute: Int,
     val bounds: Rect,
@@ -79,6 +83,7 @@ fun LessonMenuOverlay(
     onSubstitute: (LessonMenuTarget) -> Unit,
     onFree: (LessonMenuTarget) -> Unit,
     onRestore: (LessonMenuTarget) -> Unit,
+    onReminder: (LessonMenuTarget) -> Unit,
 ) {
     // Tiene l'ultimo bersaglio mentre il menu si chiude con l'animazione
     var shown by remember { mutableStateOf(target) }
@@ -111,6 +116,7 @@ fun LessonMenuOverlay(
                     minute = t.minute,
                     override = t.override,
                     original = t.original,
+                    hasReminder = t.reminder != null,
                     elevation = elevation,
                 )
             }
@@ -138,6 +144,11 @@ fun LessonMenuOverlay(
                             if (t.override?.lesson != null) "Modifica supplenza" else "Segna supplenza",
                         ) { onSubstitute(t) }
                         if (t.slot.lesson != null) {
+                            if (t.reminder != null) {
+                                MenuItem(Icons.Rounded.NotificationsActive, "Modifica promemoria") { onReminder(t) }
+                            } else {
+                                MenuItem(Icons.Rounded.NotificationAdd, "Aggiungi promemoria") { onReminder(t) }
+                            }
                             MenuItem(Icons.Rounded.EventBusy, "Libera solo questo giorno") { onFree(t) }
                         }
                         if (t.override != null) {

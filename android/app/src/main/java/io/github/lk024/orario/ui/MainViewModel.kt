@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.lk024.orario.OrarioApplication
 import io.github.lk024.orario.data.Lesson
+import io.github.lk024.orario.data.ManualReminder
 import io.github.lk024.orario.data.Override
 import io.github.lk024.orario.data.OverrideKey
 import io.github.lk024.orario.data.Settings
@@ -30,17 +31,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val schedules = (application as OrarioApplication).scheduleRepository
     private val settingsRepository = (application as OrarioApplication).settingsRepository
     private val overridesRepository = (application as OrarioApplication).overridesRepository
+    private val remindersRepository = (application as OrarioApplication).remindersRepository
 
     val schedule = schedules.schedule
     val lastSync = schedules.lastSync
     val overrides = overridesRepository.overrides
+    val manualReminders = remindersRepository.reminders
     val settings: StateFlow<Settings?> = settingsRepository.settings
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** Lo splash resta finché non ci sono sia l'orario in cache sia le impostazioni: niente sfarfallii. */
     val ready: StateFlow<Boolean> =
-        combine(schedules.loaded, overridesRepository.loaded, settings) { schedule, overrides, settings ->
-            schedule && overrides && settings != null
+        combine(schedules.loaded, overridesRepository.loaded, remindersRepository.loaded, settings) { schedule, overrides, reminders, settings ->
+            schedule && overrides && reminders && settings != null
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
@@ -59,6 +62,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     init {
         viewModelScope.launch { schedules.load() }
         viewModelScope.launch { overridesRepository.load() }
+        viewModelScope.launch { remindersRepository.load() }
     }
 
     /** All'apertura aggiorna in silenzio, al massimo ogni 15 minuti. */
@@ -116,6 +120,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private fun restore(key: OverrideKey, previous: Override?) = viewModelScope.launch {
         if (previous != null) overridesRepository.set(previous) else overridesRepository.remove(key)
     }
+
+    fun setManualReminder(reminder: ManualReminder) = viewModelScope.launch { remindersRepository.set(reminder) }
+
+    fun removeManualReminder(reminder: ManualReminder) = viewModelScope.launch {
+        remindersRepository.remove(reminder)
+        _messages.send(UiMessage("Promemoria eliminato", "Annulla") { setManualReminder(reminder) })
+    }
+
+    fun setBlockReminders(enabled: Boolean, lead: Int) = viewModelScope.launch { settingsRepository.setBlockReminders(enabled, lead) }
+    fun setLunchReminders(enabled: Boolean, lead: Int) = viewModelScope.launch { settingsRepository.setLunchReminders(enabled, lead) }
+    fun setPause(from: LocalDate?, to: LocalDate?) = viewModelScope.launch { settingsRepository.setPause(from, to) }
 
     fun setWeeklyView(weekly: Boolean) = viewModelScope.launch { settingsRepository.setWeeklyView(weekly) }
     fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { settingsRepository.setThemeMode(mode) }

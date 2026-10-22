@@ -29,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MeetingRoom
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.rounded.EventBusy
+import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -68,6 +69,7 @@ import io.github.lk024.orario.data.BreakSlot
 import io.github.lk024.orario.data.Day
 import io.github.lk024.orario.data.Lesson
 import io.github.lk024.orario.data.LessonSlot
+import io.github.lk024.orario.data.ManualReminder
 import io.github.lk024.orario.data.Override
 import io.github.lk024.orario.data.OverrideKey
 import io.github.lk024.orario.data.Slot
@@ -82,6 +84,7 @@ import java.time.LocalDateTime
 fun DailyView(
     days: List<Day>,
     overrides: Map<OverrideKey, Override>,
+    manualReminders: List<ManualReminder>,
     weekStart: LocalDate,
     now: LocalDateTime,
     pagerState: PagerState,
@@ -111,6 +114,7 @@ fun DailyView(
                     day = days[page],
                     date = days[page].dateIn(weekStart, page),
                     overrides = overrides,
+                    manualReminders = manualReminders,
                     now = now,
                     bottomPadding = contentPadding.calculateBottomPadding(),
                     onLessonLongPress = onLessonLongPress,
@@ -145,6 +149,7 @@ private fun DayPage(
     day: Day,
     date: LocalDate,
     overrides: Map<OverrideKey, Override>,
+    manualReminders: List<ManualReminder>,
     now: LocalDateTime,
     bottomPadding: Dp,
     onLessonLongPress: (LessonMenuTarget) -> Unit,
@@ -167,15 +172,17 @@ private fun DayPage(
                 is LessonSlot -> {
                     val original = day.lessons.getOrNull(slot.hour)
                     val override = overrides[OverrideKey(date, slot.hour)]
+                    val reminder = manualReminders.reminderFor(day, date, slot.hour)
                     LessonCard(
                         slot = slot,
                         active = active,
                         minute = minute,
                         override = override,
                         original = original,
+                        hasReminder = reminder != null && slot.lesson != null,
                         onLongPress = { bounds ->
                             onLessonLongPress(
-                                LessonMenuTarget(date, day.name, slot, original, override, active, minute, bounds)
+                                LessonMenuTarget(date, day.name, slot, original, override, reminder, active, minute, bounds)
                             )
                         },
                     )
@@ -185,6 +192,10 @@ private fun DayPage(
         }
     }
 }
+
+/** Il promemoria di quell'ora: prima quello solo per la data, poi quello settimanale. */
+fun List<ManualReminder>.reminderFor(day: Day, date: LocalDate, hour: Int): ManualReminder? =
+    firstOrNull { it.date != null && it.matches(day, date, hour) } ?: firstOrNull { it.matches(day, date, hour) }
 
 private val Slot.key: String
     get() = when (this) {
@@ -225,6 +236,7 @@ fun LessonCard(
     override: Override?,
     original: Lesson?,
     modifier: Modifier = Modifier,
+    hasReminder: Boolean = false,
     elevation: Dp = 0.dp,
     onLongPress: ((Rect) -> Unit)? = null,
 ) {
@@ -284,6 +296,14 @@ fun LessonCard(
                         color = if (active) colors.primary else colors.onSurfaceVariant,
                         modifier = Modifier.weight(1f),
                     )
+                    if (hasReminder) {
+                        Icon(
+                            Icons.Rounded.NotificationsActive,
+                            contentDescription = "Promemoria impostato",
+                            tint = colors.primary,
+                            modifier = Modifier.padding(end = 6.dp).size(16.dp),
+                        )
+                    }
                     if (override != null) {
                         if (override.lesson != null) {
                             InfoChip(Icons.Rounded.SwapHoriz, "Supplenza", colors.tertiary, colors.onTertiary)

@@ -21,6 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.NotificationsActive
+import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import io.github.lk024.orario.data.Day
 import io.github.lk024.orario.data.Lesson
 import io.github.lk024.orario.data.LessonSlot
+import io.github.lk024.orario.data.ManualReminder
 import io.github.lk024.orario.data.Override
 import io.github.lk024.orario.data.OverrideKey
 import io.github.lk024.orario.data.forDate
@@ -43,6 +48,7 @@ import java.time.LocalDateTime
 fun WeeklyView(
     days: List<Day>,
     overrides: Map<OverrideKey, Override>,
+    manualReminders: List<ManualReminder>,
     weekStart: LocalDate,
     now: LocalDateTime,
     contentPadding: PaddingValues,
@@ -106,7 +112,17 @@ fun WeeklyView(
                                 val slot = lessonSlots[index].getOrNull(hour)
                                 val active = date == today && slot != null && minute in slot
                                 val changed = OverrideKey(date, hour) in overrides
-                                LessonCell(day.lessons.getOrNull(hour), active, changed) { onDayClick(index) }
+                                val lesson = day.lessons.getOrNull(hour)
+                                val reminder = lesson != null && manualReminders.reminderFor(days[index], date, hour) != null
+                                LessonCell(lesson, active, changed) { onDayClick(index) }
+                                if (reminder) {
+                                    Icon(
+                                        Icons.Rounded.NotificationsActive,
+                                        contentDescription = "Promemoria impostato",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(12.dp),
+                                    )
+                                }
                             }
                         }
                     }

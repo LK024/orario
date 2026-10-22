@@ -1,5 +1,11 @@
 package io.github.lk024.orario.ui
 
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.provider.Settings as AndroidSettings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -44,7 +50,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.lk024.orario.BuildConfig
@@ -59,6 +68,7 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
     val syncing by viewModel.syncing.collectAsStateWithLifecycle()
     val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
     val overrides by viewModel.overrides.collectAsStateWithLifecycle()
+    val manualReminders by viewModel.manualReminders.collectAsStateWithLifecycle()
     val now by rememberNow()
     val today = now.toLocalDate()
     val days = schedule?.days.orEmpty()
@@ -72,6 +82,21 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
     var showSettings by rememberSaveable { mutableStateOf(false) }
     var menuTarget by remember { mutableStateOf<LessonMenuTarget?>(null) }
     var editing by remember { mutableStateOf<LessonMenuTarget?>(null) }
+    var reminderTarget by remember { mutableStateOf<LessonMenuTarget?>(null) }
+
+    // Permesso per le notifiche: chiesto quando si attiva il primo promemoria
+    val context = LocalContext.current
+    fun notificationsGranted() =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    var notificationsAllowed by remember { mutableStateOf(notificationsGranted()) }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { notificationsAllowed = it }
+    LifecycleResumeEffect(Unit) {
+        notificationsAllowed = notificationsGranted()
+        onPauseOrDispose {}
+    }
+    fun ensureNotifications() {
+        if (!notificationsAllowed) permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+    }
 
     LaunchedEffect(Unit) {
         viewModel.messages.collect { message ->
@@ -134,6 +159,7 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
                     WeeklyView(
                         days = days,
                         overrides = overrides,
+                        manualReminders = manualReminders,
                         weekStart = weekStart,
                         now = now,
                         contentPadding = padding,
@@ -148,6 +174,7 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
                     DailyView(
                         days = days,
                         overrides = overrides,
+                        manualReminders = manualReminders,
                         weekStart = weekStart,
                         now = now,
                         pagerState = pagerState,
@@ -167,6 +194,7 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
         onSubstitute = { menuTarget = null; editing = it },
         onFree = { menuTarget = null; viewModel.setOverride(it.date, it.slot.hour, null) },
         onRestore = { menuTarget = null; viewModel.clearOverride(it.date, it.slot.hour) },
+        onReminder = { menuTarget = null; reminderTarget = it },
     )
     }
 
@@ -183,6 +211,22 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
         )
     }
 
+    reminderTarget?.let { target ->
+        ReminderSheet(
+            target = target,
+            onSave = { reminder ->
+                viewModel.setManualReminder(reminder)
+                ensureNotifications()
+                reminderTarget = null
+            },
+            onRemove = { reminder ->
+                viewModel.removeManualReminder(reminder)
+                reminderTarget = null
+            },
+            onDismiss = { reminderTarget = null },
+        )
+    }
+
     if (showSettings) {
         SettingsSheet(
             settings = settings,
@@ -195,6 +239,25 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
             onSeedColorChange = viewModel::setSeedColor,
             onRefresh = viewModel::refresh,
             onOpenSheet = { uriHandler.openUri(BuildConfig.SHEET_EDIT_URL) },
+            days = days,
+            manualReminders = manualReminders,
+            notificationsAllowed = notificationsAllowed,
+            onOpenNotificationSettings = {
+                context.startActivity(
+                    Intent(AndroidSettings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(AndroidSettings.EXTRA_APP_PACKAGE, context.packageName)
+                )
+            },
+            onBlockRemindersChange = { enabled, lead ->
+                viewModel.setBlockReminders(enabled, lead)
+                if (enabled) ensureNotifications()
+            },
+            onLunchRemindersChange = { enabled, lead ->
+                viewModel.setLunchReminders(enabled, lead)
+                if (enabled) ensureNotifications()
+            },
+            onPauseChange = viewModel::setPause,
+            onRemoveManualReminder = viewModel::removeManualReminder,
         )
     }
 }
