@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -25,8 +26,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -55,6 +58,7 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
     val lastSync by viewModel.lastSync.collectAsStateWithLifecycle()
     val syncing by viewModel.syncing.collectAsStateWithLifecycle()
     val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
+    val overrides by viewModel.overrides.collectAsStateWithLifecycle()
     val now by rememberNow()
     val today = now.toLocalDate()
     val days = schedule?.days.orEmpty()
@@ -66,9 +70,14 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val pagerState = rememberPagerState(initialPage = days.todayIndex(today)) { days.size }
     var showSettings by rememberSaveable { mutableStateOf(false) }
+    var menuTarget by remember { mutableStateOf<LessonMenuTarget?>(null) }
+    var editing by remember { mutableStateOf<LessonMenuTarget?>(null) }
 
     LaunchedEffect(Unit) {
-        viewModel.messages.collect { snackbarHostState.showSnackbar(it) }
+        viewModel.messages.collect { message ->
+            val result = snackbarHostState.showSnackbar(message.text, message.actionLabel, duration = SnackbarDuration.Short)
+            if (result == SnackbarResult.ActionPerformed) message.action?.invoke()
+        }
     }
     // Primo download senza cache: porta al giorno giusto appena arriva l'orario
     LaunchedEffect(days.isEmpty()) {
@@ -80,6 +89,7 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
         scope.launch { pagerState.animateScrollToPage(days.todayIndex(today)) }
     }
 
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
@@ -123,6 +133,7 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
                 if (weekly) {
                     WeeklyView(
                         days = days,
+                        overrides = overrides,
                         weekStart = weekStart,
                         now = now,
                         contentPadding = padding,
@@ -136,16 +147,40 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
                 } else {
                     DailyView(
                         days = days,
+                        overrides = overrides,
                         weekStart = weekStart,
                         now = now,
                         pagerState = pagerState,
                         contentPadding = padding,
                         refreshing = refreshing,
                         onRefresh = viewModel::refresh,
+                        onLessonLongPress = { menuTarget = it },
                     )
                 }
             }
         }
+    }
+
+    LessonMenuOverlay(
+        target = menuTarget,
+        onDismiss = { menuTarget = null },
+        onSubstitute = { menuTarget = null; editing = it },
+        onFree = { menuTarget = null; viewModel.setOverride(it.date, it.slot.hour, null) },
+        onRestore = { menuTarget = null; viewModel.clearOverride(it.date, it.slot.hour) },
+    )
+    }
+
+    editing?.let { target ->
+        SubstitutionSheet(
+            subtitle = target.title,
+            initial = target.override?.lesson,
+            suggestions = remember(days) { Suggestions.from(days) },
+            onSave = { lesson ->
+                viewModel.setOverride(target.date, target.slot.hour, lesson)
+                editing = null
+            },
+            onDismiss = { editing = null },
+        )
     }
 
     if (showSettings) {

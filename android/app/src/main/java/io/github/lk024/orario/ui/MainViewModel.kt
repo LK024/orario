@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.lk024.orario.OrarioApplication
+import io.github.lk024.orario.data.Lesson
+import io.github.lk024.orario.data.Override
+import io.github.lk024.orario.data.OverrideKey
 import io.github.lk024.orario.data.Settings
 import io.github.lk024.orario.data.SyncResult
 import io.github.lk024.orario.data.ThemeMode
@@ -17,19 +20,28 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+
+/** Messaggio per lo snackbar, con un'azione facoltativa (es. "Annulla"). */
+data class UiMessage(val text: String, val actionLabel: String? = null, val action: (() -> Unit)? = null)
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val schedules = (application as OrarioApplication).scheduleRepository
     private val settingsRepository = (application as OrarioApplication).settingsRepository
+    private val overridesRepository = (application as OrarioApplication).overridesRepository
 
     val schedule = schedules.schedule
     val lastSync = schedules.lastSync
+    val overrides = overridesRepository.overrides
     val settings: StateFlow<Settings?> = settingsRepository.settings
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     /** Lo splash resta finché non ci sono sia l'orario in cache sia le impostazioni: niente sfarfallii. */
-    val ready: StateFlow<Boolean> = combine(schedules.loaded, settings) { loaded, settings -> loaded && settings != null }
+    val ready: StateFlow<Boolean> =
+        combine(schedules.loaded, overridesRepository.loaded, settings) { schedule, overrides, settings ->
+            schedule && overrides && settings != null
+        }
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private val _syncing = MutableStateFlow(false)
@@ -39,13 +51,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _refreshing = MutableStateFlow(false)
     val refreshing = _refreshing.asStateFlow()
 
-    private val _messages = Channel<String>(Channel.BUFFERED)
+    private val _messages = Channel<UiMessage>(Channel.BUFFERED)
     val messages = _messages.receiveAsFlow()
 
     private var backgroundSync: Job? = null
 
     init {
         viewModelScope.launch { schedules.load() }
+        viewModelScope.launch { overridesRepository.load() }
     }
 
     /** All'apertura aggiorna in silenzio, al massimo ogni 15 minuti. */
@@ -57,7 +70,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (last != null && System.currentTimeMillis() - last < FOREGROUND_SYNC_INTERVAL) return@launch
             val result = sync()
             if (result == SyncResult.Failed && schedule.value == null) {
-                _messages.send("Impossibile scaricare l'orario. Controlla la connessione.")
+                _messages.send(UiMessage("Impossibile scaricare l'orario. Controlla la connessione."))
             }
         }
     }
@@ -69,11 +82,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val result = sync()
             _refreshing.value = false
             _messages.send(
-                when (result) {
+                UiMessage(when (result) {
                     SyncResult.Updated -> "Orario aggiornato"
                     SyncResult.Unchanged -> "L'orario è già aggiornato"
                     SyncResult.Failed -> "Impossibile aggiornare. Controlla la connessione."
-                }
+                })
             )
         }
     }
@@ -81,6 +94,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun sync(): SyncResult {
         _syncing.value = true
         return schedules.sync().also { _syncing.value = false }
+    }
+
+    /** Supplenza ([lesson] non nullo) o ora libera ([lesson] nullo), solo per [date]. */
+    fun setOverride(date: LocalDate, hour: Int, lesson: Lesson?) = viewModelScope.launch {
+        val key = OverrideKey(date, hour)
+        val previous = overrides.value[key]
+        overridesRepository.set(Override.of(date, hour, lesson))
+        if (lesson == null) {
+            _messages.send(UiMessage("Ora libera solo per questo giorno", "Annulla") { restore(key, previous) })
+        }
+    }
+
+    fun clearOverride(date: LocalDate, hour: Int) = viewModelScope.launch {
+        val key = OverrideKey(date, hour)
+        val previous = overrides.value[key] ?: return@launch
+        overridesRepository.remove(key)
+        _messages.send(UiMessage("Orario ripristinato", "Annulla") { restore(key, previous) })
+    }
+
+    private fun restore(key: OverrideKey, previous: Override?) = viewModelScope.launch {
+        if (previous != null) overridesRepository.set(previous) else overridesRepository.remove(key)
     }
 
     fun setWeeklyView(weekly: Boolean) = viewModelScope.launch { settingsRepository.setWeeklyView(weekly) }

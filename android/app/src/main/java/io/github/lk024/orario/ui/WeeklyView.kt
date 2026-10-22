@@ -31,6 +31,9 @@ import androidx.compose.ui.unit.dp
 import io.github.lk024.orario.data.Day
 import io.github.lk024.orario.data.Lesson
 import io.github.lk024.orario.data.LessonSlot
+import io.github.lk024.orario.data.Override
+import io.github.lk024.orario.data.OverrideKey
+import io.github.lk024.orario.data.forDate
 import io.github.lk024.orario.data.timeline
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -39,6 +42,7 @@ import java.time.LocalDateTime
 @Composable
 fun WeeklyView(
     days: List<Day>,
+    overrides: Map<OverrideKey, Override>,
     weekStart: LocalDate,
     now: LocalDateTime,
     contentPadding: PaddingValues,
@@ -48,7 +52,11 @@ fun WeeklyView(
 ) {
     val today = now.toLocalDate()
     val minute = now.minuteOfDay
-    val lessonSlots = remember(days) { days.map { day -> day.timeline().filterIsInstance<LessonSlot>() } }
+    // Le variazioni della settimana mostrata sono già applicate
+    val effective = remember(days, overrides, weekStart) {
+        days.mapIndexed { index, day -> day.forDate(day.dateIn(weekStart, index), overrides) }
+    }
+    val lessonSlots = remember(effective) { effective.map { day -> day.timeline().filterIsInstance<LessonSlot>() } }
     val maxHours = days.maxOf { it.config.totalHours }.coerceAtLeast(1)
 
     PullToRefreshBox(
@@ -91,12 +99,14 @@ fun WeeklyView(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    days.forEachIndexed { index, day ->
+                    effective.forEachIndexed { index, day ->
                         Box(Modifier.weight(1f).fillMaxHeight().padding(horizontal = 2.dp)) {
                             if (hour < day.config.totalHours) {
+                                val date = day.dateIn(weekStart, index)
                                 val slot = lessonSlots[index].getOrNull(hour)
-                                val active = day.dateIn(weekStart, index) == today && slot != null && minute in slot
-                                LessonCell(day.lessons.getOrNull(hour), active) { onDayClick(index) }
+                                val active = date == today && slot != null && minute in slot
+                                val changed = OverrideKey(date, hour) in overrides
+                                LessonCell(day.lessons.getOrNull(hour), active, changed) { onDayClick(index) }
                             }
                         }
                     }
@@ -109,7 +119,7 @@ fun WeeklyView(
 private val HourLabelWidth = 28.dp
 
 @Composable
-private fun LessonCell(lesson: Lesson?, active: Boolean, onClick: () -> Unit) {
+private fun LessonCell(lesson: Lesson?, active: Boolean, changed: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Surface(
         onClick = onClick,
@@ -122,6 +132,7 @@ private fun LessonCell(lesson: Lesson?, active: Boolean, onClick: () -> Unit) {
         },
         border = when {
             active -> BorderStroke(2.dp, colors.primary)
+            changed -> BorderStroke(2.dp, colors.tertiary)
             lesson == null -> BorderStroke(1.dp, colors.outlineVariant)
             else -> null
         },

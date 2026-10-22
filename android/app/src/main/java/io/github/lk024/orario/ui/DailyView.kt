@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MeetingRoom
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.rounded.EventBusy
+import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -39,20 +42,36 @@ import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.lk024.orario.data.BreakSlot
 import io.github.lk024.orario.data.Day
+import io.github.lk024.orario.data.Lesson
 import io.github.lk024.orario.data.LessonSlot
+import io.github.lk024.orario.data.Override
+import io.github.lk024.orario.data.OverrideKey
 import io.github.lk024.orario.data.Slot
+import io.github.lk024.orario.data.forDate
 import io.github.lk024.orario.data.formatMinutes
 import io.github.lk024.orario.data.timeline
 import kotlinx.coroutines.launch
@@ -62,12 +81,14 @@ import java.time.LocalDateTime
 @Composable
 fun DailyView(
     days: List<Day>,
+    overrides: Map<OverrideKey, Override>,
     weekStart: LocalDate,
     now: LocalDateTime,
     pagerState: PagerState,
     contentPadding: PaddingValues,
     refreshing: Boolean,
     onRefresh: () -> Unit,
+    onLessonLongPress: (LessonMenuTarget) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val today = now.toLocalDate()
@@ -89,8 +110,10 @@ fun DailyView(
                 DayPage(
                     day = days[page],
                     date = days[page].dateIn(weekStart, page),
+                    overrides = overrides,
                     now = now,
                     bottomPadding = contentPadding.calculateBottomPadding(),
+                    onLessonLongPress = onLessonLongPress,
                 )
             }
         }
@@ -118,8 +141,16 @@ private fun DayTabLabel(name: String, dayOfMonth: Int, isToday: Boolean) {
 }
 
 @Composable
-private fun DayPage(day: Day, date: LocalDate, now: LocalDateTime, bottomPadding: Dp) {
-    val slots = remember(day) { day.timeline() }
+private fun DayPage(
+    day: Day,
+    date: LocalDate,
+    overrides: Map<OverrideKey, Override>,
+    now: LocalDateTime,
+    bottomPadding: Dp,
+    onLessonLongPress: (LessonMenuTarget) -> Unit,
+) {
+    val effective = remember(day, date, overrides) { day.forDate(date, overrides) }
+    val slots = remember(effective) { effective.timeline() }
     val isToday = date == now.toLocalDate()
     val minute = now.minuteOfDay
 
@@ -133,7 +164,22 @@ private fun DayPage(day: Day, date: LocalDate, now: LocalDateTime, bottomPadding
         items(slots, key = { it.key }) { slot ->
             val active = isToday && minute in slot
             when (slot) {
-                is LessonSlot -> LessonCard(slot, active, minute)
+                is LessonSlot -> {
+                    val original = day.lessons.getOrNull(slot.hour)
+                    val override = overrides[OverrideKey(date, slot.hour)]
+                    LessonCard(
+                        slot = slot,
+                        active = active,
+                        minute = minute,
+                        override = override,
+                        original = original,
+                        onLongPress = { bounds ->
+                            onLessonLongPress(
+                                LessonMenuTarget(date, day.name, slot, original, override, active, minute, bounds)
+                            )
+                        },
+                    )
+                }
                 is BreakSlot -> BreakRow(slot, active)
             }
         }
@@ -167,14 +213,31 @@ private fun DayHeader(day: Day, date: LocalDate, isToday: Boolean, slots: List<S
     }
 }
 
+/**
+ * Card di un'ora. [slot] contiene la lezione effettiva di quel giorno, [original] quella
+ * dell'orario fisso: se c'è una variazione ([override]) la card lo segnala.
+ */
 @Composable
-private fun LessonCard(slot: LessonSlot, active: Boolean, minute: Int) {
+fun LessonCard(
+    slot: LessonSlot,
+    active: Boolean,
+    minute: Int,
+    override: Override?,
+    original: Lesson?,
+    modifier: Modifier = Modifier,
+    elevation: Dp = 0.dp,
+    onLongPress: ((Rect) -> Unit)? = null,
+) {
     val colors = MaterialTheme.colorScheme
     val lesson = slot.lesson
+    val haptics = LocalHapticFeedback.current
+    var bounds by remember { mutableStateOf(Rect.Zero) }
+    // Il gesto non deve ripartire a ogni ricomposizione (es. lo scatto del minuto)
+    val currentOnLongPress by rememberUpdatedState(onLongPress)
     val container by animateColorAsState(
         when {
             active -> colors.primaryContainer
-            lesson == null -> Color.Transparent
+            lesson == null -> if (elevation > 0.dp) colors.surface else Color.Transparent
             else -> colors.surfaceContainer
         },
         label = "container",
@@ -182,10 +245,22 @@ private fun LessonCard(slot: LessonSlot, active: Boolean, minute: Int) {
     val borderWidth by animateDpAsState(if (active) 2.dp else if (lesson == null) 1.dp else 0.dp, label = "border")
     val borderColor = if (active) colors.primary else colors.outlineVariant
 
+    val pressModifier = if (onLongPress == null) Modifier else Modifier
+        .onGloballyPositioned { bounds = it.boundsInRoot() }
+        .pointerInput(Unit) {
+            detectTapGestures(onLongPress = {
+                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                currentOnLongPress?.invoke(bounds)
+            })
+        }
+        .semantics { onLongClick(label = "Opzioni") { currentOnLongPress?.invoke(bounds); true } }
+
     Surface(
+        modifier = modifier.then(pressModifier),
         shape = RoundedCornerShape(20.dp),
         color = container,
         border = if (borderWidth > 0.dp) BorderStroke(borderWidth, borderColor) else null,
+        shadowElevation = elevation,
     ) {
         Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
             Column(
@@ -202,13 +277,31 @@ private fun LessonCard(slot: LessonSlot, active: Boolean, minute: Int) {
             }
             VerticalDivider(color = if (active) colors.primary.copy(alpha = 0.4f) else colors.outlineVariant)
             Column(Modifier.weight(1f).padding(horizontal = 16.dp, vertical = 12.dp)) {
-                Text(
-                    "${slot.hour + 1}ª ora",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (active) colors.primary else colors.onSurfaceVariant,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "${slot.hour + 1}ª ora",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (active) colors.primary else colors.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (override != null) {
+                        if (override.lesson != null) {
+                            InfoChip(Icons.Rounded.SwapHoriz, "Supplenza", colors.tertiary, colors.onTertiary)
+                        } else {
+                            InfoChip(Icons.Rounded.EventBusy, "Libera oggi", colors.tertiary, colors.onTertiary)
+                        }
+                    }
+                }
                 if (lesson == null) {
                     Text("Libera", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
+                    if (override != null && original != null) {
+                        Text(
+                            listOfNotNull(original.title, original.room).joinToString(" · "),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.onSurfaceVariant,
+                            textDecoration = TextDecoration.LineThrough,
+                        )
+                    }
                 } else {
                     Text(lesson.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Medium)
                     if (lesson.room != null || lesson.teacher != null) {
