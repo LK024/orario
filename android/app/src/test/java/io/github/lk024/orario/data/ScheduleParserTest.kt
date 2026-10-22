@@ -80,6 +80,24 @@ class ScheduleParserTest {
     }
 
     @Test
+    fun findsColumnsByNameInAnyOrder() {
+        val csv = """
+            Giorno,1ª ora,2ª ora
+            Lunedì,3B,5D
+            Giorno,Ore totali,Inizio,Durata intervallo,Intervallo dopo ora,Durata pranzo,Ora pranzo,Durata 1ª ora,Durata 2ª ora
+            Lunedì,2,8.10.00,10,1,30,1,55,45
+        """.trimIndent()
+        val config = ScheduleParser.parse(csv).days[0].config
+        assertEquals(2, config.totalHours)
+        assertEquals(8 * 60 + 10, config.start)
+        assertEquals(10, config.breakDuration)
+        assertEquals(1, config.breakAfter)
+        assertEquals(30, config.lunchDuration)
+        assertEquals(1, config.lunchAfter)
+        assertEquals(listOf(55, 45), config.durations)
+    }
+
+    @Test
     fun handlesQuotedCells() {
         val rows = ScheduleParser.parseCsv("a,\"b, c\",\"d \"\"e\"\"\"\nf,\"g\nh\"")
         assertEquals(listOf(listOf("a", "b, c", "d \"e\""), listOf("f", "g\nh")), rows)
