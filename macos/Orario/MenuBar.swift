@@ -1,4 +1,3 @@
-import ServiceManagement
 import SwiftUI
 import OrarioCore
 
@@ -39,7 +38,6 @@ struct MenuBarLabel: View {
 struct MenuBarContent: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openWindow) private var openWindow
-    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -58,13 +56,6 @@ struct MenuBarContent: View {
 
             Divider()
 
-            Toggle("Apri all'accesso", isOn: $launchAtLogin)
-                .toggleStyle(.checkbox)
-                .onChange(of: launchAtLogin) { _, enabled in
-                    try? enabled ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister()
-                    launchAtLogin = SMAppService.mainApp.status == .enabled
-                }
-
             HStack {
                 Button("Apri Orario") {
                     openWindow(id: "main")
@@ -78,6 +69,10 @@ struct MenuBarContent: View {
                 }
                 .help("Aggiorna")
                 .disabled(model.isSyncing)
+                SettingsLink {
+                    Image(systemName: "gearshape")
+                }
+                .help("Impostazioni")
                 Button("Esci") { NSApp.terminate(nil) }
             }
         }
