@@ -256,21 +256,13 @@
                 newLessons.push(dayLessons);
             }
 
-            // Leggi Blocco 2: Parametri (da block2Index + 1 in poi)
+            // Leggi Blocco 2: Parametri (da block2Index + 1 in poi), colonne cercate per nome
+            const configCols = parseConfigHeader((rows[block2Index] || "").split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/));
             for(let i = block2Index + 1; i < rows.length; i++) {
                 let cells = rows[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 let dayName = cells[0] ? cells[0].replace(/['"]+/g, '').trim() : "";
                 if(!dayName) continue;
-
-                let total = parseInt(cells[1] ? cells[1].replace(/['"]+/g, '') : '0') || 0;
-                let lunchDur = parseInt(cells[2] ? cells[2].replace(/['"]+/g, '') : '0') || 0;
-                let lunchAfter = parseInt(cells[3] ? cells[3].replace(/['"]+/g, '') : '0') || 0;
-                
-                let durations = [];
-                for(let h=4; h<=12; h++) {
-                    durations.push(parseInt(cells[h] ? cells[h].replace(/['"]+/g, '') : '0') || 0);
-                }
-                newConfig.push({ total, lunchDur, lunchAfter, durations });
+                newConfig.push(parseConfigRow(cells, configCols));
             }
 
             localStorage.setItem('daysList', JSON.stringify(newDays));
@@ -286,16 +278,63 @@
         }
     }
 
+    // Valori usati se il foglio non ha le colonne Inizio / Durata intervallo / Intervallo dopo ora
+    const DEFAULT_START = 8 * 60 + 20, DEFAULT_BREAK_DUR = 20, DEFAULT_BREAK_AFTER = 3;
+    const startOf = c => c.start ?? DEFAULT_START;
+    const breakDurOf = c => c.breakDur ?? DEFAULT_BREAK_DUR;
+    const breakAfterOf = c => breakDurOf(c) > 0 ? (c.breakAfter ?? DEFAULT_BREAK_AFTER) : 0;
+
+    function normalizeHeader(s) {
+        return (s || "").replace(/['"]+/g, '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    }
+
+    // Posizione di ogni colonna del blocco orari, trovata dal nome (fallback: vecchio ordine fisso)
+    function parseConfigHeader(headerCells) {
+        const names = headerCells.map(normalizeHeader);
+        const find = (prefixes, fallback) => {
+            const i = names.findIndex(n => prefixes.some(p => n.startsWith(p)));
+            return i >= 0 ? i : fallback;
+        };
+        let durations = [];
+        names.forEach((n, i) => { const m = n.match(/^durata (\d+)/); if (m) durations.push([+m[1], i]); });
+        durations = durations.length ? durations.sort((a, b) => a[0] - b[0]).map(d => d[1]) : [4,5,6,7,8,9,10,11,12];
+        return {
+            total: find(["ore totali"], 1),
+            lunchDur: find(["durata pranzo"], 2),
+            lunchAfter: find(["ora pranzo"], 3),
+            start: find(["inizio", "ora inizio"], -1),
+            breakDur: find(["durata intervallo"], -1),
+            breakAfter: find(["intervallo dopo", "ora intervallo"], -1),
+            durations
+        };
+    }
+
+    function parseConfigRow(cells, cols) {
+        const cell = i => (i >= 0 && cells[i]) ? cells[i].replace(/['"]+/g, '').trim() : "";
+        const num = (i, def) => { const n = parseInt(cell(i)); return isNaN(n) ? def : n; };
+        // "8:20", "08:20:00" e "8.20.00" (formato ora di Sheets in italiano)
+        const time = /^(\d{1,2})[:.](\d{2})/.exec(cell(cols.start));
+        return {
+            total: num(cols.total, 0),
+            lunchDur: num(cols.lunchDur, 0),
+            lunchAfter: num(cols.lunchAfter, 0),
+            durations: cols.durations.map(i => num(i, 0)),
+            start: time ? (+time[1]) * 60 + (+time[2]) : DEFAULT_START,
+            breakDur: num(cols.breakDur, DEFAULT_BREAK_DUR),
+            breakAfter: num(cols.breakAfter, DEFAULT_BREAK_AFTER)
+        };
+    }
+
     function minToTime(mins) {
         let h = Math.floor(mins / 60); let m = mins % 60;
         return `${h}:${m.toString().padStart(2, '0')}`;
     }
 
     function calculateTime(hourIndex, config) {
-        let currentStart = 8 * 60 + 20; 
+        let currentStart = startOf(config);
         for (let i = 0; i < hourIndex; i++) {
             currentStart += config.durations[i];
-            if (i === 2) currentStart += 20; 
+            if (i === breakAfterOf(config) - 1) currentStart += breakDurOf(config);
             if (config.lunchAfter > 0 && i === config.lunchAfter - 1) currentStart += config.lunchDur;
         }
         let currentEnd = currentStart + config.durations[hourIndex];
@@ -313,8 +352,13 @@
         let maxHours = Math.max(...savedConfig.map(c => c.total));
         if(!isFinite(maxHours) || maxHours < 1) maxHours = 6;
 
-        let breakPositions = new Set([3]); 
-        savedConfig.forEach(c => { if(c.lunchAfter > 0) breakPositions.add(c.lunchAfter); });
+        // Colonne pausa: dopo l'ora dell'intervallo e del pranzo di ogni giorno
+        let breakPositions = new Set();
+        let recessPositions = new Set(), lunchPositions = new Set();
+        savedConfig.forEach(c => {
+            if(breakAfterOf(c) > 0) { breakPositions.add(breakAfterOf(c)); recessPositions.add(breakAfterOf(c)); }
+            if(c.lunchAfter > 0) { breakPositions.add(c.lunchAfter); lunchPositions.add(c.lunchAfter); }
+        });
 
         let cols = "90px ";
         let breakCount = 0;
@@ -334,7 +378,7 @@
             let col = document.createElement('div'); col.className = 'grid-header'; col.innerText = i + "ª"; grid.appendChild(col);
             if (breakPositions.has(i)) {
                 let bCol = document.createElement('div'); bCol.className = 'grid-header'; 
-                bCol.innerText = (i === 3) ? "INT" : "PRA"; 
+                bCol.innerText = !lunchPositions.has(i) ? "INT" : !recessPositions.has(i) ? "PRA" : "PAUSA";
                 grid.appendChild(bCol);
             }
         }
@@ -365,7 +409,7 @@
                     const breakCol = document.createElement('div'); 
                     breakCol.className = 'break-col';
                     
-                    if (i + 1 === 3) {
+                    if (i + 1 === breakAfterOf(conf)) {
                         breakCol.id = `desk-int-${dayIndex}`;
                         breakCol.innerHTML = '<span class="break-text">INTERVALLO</span>';
                     } else if (conf.lunchAfter === i + 1) {
@@ -391,24 +435,24 @@
         const savedConfig = JSON.parse(localStorage.getItem('daysConfigObj')) || defaultDaysConfig;
         const conf = savedConfig[dayIdx];
         
-        let startAcc = 8 * 60 + 20;
+        let startAcc = startOf(conf);
 
         for(let i=0; i<conf.total; i++) {
             let start = startAcc;
             let end = start + conf.durations[i];
-            
+
             if (currentMin >= start && currentMin < end) {
                 const cell = document.getElementById(`desk-lesson-${dayIdx}-${i}`);
                 if(cell) cell.classList.add('now-active');
             }
             startAcc += conf.durations[i];
 
-            if (i === 2) {
-                if (currentMin >= startAcc && currentMin < startAcc + 20) {
+            if (i === breakAfterOf(conf) - 1) {
+                if (currentMin >= startAcc && currentMin < startAcc + breakDurOf(conf)) {
                     const b = document.getElementById(`desk-int-${dayIdx}`);
                     if(b) b.classList.add('now-active');
                 }
-                startAcc += 20;
+                startAcc += breakDurOf(conf);
             }
 
             if (conf.lunchAfter > 0 && i === conf.lunchAfter - 1) {

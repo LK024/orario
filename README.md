@@ -31,6 +31,7 @@ Il progetto utilizza un redirect intelligente per servire l'interfaccia migliore
 2. **Pubblica in CSV:** Vai su *File > Condividi > Pubblica sul web*. Scegli l'intero documento e come formato seleziona **Valori separati da virgole (.csv)**.
 3. **Collega l'App:** Copia il link generato da Google. Apri i file `index.html` e `android.html`, cerca la costante `SHEET_URL` e sostituisci la stringa `"INSERISCI_QUI_IL_LINK_DEL_CSV_PUBBLICATO"` con il tuo link.
 4. **Modifica Rapida:** (Opzionale) Sostituisci il link del bottone "Modifica" (o del FAB su mobile) con l'URL standard del tuo foglio Google per aprirlo comodamente in modalità modifica.
+5. **Orari di inizio e intervallo:** (Opzionale) Nel blocco degli orari puoi aggiungere le colonne `Inizio` (es. `8:20`), `Durata intervallo` (minuti) e `Intervallo dopo ora` (es. `3`). Le colonne di quel blocco vengono riconosciute dal nome, quindi l'ordine non conta; se mancano o sono vuote si usano 8:20, 20 minuti e la 3ª ora.
 
 ## 🛠️ Stack Tecnologico
 
@@ -70,6 +71,7 @@ The project uses a smart redirect to serve the best UI based on the user's devic
 2. **Publish as CSV:** Go to *File > Share > Publish to web*. Choose the entire document and select **Comma-separated values (.csv)** as the format.
 3. **Link the App:** Copy the generated Google link. Open both `index.html` and `android.html`, locate the `SHEET_URL` constant, and replace the `"INSERISCI_QUI_IL_LINK_DEL_CSV_PUBBLICATO"` string with your link.
 4. **Quick Edit:** (Optional) Replace the link of the "Edit" button (or the FAB on mobile) with the standard URL of your Google Sheet to easily open the editor.
+5. **Start time and break:** (Optional) In the timetable block you can add the columns `Inizio` (e.g. `8:20`), `Durata intervallo` (minutes) and `Intervallo dopo ora` (e.g. `3`). Columns in that block are matched by name, so their order doesn't matter; if missing or empty, 8:20, 20 minutes and the 3rd hour are used.
 
 ## 🛠️ Tech Stack
 
