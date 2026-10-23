@@ -12,10 +12,14 @@ import java.time.LocalDate
 
 enum class ThemeMode { System, Light, Dark }
 
+/** Stile della palette generata dal colore scelto: Standard (Tonal Spot) o Vibrante. */
+enum class ColorStyle { Standard, Vibrant }
+
 data class Settings(
     val themeMode: ThemeMode = ThemeMode.System,
     val dynamicColor: Boolean = true,
     val seedColor: Int = DEFAULT_SEED,
+    val colorStyle: ColorStyle = ColorStyle.Standard,
     val weeklyView: Boolean = false,
     val blockReminders: Boolean = false,
     val blockLead: Int = 30,
@@ -27,7 +31,8 @@ data class Settings(
     val reminderSettings get() = ReminderSettings(blockReminders, blockLead, lunchReminders, lunchLead, pauseFrom, pauseTo)
 
     companion object {
-        const val DEFAULT_SEED = 0xFF006C4C.toInt()
+        // Lo stesso rosso dell'icona
+        const val DEFAULT_SEED = 0xFFD93025.toInt()
     }
 }
 
@@ -39,6 +44,7 @@ class SettingsRepository(private val context: Context) {
         val themeMode = stringPreferencesKey("theme_mode")
         val dynamicColor = booleanPreferencesKey("dynamic_color")
         val seedColor = intPreferencesKey("seed_color")
+        val colorStyle = stringPreferencesKey("color_style")
         val weeklyView = booleanPreferencesKey("weekly_view")
         val blockReminders = booleanPreferencesKey("block_reminders")
         val blockLead = intPreferencesKey("block_lead")
@@ -54,6 +60,8 @@ class SettingsRepository(private val context: Context) {
                 ?: ThemeMode.System,
             dynamicColor = prefs[Keys.dynamicColor] ?: true,
             seedColor = prefs[Keys.seedColor] ?: Settings.DEFAULT_SEED,
+            colorStyle = prefs[Keys.colorStyle]?.let { runCatching { ColorStyle.valueOf(it) }.getOrNull() }
+                ?: ColorStyle.Standard,
             weeklyView = prefs[Keys.weeklyView] ?: false,
             blockReminders = prefs[Keys.blockReminders] ?: false,
             blockLead = prefs[Keys.blockLead] ?: 30,
@@ -67,6 +75,7 @@ class SettingsRepository(private val context: Context) {
     suspend fun setThemeMode(mode: ThemeMode) = context.dataStore.edit { it[Keys.themeMode] = mode.name }
     suspend fun setDynamicColor(enabled: Boolean) = context.dataStore.edit { it[Keys.dynamicColor] = enabled }
     suspend fun setSeedColor(color: Int) = context.dataStore.edit { it[Keys.seedColor] = color }
+    suspend fun setColorStyle(style: ColorStyle) = context.dataStore.edit { it[Keys.colorStyle] = style.name }
     suspend fun setWeeklyView(weekly: Boolean) = context.dataStore.edit { it[Keys.weeklyView] = weekly }
     suspend fun setBlockReminders(enabled: Boolean, lead: Int) = context.dataStore.edit {
         it[Keys.blockReminders] = enabled

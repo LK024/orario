@@ -237,6 +237,7 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
             onThemeModeChange = viewModel::setThemeMode,
             onDynamicColorChange = viewModel::setDynamicColor,
             onSeedColorChange = viewModel::setSeedColor,
+            onColorStyleChange = viewModel::setColorStyle,
             onRefresh = viewModel::refresh,
             onOpenSheet = { uriHandler.openUri(BuildConfig.SHEET_EDIT_URL) },
             days = days,

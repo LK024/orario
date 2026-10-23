@@ -256,6 +256,10 @@ fun LessonCard(
     )
     val borderWidth by animateDpAsState(if (active) 2.dp else if (lesson == null) 1.dp else 0.dp, label = "border")
     val borderColor = if (active) colors.primary else colors.outlineVariant
+    // Sulla lezione in corso tutto il testo usa il colore pensato per primaryContainer:
+    // con le palette monocromatiche i grigi "variant" non si leggerebbero
+    val content = if (active) colors.onPrimaryContainer else colors.onSurface
+    val secondary = if (active) colors.onPrimaryContainer.copy(alpha = 0.75f) else colors.onSurfaceVariant
 
     val pressModifier = if (onLongPress == null) Modifier else Modifier
         .onGloballyPositioned { bounds = it.boundsInRoot() }
@@ -271,6 +275,7 @@ fun LessonCard(
         modifier = modifier.then(pressModifier),
         shape = RoundedCornerShape(20.dp),
         color = container,
+        contentColor = content,
         border = if (borderWidth > 0.dp) BorderStroke(borderWidth, borderColor) else null,
         shadowElevation = elevation,
     ) {
@@ -284,16 +289,16 @@ fun LessonCard(
                 Text(
                     formatMinutes(slot.end),
                     style = MaterialTheme.typography.labelMedium,
-                    color = colors.onSurfaceVariant,
+                    color = secondary,
                 )
             }
-            VerticalDivider(color = if (active) colors.primary.copy(alpha = 0.4f) else colors.outlineVariant)
+            VerticalDivider(color = if (active) colors.onPrimaryContainer.copy(alpha = 0.3f) else colors.outlineVariant)
             Column(Modifier.weight(1f).padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         "${slot.hour + 1}ª ora",
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (active) colors.primary else colors.onSurfaceVariant,
+                        color = secondary,
                         modifier = Modifier.weight(1f),
                     )
                     if (hasReminder) {
@@ -313,12 +318,12 @@ fun LessonCard(
                     }
                 }
                 if (lesson == null) {
-                    Text("Libera", style = MaterialTheme.typography.titleMedium, color = colors.onSurfaceVariant)
+                    Text("Libera", style = MaterialTheme.typography.titleMedium, color = secondary)
                     if (override != null && original != null) {
                         Text(
                             listOfNotNull(original.title, original.room).joinToString(" · "),
                             style = MaterialTheme.typography.bodySmall,
-                            color = colors.onSurfaceVariant,
+                            color = secondary,
                             textDecoration = TextDecoration.LineThrough,
                         )
                     }
@@ -336,6 +341,8 @@ fun LessonCard(
                     LinearProgressIndicator(
                         progress = { progress },
                         modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                        color = colors.onPrimaryContainer,
+                        trackColor = colors.onPrimaryContainer.copy(alpha = 0.2f),
                     )
                     Text(
                         "Termina alle ${formatMinutes(slot.end)} · mancano ${slot.end - minute} min",
