@@ -141,6 +141,7 @@ private fun LessonCell(lesson: Lesson?, active: Boolean, changed: Boolean, onCli
         onClick = onClick,
         modifier = Modifier.fillMaxSize(),
         shape = RoundedCornerShape(12.dp),
+        contentColor = if (active) colors.onPrimaryContainer else colors.onSurface,
         color = when {
             active -> colors.primaryContainer
             lesson == null -> Color.Transparent
@@ -166,7 +167,7 @@ private fun LessonCell(lesson: Lesson?, active: Boolean, changed: Boolean, onCli
                     Text(
                         it,
                         style = MaterialTheme.typography.labelSmall,
-                        color = colors.onSurfaceVariant,
+                        color = if (active) colors.onPrimaryContainer.copy(alpha = 0.75f) else colors.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,

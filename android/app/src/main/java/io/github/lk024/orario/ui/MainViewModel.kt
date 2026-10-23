@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.lk024.orario.OrarioApplication
+import io.github.lk024.orario.data.ColorStyle
 import io.github.lk024.orario.data.Lesson
 import io.github.lk024.orario.data.ManualReminder
 import io.github.lk024.orario.data.Override
@@ -143,6 +144,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { settingsRepository.setThemeMode(mode) }
     fun setDynamicColor(enabled: Boolean) = viewModelScope.launch { settingsRepository.setDynamicColor(enabled) }
     fun setSeedColor(color: Int) = viewModelScope.launch { settingsRepository.setSeedColor(color) }
+    fun setColorStyle(style: ColorStyle) = viewModelScope.launch { settingsRepository.setColorStyle(style) }
 
     private companion object {
         const val FOREGROUND_SYNC_INTERVAL = 15 * 60 * 1000L

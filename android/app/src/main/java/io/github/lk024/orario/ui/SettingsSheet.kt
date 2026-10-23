@@ -50,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import io.github.lk024.orario.data.ColorStyle
 import io.github.lk024.orario.data.Day
 import io.github.lk024.orario.data.ManualReminder
 import io.github.lk024.orario.data.Settings
@@ -69,6 +70,7 @@ fun SettingsSheet(
     onThemeModeChange: (ThemeMode) -> Unit,
     onDynamicColorChange: (Boolean) -> Unit,
     onSeedColorChange: (Int) -> Unit,
+    onColorStyleChange: (ColorStyle) -> Unit,
     onRefresh: () -> Unit,
     onOpenSheet: () -> Unit,
     days: List<Day>,
@@ -107,13 +109,25 @@ fun SettingsSheet(
                 ).padding(horizontal = 8.dp),
             )
             AnimatedVisibility(visible = !settings.dynamicColor) {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    SeedColors.forEach { color ->
-                        ColorSwatch(color, selected = color == settings.seedColor) { onSeedColorChange(color) }
+                Column {
+                    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp)) {
+                        val styles = listOf(ColorStyle.Standard to "Standard", ColorStyle.Vibrant to "Vibrante")
+                        styles.forEachIndexed { index, (style, label) ->
+                            SegmentedButton(
+                                selected = settings.colorStyle == style,
+                                onClick = { onColorStyleChange(style) },
+                                shape = SegmentedButtonDefaults.itemShape(index, styles.size),
+                            ) { Text(label) }
+                        }
+                    }
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        SeedColors.forEach { color ->
+                            ColorSwatch(color, selected = color == settings.seedColor) { onSeedColorChange(color) }
+                        }
                     }
                 }
             }
