@@ -138,6 +138,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setBlockReminders(enabled: Boolean, lead: Int) = viewModelScope.launch { settingsRepository.setBlockReminders(enabled, lead) }
     fun setLunchReminders(enabled: Boolean, lead: Int) = viewModelScope.launch { settingsRepository.setLunchReminders(enabled, lead) }
+    fun setLiveDay(enabled: Boolean) = viewModelScope.launch { settingsRepository.setLiveDay(enabled) }
     fun setPause(from: LocalDate?, to: LocalDate?) = viewModelScope.launch { settingsRepository.setPause(from, to) }
 
     fun setWeeklyView(weekly: Boolean) = viewModelScope.launch { settingsRepository.setWeeklyView(weekly) }

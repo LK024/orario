@@ -27,6 +27,7 @@ data class Settings(
     val lunchLead: Int = 10,
     val pauseFrom: LocalDate? = null,
     val pauseTo: LocalDate? = null,
+    val liveDay: Boolean = true,
 ) {
     val reminderSettings get() = ReminderSettings(blockReminders, blockLead, lunchReminders, lunchLead, pauseFrom, pauseTo)
 
@@ -52,6 +53,7 @@ class SettingsRepository(private val context: Context) {
         val lunchLead = intPreferencesKey("lunch_lead")
         val pauseFrom = stringPreferencesKey("pause_from")
         val pauseTo = stringPreferencesKey("pause_to")
+        val liveDay = booleanPreferencesKey("live_day")
     }
 
     val settings: Flow<Settings> = context.dataStore.data.map { prefs ->
@@ -69,6 +71,7 @@ class SettingsRepository(private val context: Context) {
             lunchLead = prefs[Keys.lunchLead] ?: 10,
             pauseFrom = prefs[Keys.pauseFrom]?.let(LocalDate::parse),
             pauseTo = prefs[Keys.pauseTo]?.let(LocalDate::parse),
+            liveDay = prefs[Keys.liveDay] ?: true,
         )
     }
 
@@ -85,6 +88,7 @@ class SettingsRepository(private val context: Context) {
         it[Keys.lunchReminders] = enabled
         it[Keys.lunchLead] = lead
     }
+    suspend fun setLiveDay(enabled: Boolean) = context.dataStore.edit { it[Keys.liveDay] = enabled }
     suspend fun setPause(from: LocalDate?, to: LocalDate?) = context.dataStore.edit {
         if (from != null && to != null) {
             it[Keys.pauseFrom] = from.toString()
