@@ -80,6 +80,9 @@ fun SettingsSheet(
     onBlockRemindersChange: (Boolean, Int) -> Unit,
     onLunchRemindersChange: (Boolean, Int) -> Unit,
     onPauseChange: (LocalDate?, LocalDate?) -> Unit,
+    liveUpdatesAllowed: Boolean,
+    onLiveDayChange: (Boolean) -> Unit,
+    onOpenLiveUpdateSettings: () -> Unit,
     onRemoveManualReminder: (ManualReminder) -> Unit,
 ) {
     var showPause by rememberSaveable { mutableStateOf(false) }
@@ -159,6 +162,26 @@ fun SettingsSheet(
                 lead = settings.lunchLead,
                 options = listOf(5, 10, 15, 20),
                 onChange = onLunchRemindersChange,
+            )
+            ListItem(
+                headlineContent = { Text("Giornata nella barra di stato") },
+                supportingContent = {
+                    Text(
+                        if (settings.liveDay && !liveUpdatesAllowed) "I Live Update sono disattivati per Orario"
+                        else "La lezione in corso come Live Update, dalla prima all'ultima lezione"
+                    )
+                },
+                trailingContent = {
+                    if (settings.liveDay && !liveUpdatesAllowed) {
+                        TextButton(onClick = onOpenLiveUpdateSettings) { Text("Attiva") }
+                    } else {
+                        Switch(checked = settings.liveDay, onCheckedChange = null)
+                    }
+                },
+                colors = listColors,
+                modifier = Modifier
+                    .toggleable(value = settings.liveDay, role = Role.Switch, onValueChange = onLiveDayChange)
+                    .padding(horizontal = 8.dp),
             )
             val pausedUntil = settings.pauseTo?.takeIf { it >= today }
             ListItem(

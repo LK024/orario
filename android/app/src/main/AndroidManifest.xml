@@ -6,6 +6,8 @@
     <!-- Promemoria all'orario esatto anche col telefono in standby -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Live Update della giornata (notifica promossa nella barra di stato) -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 
     <application
         android:name=".OrarioApplication"
@@ -30,6 +32,9 @@
             android:exported="false" />
         <receiver
             android:name=".notify.ReminderActionReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".notify.LiveDayReceiver"
             android:exported="false" />
         <receiver
             android:name=".notify.RescheduleReceiver"

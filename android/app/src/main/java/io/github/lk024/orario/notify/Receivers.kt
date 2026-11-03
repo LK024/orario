@@ -50,5 +50,13 @@ class ReminderActionReceiver : BroadcastReceiver() {
 
 /** Dopo un riavvio, un aggiornamento dell'app o un cambio d'ora le sveglie vanno riprogrammate. */
 class RescheduleReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) = runAsync(context) { app -> app.refreshReminders() }
+    override fun onReceive(context: Context, intent: Intent) = runAsync(context) { app ->
+        app.refreshReminders()
+        app.refreshLiveDay()
+    }
+}
+
+/** Cambio d'ora: ridisegna (o toglie) il Live Update della giornata e programma il prossimo. */
+class LiveDayReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) = runAsync(context) { app -> app.refreshLiveDay() }
 }

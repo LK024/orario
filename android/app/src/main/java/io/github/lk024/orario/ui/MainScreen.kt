@@ -52,6 +52,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.compose.ui.unit.dp
@@ -91,9 +92,13 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
     fun notificationsGranted() =
         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
     var notificationsAllowed by remember { mutableStateOf(notificationsGranted()) }
+    // Android 16: l'utente può disattivare i Live Update app per app
+    fun liveUpdatesGranted() = NotificationManagerCompat.from(context).canPostPromotedNotifications()
+    var liveUpdatesAllowed by remember { mutableStateOf(liveUpdatesGranted()) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { notificationsAllowed = it }
     LifecycleResumeEffect(Unit) {
         notificationsAllowed = notificationsGranted()
+        liveUpdatesAllowed = liveUpdatesGranted()
         onPauseOrDispose {}
     }
     fun ensureNotifications() {
@@ -260,6 +265,17 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
                 if (enabled) ensureNotifications()
             },
             onPauseChange = viewModel::setPause,
+            liveUpdatesAllowed = liveUpdatesAllowed,
+            onLiveDayChange = { enabled ->
+                viewModel.setLiveDay(enabled)
+                if (enabled) ensureNotifications()
+            },
+            onOpenLiveUpdateSettings = {
+                context.startActivity(
+                    Intent(AndroidSettings.ACTION_APP_NOTIFICATION_PROMOTION_SETTINGS)
+                        .putExtra(AndroidSettings.EXTRA_APP_PACKAGE, context.packageName)
+                )
+            },
             onRemoveManualReminder = viewModel::removeManualReminder,
         )
     }
