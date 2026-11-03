@@ -26,6 +26,8 @@ import io.github.lk024.orario.wear.TileState
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import kotlin.math.abs
+import kotlin.math.sqrt
 
 /** Disegna una schermata del Tile per un certo istante. */
 internal class TileLayout(
@@ -35,6 +37,7 @@ internal class TileLayout(
 ) {
     private val colors = scope.colorScheme
     private val contentHeight = screenHeightDp * (1 - 2 * VERTICAL_INSET)
+    private val contentWidth = screenHeightDp * (1 - 2 * HORIZONTAL_INSET)
 
     fun render(state: TileState?, at: LocalDateTime): LayoutElement {
         val content = when (state) {
@@ -87,6 +90,17 @@ internal class TileLayout(
         }
         val hidden = visible.drop(shown.size).count { it is LessonSlot }
 
+        // Posizione verticale di ogni elemento (la colonna è centrata nello schermo rotondo): serve a
+        // stringere solo le card che il bordo del cerchio taglierebbe, le altre restano larghe uguali
+        val titleBlock = if (state.title != null) TITLE_HEIGHT else 0f
+        val total = titleBlock + shown.sumOf { heightOf(it).toDouble() }.toFloat() + (shown.size - 1) * GAP +
+            (if (hidden > 0) GAP + MORE_HEIGHT else 0f)
+        var y = screenHeightDp / 2f - total / 2f + titleBlock
+        val widths = shown.map { slot ->
+            val h = heightOf(slot)
+            fitWidth(y, h).also { y += h + GAP }
+        }
+
         val column = LayoutElementBuilders.Column.Builder()
             .setWidth(expand())
             .setHorizontalAlignment(LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER)
@@ -99,9 +113,9 @@ internal class TileLayout(
             column.addContent(
                 when {
                     slot is BreakSlot -> pauseRow(slot, active = minute in slot)
-                    slot == hours[featured] -> featuredCard(slot as LessonSlot, agenda.date, minute, state.live, BIG_HEIGHT)
-                    slot == hours.getOrNull(featured + 1) -> compactCard(slot as LessonSlot, NEXT_HEIGHT, Typography.LABEL_MEDIUM)
-                    else -> compactCard(slot as LessonSlot, SMALL_HEIGHT, Typography.LABEL_SMALL)
+                    slot == hours[featured] -> featuredCard(slot as LessonSlot, agenda.date, minute, state.live, BIG_HEIGHT, widths[index])
+                    slot == hours.getOrNull(featured + 1) -> compactCard(slot as LessonSlot, NEXT_HEIGHT, Typography.LABEL_MEDIUM, widths[index])
+                    else -> compactCard(slot as LessonSlot, SMALL_HEIGHT, Typography.LABEL_SMALL, widths[index])
                 }
             )
         }
@@ -112,8 +126,19 @@ internal class TileLayout(
         return root(column.build())
     }
 
+    /**
+     * Larghezza massima per un elemento alto [height] che parte a [top] dp dall'alto: la corda del
+     * cerchio dello schermo nel suo punto più lontano dal centro, meno un piccolo margine.
+     */
+    private fun fitWidth(top: Float, height: Float): Float {
+        val radius = screenHeightDp / 2f
+        val distance = maxOf(abs(top - radius), abs(top + height - radius)).coerceAtMost(radius)
+        val chord = 2 * sqrt(radius * radius - distance * distance) - 2 * EDGE_MARGIN
+        return chord.coerceIn(40f, contentWidth)
+    }
+
     /** L'ora in evidenza: classe grande, aula e docente, e i minuti (che scorrono da soli). */
-    private fun featuredCard(slot: LessonSlot, date: LocalDate, minute: Int, live: Boolean, height: Float): LayoutElement {
+    private fun featuredCard(slot: LessonSlot, date: LocalDate, minute: Int, live: Boolean, height: Float, width: Float): LayoutElement {
         val lesson = slot.lesson
         val running = live && minute in slot
         val countdown: LayoutElement = when {
@@ -143,11 +168,11 @@ internal class TileLayout(
             .addContent(info)
             .addContent(countdown)
             .build()
-        return card(row, height, filled = lesson != null, primary = true, radius = FEATURED_RADIUS)
+        return card(row, height, width, filled = lesson != null, primary = true, radius = FEATURED_RADIUS)
     }
 
     /** Ore non in evidenza: una riga "12:10 · 5D · 2.03", con l'icona se c'è un altro docente. */
-    private fun compactCard(slot: LessonSlot, height: Float, typography: Int): LayoutElement {
+    private fun compactCard(slot: LessonSlot, height: Float, typography: Int, width: Float): LayoutElement {
         val lesson = slot.lesson
         val color = colors.onSurface
         val text = listOfNotNull(formatMinutes(slot.start), lesson?.title ?: "Libera", lesson?.room).joinToString(" · ")
@@ -165,7 +190,7 @@ internal class TileLayout(
                     .build()
             )
         }
-        return card(row.build(), height, filled = lesson != null, primary = false, centered = true)
+        return card(row.build(), height, width, filled = lesson != null, primary = false, centered = true)
     }
 
     /** Intervallo e pranzo: separatore di testo, colorato quando è il suo turno. */
@@ -179,6 +204,7 @@ internal class TileLayout(
     private fun card(
         content: LayoutElement,
         height: Float,
+        width: Float,
         filled: Boolean,
         primary: Boolean,
         centered: Boolean = false,
@@ -204,7 +230,8 @@ internal class TileLayout(
             )
         }
         return LayoutElementBuilders.Box.Builder()
-            .setWidth(expand())
+            // Larghezza piena, tranne dove il bordo rotondo la taglierebbe
+            .setWidth(if (width < contentWidth - 0.5f) dp(width) else expand())
             .setHeight(dp(height))
             .setHorizontalAlignment(
                 if (centered) LayoutElementBuilders.HORIZONTAL_ALIGN_CENTER else LayoutElementBuilders.HORIZONTAL_ALIGN_START
@@ -284,5 +311,6 @@ internal class TileLayout(
         private const val TITLE_HEIGHT = 18f
         private const val VERTICAL_INSET = 0.11f
         private const val HORIZONTAL_INSET = 0.12f
+        private const val EDGE_MARGIN = 6f
     }
 }
