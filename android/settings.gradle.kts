@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Orario"
-include(":app")
+include(":app", ":core", ":wear")

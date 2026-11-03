@@ -76,7 +76,7 @@ fun Day.timeline(): List<Slot> = buildList {
 
 fun formatMinutes(minutes: Int) = "%d:%02d".format(minutes / 60, minutes % 60)
 
-internal fun String.normalized(): String =
+fun String.normalized(): String =
     Normalizer.normalize(trim().lowercase(), Normalizer.Form.NFD).replace(Regex("\\p{M}"), "")
 
 private val dayNames = mapOf(

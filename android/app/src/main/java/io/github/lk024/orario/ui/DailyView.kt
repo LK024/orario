@@ -76,6 +76,7 @@ import io.github.lk024.orario.data.Slot
 import io.github.lk024.orario.data.forDate
 import io.github.lk024.orario.data.formatMinutes
 import io.github.lk024.orario.data.timeline
+import io.github.lk024.orario.data.dateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime

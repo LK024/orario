@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Orario" parent="android:Theme.DeviceDefault" />
+
+    <style name="Theme.Orario.Starting" parent="Theme.SplashScreen">
+        <!-- Sfondo nero come le app di sistema dell'orologio, con l'icona dell'app -->
+        <item name="windowSplashScreenBackground">@android:color/black</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.Orario</item>
+    </style>
+</resources>
