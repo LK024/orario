@@ -58,6 +58,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.lk024.orario.BuildConfig
 import io.github.lk024.orario.data.Settings
+import io.github.lk024.orario.data.displayedWeekStart
+import io.github.lk024.orario.data.todayIndex
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

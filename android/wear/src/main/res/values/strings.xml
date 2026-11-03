@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Orario</string>
+    <string name="tile_label">Orario di oggi</string>
+    <string name="tile_description">Le lezioni che restano oggi, o quelle del prossimo giorno di scuola</string>
+    <string name="complication_label">Lezione</string>
+</resources>
