@@ -13,6 +13,10 @@ final class AppModel {
     private(set) var now = Date()
     var errorMessage: String?
 
+    /// Settimana mostrata rispetto a quella corrente: 0 questa, 1 la prossima, -1 la scorsa.
+    var weekOffset = 0
+    @ObservationIgnored private var offsetDay = LocalDate(Date())
+
     private var pending: [PendingChange] = []
     private let scheduleSource = ScheduleSource(csvURL: Config.sheetCSVURL)
     private let api = SubstitutionsAPI(url: Config.syncURL, token: Config.syncToken)
@@ -48,7 +52,9 @@ final class AppModel {
 
     var today: LocalDate { LocalDate(now) }
     var minuteOfDay: Int { Calendar.current.component(.hour, from: now) * 60 + Calendar.current.component(.minute, from: now) }
-    var weekStart: LocalDate { today.displayedWeekStart }
+    var weekStart: LocalDate { today.displayedWeekStart.adding(days: 7 * weekOffset) }
+
+    func goToCurrentWeek() { weekOffset = 0 }
 
     private func startClock() {
         // Scatta all'inizio di ogni minuto
@@ -62,6 +68,11 @@ final class AppModel {
 
     private func tick(refreshIfStale: Bool) {
         now = Date()
+        // La finestra resta aperta per giorni: al cambio di giorno si torna alla settimana corrente
+        if today != offsetDay {
+            weekOffset = 0
+            offsetDay = today
+        }
         if refreshIfStale, !isSyncing, Date().timeIntervalSince(lastSync ?? .distantPast) > 15 * 60 {
             Task { await refresh() }
         }
@@ -77,6 +88,9 @@ final class AppModel {
     func effectiveDay(at index: Int) -> Day { days[index].forDate(date(ofDayAt: index), overrides: overrides) }
 
     func override(on date: LocalDate, hour: Int) -> Override? { overrides[OverrideKey(date: date, hour: hour)] }
+
+    /// La lezione dell'orario fisso, prima di supplenze e ore libere.
+    func originalLesson(dayAt index: Int, hour: Int) -> Lesson? { days[index].lesson(at: hour) }
 
     /// Classi, aule e docenti già presenti nell'orario, per i suggerimenti.
     var suggestions: (titles: [String], rooms: [String], teachers: [String]) {
@@ -134,7 +148,7 @@ final class AppModel {
             let remote = sent.isEmpty ? try await api.fetch() : try await api.push(sent)
             // Quello che è cambiato mentre la richiesta era in corso resta in coda
             pending.removeAll { sent.contains($0) }
-            let merged = recent(mergeWithPending(remote: remote, pending: pending))
+            let merged = mergeWithPending(remote: remote, pending: pending)
             if merged != overrides { overrides = merged }
             save()
         } catch {
@@ -163,19 +177,13 @@ final class AppModel {
         Task { await syncSubstitutions() }
     }
 
-    /// Sul Mac bastano le ultime due settimane: lo storico completo resta nel foglio.
-    private func recent(_ overrides: [OverrideKey: Override]) -> [OverrideKey: Override] {
-        let oldest = today.adding(days: -14)
-        return overrides.filter { $0.key.date >= oldest }
-    }
-
     // MARK: - Disco
 
     private func load() {
         guard let data = try? Data(contentsOf: storeURL),
               let stored = try? JSONDecoder().decode(Stored.self, from: data) else { return }
         schedule = stored.schedule
-        overrides = recent(Dictionary(stored.overrides.map { ($0.key, $0) }, uniquingKeysWith: { _, last in last }))
+        overrides = Dictionary(stored.overrides.map { ($0.key, $0) }, uniquingKeysWith: { _, last in last })
         pending = stored.pending
         lastSync = stored.lastSync
     }

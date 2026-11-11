@@ -30,8 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.pager.HorizontalPager
 import io.github.lk024.orario.data.Day
 import io.github.lk024.orario.data.Lesson
 import io.github.lk024.orario.data.LessonSlot
@@ -44,9 +46,42 @@ import io.github.lk024.orario.data.dateIn
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-/** Recap settimanale: una colonna per giorno, una riga per ora. Tocca una casella per aprire il giorno. */
+/**
+ * Recap settimanale: una colonna per giorno, una riga per ora. Tocca una casella per aprire il giorno,
+ * scorri a destra o a sinistra per cambiare settimana.
+ */
 @Composable
 fun WeeklyView(
+    days: List<Day>,
+    overrides: Map<OverrideKey, Override>,
+    manualReminders: List<ManualReminder>,
+    weekStart: LocalDate,
+    weekOffset: Int,
+    onWeekOffsetChange: (Int) -> Unit,
+    now: LocalDateTime,
+    contentPadding: PaddingValues,
+    refreshing: Boolean,
+    onRefresh: () -> Unit,
+    onDayClick: (Int) -> Unit,
+) {
+    val weekPager = rememberWeekPagerState(weekOffset, onWeekOffsetChange)
+    HorizontalPager(state = weekPager, modifier = Modifier.fillMaxSize()) { page ->
+        WeekGrid(
+            days = days,
+            overrides = overrides,
+            manualReminders = manualReminders,
+            weekStart = weekStart.plusWeeks((weekOffsetOf(page) - weekOffset).toLong()),
+            now = now,
+            contentPadding = contentPadding,
+            refreshing = refreshing,
+            onRefresh = onRefresh,
+            onDayClick = onDayClick,
+        )
+    }
+}
+
+@Composable
+private fun WeekGrid(
     days: List<Day>,
     overrides: Map<OverrideKey, Override>,
     manualReminders: List<ManualReminder>,
@@ -114,8 +149,10 @@ fun WeeklyView(
                                 val active = date == today && slot != null && minute in slot
                                 val changed = OverrideKey(date, hour) in overrides
                                 val lesson = day.lessons.getOrNull(hour)
+                                // days è l'orario fisso: la lezione che la variazione ha sostituito
+                                val original = if (changed) days[index].lessons.getOrNull(hour) else null
                                 val reminder = lesson != null && manualReminders.reminderFor(days[index], date, hour) != null
-                                LessonCell(lesson, active, changed) { onDayClick(index) }
+                                LessonCell(lesson, original, active, changed) { onDayClick(index) }
                                 if (reminder) {
                                     Icon(
                                         Icons.Rounded.NotificationsActive,
@@ -136,7 +173,7 @@ fun WeeklyView(
 private val HourLabelWidth = 28.dp
 
 @Composable
-private fun LessonCell(lesson: Lesson?, active: Boolean, changed: Boolean, onClick: () -> Unit) {
+private fun LessonCell(lesson: Lesson?, original: Lesson?, active: Boolean, changed: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Surface(
         onClick = onClick,
@@ -161,10 +198,11 @@ private fun LessonCell(lesson: Lesson?, active: Boolean, changed: Boolean, onCli
             verticalArrangement = Arrangement.Center,
         ) {
             if (lesson == null) {
-                Text("–", color = colors.outline)
+                if (original == null) Text("–", color = colors.outline)
             } else {
                 Text(lesson.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1)
-                lesson.room?.let {
+                // Con una variazione la seconda riga è per la lezione sostituita: l'aula è nella vista del giorno
+                if (original == null) lesson.room?.let {
                     Text(
                         it,
                         style = MaterialTheme.typography.labelSmall,
@@ -174,6 +212,15 @@ private fun LessonCell(lesson: Lesson?, active: Boolean, changed: Boolean, onCli
                         textAlign = TextAlign.Center,
                     )
                 }
+            }
+            original?.let {
+                Text(
+                    it.title,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (active) colors.onPrimaryContainer.copy(alpha = 0.75f) else colors.onSurfaceVariant,
+                    textDecoration = TextDecoration.LineThrough,
+                    maxLines = 1,
+                )
             }
         }
     }

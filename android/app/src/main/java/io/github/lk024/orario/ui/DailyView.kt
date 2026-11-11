@@ -87,6 +87,8 @@ fun DailyView(
     overrides: Map<OverrideKey, Override>,
     manualReminders: List<ManualReminder>,
     weekStart: LocalDate,
+    weekOffset: Int,
+    onWeekOffsetChange: (Int) -> Unit,
     now: LocalDateTime,
     pagerState: PagerState,
     contentPadding: PaddingValues,
@@ -97,18 +99,25 @@ fun DailyView(
     val scope = rememberCoroutineScope()
     val today = now.toLocalDate()
     Column(Modifier.fillMaxSize().padding(top = contentPadding.calculateTopPadding())) {
-        PrimaryTabRow(selectedTabIndex = pagerState.currentPage.coerceAtMost(days.lastIndex)) {
-            days.forEachIndexed { index, day ->
-                val date = day.dateIn(weekStart, index)
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                    modifier = Modifier.height(64.dp),
-                ) {
-                    DayTabLabel(day.name.take(3), date.dayOfMonth, isToday = date == today)
+        // La riga dei giorni scorre fra le settimane, come in Google Calendar; toccando un giorno lo si apre
+        val weekPager = rememberWeekPagerState(weekOffset, onWeekOffsetChange)
+        HorizontalPager(state = weekPager) { page ->
+            val pageWeekStart = weekStart.plusWeeks((weekOffsetOf(page) - weekOffset).toLong())
+            PrimaryTabRow(selectedTabIndex = pagerState.currentPage.coerceAtMost(days.lastIndex), divider = {}) {
+                days.forEachIndexed { index, day ->
+                    val date = day.dateIn(pageWeekStart, index)
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
+                        modifier = Modifier.height(64.dp),
+                    ) {
+                        DayTabLabel(day.name.take(3), date.dayOfMonth, isToday = date == today)
+                    }
                 }
             }
         }
+        // Fuori dal pager, così la linea resta ferma mentre i giorni scorrono
+        HorizontalDivider()
         PullToRefreshBox(isRefreshing = refreshing, onRefresh = onRefresh, modifier = Modifier.weight(1f)) {
             HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize(), beyondViewportPageCount = 1) { page ->
                 DayPage(
@@ -320,16 +329,19 @@ fun LessonCard(
                 }
                 if (lesson == null) {
                     Text("Libera", style = MaterialTheme.typography.titleMedium, color = secondary)
-                    if (override != null && original != null) {
-                        Text(
-                            listOfNotNull(original.title, original.room).joinToString(" · "),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = secondary,
-                            textDecoration = TextDecoration.LineThrough,
-                        )
-                    }
                 } else {
                     Text(lesson.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Medium)
+                }
+                // Con una supplenza o un'ora liberata, barrata, la lezione dell'orario fisso
+                if (override != null && original != null) {
+                    Text(
+                        listOfNotNull(original.title, original.room).joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = secondary,
+                        textDecoration = TextDecoration.LineThrough,
+                    )
+                }
+                if (lesson != null) {
                     if (lesson.room != null || lesson.teacher != null) {
                         Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             lesson.room?.let { InfoChip(Icons.Outlined.MeetingRoom, it, colors.tertiaryContainer, colors.onTertiaryContainer) }

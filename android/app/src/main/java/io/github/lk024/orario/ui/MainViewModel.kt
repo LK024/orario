@@ -60,6 +60,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private var backgroundSync: Job? = null
 
+    /** Settimana mostrata rispetto a quella corrente: 0 questa, 1 la prossima, -1 la scorsa. */
+    private val _weekOffset = MutableStateFlow(0)
+    val weekOffset = _weekOffset.asStateFlow()
+    private var offsetDay: LocalDate? = null
+
     init {
         viewModelScope.launch { schedules.load() }
         viewModelScope.launch { overridesRepository.load() }
@@ -140,6 +145,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setLunchReminders(enabled: Boolean, lead: Int) = viewModelScope.launch { settingsRepository.setLunchReminders(enabled, lead) }
     fun setLiveDay(enabled: Boolean) = viewModelScope.launch { settingsRepository.setLiveDay(enabled) }
     fun setPause(from: LocalDate?, to: LocalDate?) = viewModelScope.launch { settingsRepository.setPause(from, to) }
+
+    fun setWeekOffset(offset: Int) {
+        _weekOffset.value = offset
+    }
+
+    fun goToCurrentWeek() {
+        _weekOffset.value = 0
+    }
+
+    /** Al cambio di giorno si torna alla settimana corrente, come all'apertura dell'app. */
+    fun onToday(today: LocalDate) {
+        if (offsetDay != null && offsetDay != today) _weekOffset.value = 0
+        offsetDay = today
+    }
 
     fun setWeeklyView(weekly: Boolean) = viewModelScope.launch { settingsRepository.setWeeklyView(weekly) }
     fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { settingsRepository.setThemeMode(mode) }

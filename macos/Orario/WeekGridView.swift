@@ -33,11 +33,15 @@ struct WeekGridView: View {
             if model.days.isEmpty {
                 emptyState
             } else {
-                grid
+                VStack(spacing: 0) {
+                    weekHeader
+                    grid
+                }
             }
         }
         .navigationTitle("Orario")
         .navigationSubtitle(subtitle)
+        .onAppear { model.goToCurrentWeek() }
         .toolbar {
             ToolbarItemGroup {
                 Button {
@@ -77,10 +81,47 @@ struct WeekGridView: View {
     }
 
     private var subtitle: String {
-        guard !model.days.isEmpty else { return "" }
-        let week = weekRangeText(from: model.date(ofDayAt: 0), to: model.date(ofDayAt: model.days.count - 1))
-        guard let lastSync = model.lastSync else { return week }
-        return "\(week) · aggiornato alle \(timeText(lastSync))"
+        guard !model.days.isEmpty, let lastSync = model.lastSync else { return "" }
+        return "Aggiornato alle \(timeText(lastSync))"
+    }
+
+    /// Come in Calendario: la settimana mostrata in grande e, a destra, i pulsanti per scorrere.
+    private var weekHeader: some View {
+        let start = model.date(ofDayAt: 0)
+        let week = weekRangeText(from: start, to: model.date(ofDayAt: model.days.count - 1))
+        return HStack(alignment: .center) {
+            Text("\(Text(week).fontWeight(.bold)) \(String(start.year))")
+                .font(.largeTitle)
+            Spacer()
+            HStack(spacing: 8) {
+                Button {
+                    model.weekOffset -= 1
+                } label: {
+                    Label("Settimana precedente", systemImage: "chevron.left").labelStyle(.iconOnly)
+                }
+                .buttonBorderShape(.circle)
+                .keyboardShortcut(.leftArrow)
+                .help("Settimana precedente")
+
+                Button("Oggi") { model.goToCurrentWeek() }
+                    .buttonBorderShape(.capsule)
+                    .keyboardShortcut("t")
+                    .help("Torna a questa settimana")
+
+                Button {
+                    model.weekOffset += 1
+                } label: {
+                    Label("Settimana successiva", systemImage: "chevron.right").labelStyle(.iconOnly)
+                }
+                .buttonBorderShape(.circle)
+                .keyboardShortcut(.rightArrow)
+                .help("Settimana successiva")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
     }
 
     private var columns: [GridColumn] {
@@ -174,7 +215,8 @@ struct WeekGridView: View {
                     end: slot.end,
                     lesson: lesson,
                     active: isToday && slot.contains(minute: model.minuteOfDay),
-                    override: override
+                    override: override,
+                    original: override == nil ? nil : model.originalLesson(dayAt: dayIndex, hour: hour)
                 )
                 .contextMenu {
                     Section(EditTarget(date: date, dayName: day.name, hour: hour, current: nil).title) {
