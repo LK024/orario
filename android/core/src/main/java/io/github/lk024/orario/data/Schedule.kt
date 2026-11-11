@@ -76,6 +76,16 @@ fun Day.timeline(): List<Slot> = buildList {
 
 fun formatMinutes(minutes: Int) = "%d:%02d".format(minutes / 60, minutes % 60)
 
+/** Riga di chiusura di un elenco: quando finisce la giornata, più le [hidden] ore che non ci stanno. */
+fun dayEndLabel(lastEnd: Int, hidden: Int): String {
+    val end = formatMinutes(lastEnd)
+    return when (hidden) {
+        0 -> "Fine · $end"
+        1 -> "+ 1 ora · Fine $end"
+        else -> "+ $hidden ore · Fine $end"
+    }
+}
+
 fun String.normalized(): String =
     Normalizer.normalize(trim().lowercase(), Normalizer.Form.NFD).replace(Regex("\\p{M}"), "")
 

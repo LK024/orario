@@ -20,7 +20,9 @@ import androidx.wear.protolayout.types.layoutString
 import io.github.lk024.orario.data.BreakSlot
 import io.github.lk024.orario.data.LessonSlot
 import io.github.lk024.orario.data.Slot
+import io.github.lk024.orario.data.dayEndLabel
 import io.github.lk024.orario.data.formatMinutes
+import io.github.lk024.orario.wear.COUNTDOWN_MINUTES
 import io.github.lk024.orario.wear.DayAgenda
 import io.github.lk024.orario.wear.TileState
 import java.time.LocalDate
@@ -74,8 +76,8 @@ internal class TileLayout(
         // Le ore passate spariscono: restano l'eventuale pausa in corso e quello che deve ancora venire
         val visible = slots.filter { it.end > minute }
 
-        // Quante ore stanno nello schermo: in fondo le ultime si riassumono in "+ altre N"
-        val available = contentHeight - (if (state.title != null) TITLE_HEIGHT else 0f)
+        // Quante ore stanno nello schermo: la riga di fine c'è sempre, e riassume le ultime se non ci stanno
+        val available = contentHeight - (if (state.title != null) TITLE_HEIGHT else 0f) - FOOTER_HEIGHT - GAP
         fun heightOf(slot: Slot) = when {
             slot is BreakSlot -> PAUSE_HEIGHT
             slot == hours[featured] -> BIG_HEIGHT
@@ -83,9 +85,7 @@ internal class TileLayout(
             else -> SMALL_HEIGHT
         }
         var shown = visible
-        while (shown.size > 1 && shown.sumOf { heightOf(it).toDouble() } + (shown.size - 1) * GAP +
-            (if (shown.size < visible.size) MORE_HEIGHT + GAP else 0f) > available
-        ) {
+        while (shown.size > 1 && shown.sumOf { heightOf(it).toDouble() } + (shown.size - 1) * GAP > available) {
             shown = shown.dropLast(1).dropLastWhile { it is BreakSlot }
         }
         val hidden = visible.drop(shown.size).count { it is LessonSlot }
@@ -94,7 +94,7 @@ internal class TileLayout(
         // stringere solo le card che il bordo del cerchio taglierebbe, le altre restano larghe uguali
         val titleBlock = if (state.title != null) TITLE_HEIGHT else 0f
         val total = titleBlock + shown.sumOf { heightOf(it).toDouble() }.toFloat() + (shown.size - 1) * GAP +
-            (if (hidden > 0) GAP + MORE_HEIGHT else 0f)
+            GAP + FOOTER_HEIGHT
         var y = screenHeightDp / 2f - total / 2f + titleBlock
         val widths = shown.map { slot ->
             val h = heightOf(slot)
@@ -119,10 +119,8 @@ internal class TileLayout(
                 }
             )
         }
-        if (hidden > 0) {
-            column.addContent(spacer(GAP))
-            column.addContent(label(if (hidden == 1) "+ 1 altra ora" else "+ altre $hidden ore", Typography.LABEL_SMALL, colors.onSurfaceVariant))
-        }
+        column.addContent(spacer(GAP))
+        column.addContent(label(dayEndLabel(last, hidden), Typography.LABEL_SMALL, colors.onSurfaceVariant))
         return root(column.build())
     }
 
@@ -141,15 +139,13 @@ internal class TileLayout(
     private fun featuredCard(slot: LessonSlot, date: LocalDate, minute: Int, live: Boolean, height: Float, width: Float): LayoutElement {
         val lesson = slot.lesson
         val running = live && minute in slot
+        val countdownColor = if (lesson != null) colors.onPrimaryContainer else colors.primary
         val countdown: LayoutElement = when {
-            // In corso: minuti alla fine; prima dell'inizio: minuti all'inizio. Calcolati dall'orologio
-            live -> label(
-                minutesUntil(date.atTime(if (running) slot.end / 60 else slot.start / 60, if (running) slot.end % 60 else slot.start % 60),
-                    prefix = if (running) "" else "tra "),
-                Typography.LABEL_MEDIUM,
-                if (lesson != null) colors.onPrimaryContainer else colors.primary,
-            )
-            else -> label(formatMinutes(slot.start), Typography.LABEL_MEDIUM, colors.onPrimaryContainer)
+            // In corso: minuti alla fine; nell'ultima ora prima dell'inizio: minuti all'inizio. Calcolati dall'orologio
+            running -> label(minutesUntil(date.atTime(slot.end / 60, slot.end % 60), prefix = ""), Typography.LABEL_MEDIUM, countdownColor)
+            live && slot.start - minute <= COUNTDOWN_MINUTES ->
+                label(minutesUntil(date.atTime(slot.start / 60, slot.start % 60), prefix = "tra "), Typography.LABEL_MEDIUM, countdownColor)
+            else -> label(formatMinutes(slot.start), Typography.LABEL_MEDIUM, countdownColor)
         }
         val title = lesson?.title ?: "Libera"
         val details = lesson?.let { listOfNotNull(it.room, it.teacher).joinToString(" · ") }
@@ -307,7 +303,7 @@ internal class TileLayout(
         private const val NEXT_HEIGHT = 22f
         // Sotto i 18 dp il testo delle pillole viene tagliato
         private const val SMALL_HEIGHT = 18f
-        private const val MORE_HEIGHT = 14f
+        private const val FOOTER_HEIGHT = 14f
         private const val TITLE_HEIGHT = 18f
         private const val VERTICAL_INSET = 0.11f
         private const val HORIZONTAL_INSET = 0.12f
