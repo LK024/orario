@@ -85,12 +85,10 @@ struct WeekGridView: View {
         return "Aggiornato alle \(timeText(lastSync))"
     }
 
-    /// Come in Calendario: la settimana mostrata in grande e, a destra, i pulsanti per scorrere.
+    /// Come in Calendario: il mese in grande (i giorni sono già nelle righe) e, a destra, i pulsanti per scorrere.
     private var weekHeader: some View {
-        let start = model.date(ofDayAt: 0)
-        let week = weekRangeText(from: start, to: model.date(ofDayAt: model.days.count - 1))
-        return HStack(alignment: .center) {
-            Text("\(Text(week).fontWeight(.bold)) \(String(start.year))")
+        HStack(alignment: .center) {
+            monthTitle(from: model.date(ofDayAt: 0), to: model.date(ofDayAt: model.days.count - 1))
                 .font(.largeTitle)
             Spacer()
             HStack(spacing: 8) {
@@ -122,6 +120,19 @@ struct WeekGridView: View {
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
+    }
+
+    /// "Novembre 2026"; a cavallo di due mesi "Novembre – Dicembre 2026" o "Dicembre 2026 – Gennaio 2027".
+    private func monthTitle(from start: LocalDate, to end: LocalDate) -> Text {
+        let first = Text(start.monthName).fontWeight(.bold)
+        let last = Text(end.monthName).fontWeight(.bold)
+        if start.year != end.year {
+            return Text("\(first) \(String(start.year)) – \(last) \(String(end.year))")
+        }
+        if start.month != end.month {
+            return Text("\(first) – \(last) \(String(start.year))")
+        }
+        return Text("\(first) \(String(start.year))")
     }
 
     private var columns: [GridColumn] {
