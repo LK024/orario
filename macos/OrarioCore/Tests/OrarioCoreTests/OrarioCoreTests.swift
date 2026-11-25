@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import OrarioCore
 
@@ -94,4 +95,42 @@ Venerdì,9,35,6,60,50,50,50,50,50,50,50,50
     #expect(LocalDate(year: 2026, month: 10, day: 22).weekday == 4)
     #expect(LocalDate(year: 2026, month: 10, day: 22).displayedWeekStart == LocalDate(year: 2026, month: 10, day: 19))
     #expect(LocalDate(year: 2026, month: 10, day: 24).displayedWeekStart == LocalDate(year: 2026, month: 10, day: 26))
+}
+
+// MARK: - Giornata in corso e pausa
+
+private let tuesday = LocalDate(year: 2026, month: 11, day: 24)
+
+@Test func liveSpanGoesFromFirstToLastLesson() throws {
+    let schedule = try ScheduleParser.parse(sheetCSV)
+    // Martedì: 3D alle 8:20, ultima 5E fino alle 14:10
+    #expect(schedule.liveSpan(on: tuesday, overrides: [:], pause: nil) == (8 * 60 + 20)..<(14 * 60 + 10))
+    // Giovedì la 1ª è libera: si parte dalla 2ª
+    #expect(schedule.liveSpan(on: tuesday.adding(days: 2), overrides: [:], pause: nil)?.lowerBound == 9 * 60 + 20)
+    // Sabato niente
+    #expect(schedule.liveSpan(on: tuesday.adding(days: 4), overrides: [:], pause: nil) == nil)
+}
+
+@Test func liveSpanFollowsSubstitutionsAndPause() throws {
+    let schedule = try ScheduleParser.parse(sheetCSV)
+    let freedFirst = Override(date: tuesday, hour: 0, lesson: nil)
+    #expect(schedule.liveSpan(on: tuesday, overrides: [freedFirst.key: freedFirst], pause: nil)?.lowerBound == 9 * 60 + 20)
+    let pause = PausePeriod(from: tuesday.adding(days: -1), to: tuesday)
+    #expect(schedule.liveSpan(on: tuesday, overrides: [:], pause: pause) == nil)
+    #expect(schedule.liveSpan(on: tuesday.adding(days: 1), overrides: [:], pause: pause) != nil)
+}
+
+@Test func nextChangeIsTheNextBoundary() throws {
+    let schedule = try ScheduleParser.parse(sheetCSV)
+    #expect(schedule.nextChange(on: tuesday, after: 7 * 60, overrides: [:]) == 8 * 60 + 20)
+    #expect(schedule.nextChange(on: tuesday, after: 11 * 60 + 20, overrides: [:]) == 11 * 60 + 40)
+    #expect(schedule.nextChange(on: tuesday, after: 14 * 60 + 10, overrides: [:]) == nil)
+    #expect(schedule.nextChange(on: tuesday.adding(days: 4), after: 0, overrides: [:]) == nil)
+}
+
+@Test func remotePauseReadsAllThreeStates() throws {
+    #expect(try RemotePause.parse(Data(#"{"substitutions":[]}"#.utf8)) == .unsupported)
+    #expect(try RemotePause.parse(Data(#"{"substitutions":[],"pause":null}"#.utf8)) == .period(nil))
+    let period = try RemotePause.parse(Data(#"{"pause":{"from":"2026-12-23","to":"2027-01-06"}}"#.utf8))
+    #expect(period == .period(PausePeriod(from: LocalDate(year: 2026, month: 12, day: 23), to: LocalDate(year: 2027, month: 1, day: 6))))
 }

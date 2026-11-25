@@ -18,7 +18,8 @@ class SyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
         val app = applicationContext as OrarioApplication
         val schedule = app.scheduleRepository.sync()
         val substitutions = app.overridesRepository.sync()
-        return if (schedule == SyncResult.Failed || substitutions == SyncResult.Failed) Result.retry() else Result.success()
+        val pause = app.settingsRepository.syncPause()
+        return if (listOf(schedule, substitutions, pause).any { it == SyncResult.Failed }) Result.retry() else Result.success()
     }
 
     companion object {

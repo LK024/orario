@@ -27,10 +27,9 @@ class OrarioApplication : Application() {
     val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val scheduleRepository by lazy { ScheduleRepository(filesDir, BuildConfig.SHEET_CSV_URL) }
-    val settingsRepository by lazy { SettingsRepository(this) }
-    val overridesRepository by lazy {
-        OverridesRepository(filesDir, SubstitutionsApi(BuildConfig.SYNC_URL, BuildConfig.SYNC_TOKEN))
-    }
+    private val substitutionsApi by lazy { SubstitutionsApi(BuildConfig.SYNC_URL, BuildConfig.SYNC_TOKEN) }
+    val settingsRepository by lazy { SettingsRepository(this, substitutionsApi) }
+    val overridesRepository by lazy { OverridesRepository(filesDir, substitutionsApi) }
     val remindersRepository by lazy { RemindersRepository(filesDir) }
 
     override fun onCreate() {

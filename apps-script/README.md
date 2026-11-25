@@ -12,6 +12,11 @@ del foglio e permette alle app di leggerle e modificarle, senza login Google nel
 - Le righe restano come storico dell'anno: a settembre puoi svuotare la scheda.
 - Puoi aggiungere righe anche a mano dal foglio, per qualsiasi data.
 
+La scheda "Pausa" contiene la pausa condivisa: una sola riga con le date **Dal** e **Al**.
+Nei giorni in pausa il telefono non manda promemoria né il Live Update e sul Mac l'icona nella barra
+dei menu non compare. Si imposta dalle app (Android o Mac) oppure scrivendo le date a mano; per
+togliere la pausa basta svuotare la riga.
+
 ## Installazione
 
 1. Apri il foglio dell'orario → **Estensioni → Apps Script**.
@@ -19,7 +24,7 @@ del foglio e permette alle app di leggerle e modificarle, senza login Google nel
 3. **Impostazioni progetto** (ingranaggio a sinistra) → **Proprietà script** → **Aggiungi proprietà**:
    nome `TOKEN`, valore la chiave segreta (la stessa di `orario.syncToken` in `android/local.properties`).
 4. Torna all'editor, scegli la funzione `preparaFoglio` in alto e premi **Esegui**:
-   Google chiede l'autorizzazione (è il tuo script sul tuo foglio) e crea la scheda "Supplenze".
+   Google chiede l'autorizzazione (è il tuo script sul tuo foglio) e crea le schede "Supplenze" e "Pausa".
 5. **Esegui il deployment → Nuovo deployment** → tipo **App web**:
    - Esegui come: **Me**
    - Chi ha accesso: **Chiunque**

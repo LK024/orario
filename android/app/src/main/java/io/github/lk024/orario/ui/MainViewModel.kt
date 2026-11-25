@@ -73,6 +73,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /** All'apertura aggiorna in silenzio, al massimo ogni 15 minuti. */
     fun onForeground() {
+        // La pausa si legge a ogni apertura: messa dal Mac, deve valere subito anche qui
+        viewModelScope.launch { settingsRepository.syncPause() }
         if (backgroundSync?.isActive == true) return
         backgroundSync = viewModelScope.launch {
             schedules.load()
@@ -105,9 +107,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _syncing.value = true
         val schedule = schedules.sync()
         val substitutions = overridesRepository.sync()
+        val pause = settingsRepository.syncPause()
         _syncing.value = false
-        // Le supplenze arrivate dal foglio contano come aggiornamento; il fallimento è quello dell'orario
-        return if (schedule == SyncResult.Unchanged && substitutions == SyncResult.Updated) SyncResult.Updated else schedule
+        // Supplenze e pausa arrivate dal foglio contano come aggiornamento; il fallimento è quello dell'orario
+        val fromSheet = substitutions == SyncResult.Updated || pause == SyncResult.Updated
+        return if (schedule == SyncResult.Unchanged && fromSheet) SyncResult.Updated else schedule
     }
 
     /** Supplenza ([lesson] non nullo) o ora libera ([lesson] nullo), solo per [date]. */
@@ -144,7 +148,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setBlockReminders(enabled: Boolean, lead: Int) = viewModelScope.launch { settingsRepository.setBlockReminders(enabled, lead) }
     fun setLunchReminders(enabled: Boolean, lead: Int) = viewModelScope.launch { settingsRepository.setLunchReminders(enabled, lead) }
     fun setLiveDay(enabled: Boolean) = viewModelScope.launch { settingsRepository.setLiveDay(enabled) }
-    fun setPause(from: LocalDate?, to: LocalDate?) = viewModelScope.launch { settingsRepository.setPause(from, to) }
+    fun setPause(from: LocalDate?, to: LocalDate?) = viewModelScope.launch {
+        settingsRepository.setPause(from, to)
+        launch { settingsRepository.syncPause() }
+    }
 
     fun setWeekOffset(offset: Int) {
         _weekOffset.value = offset

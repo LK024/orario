@@ -41,7 +41,12 @@ struct WeekGridView: View {
         }
         .navigationTitle("Orario")
         .navigationSubtitle(subtitle)
-        .onAppear { model.goToCurrentWeek() }
+        .onAppear {
+            model.refreshClock()
+            model.goToCurrentWeek()
+            model.refreshIfStale()
+            model.syncPauseNow()
+        }
         .toolbar {
             ToolbarItemGroup {
                 Button {

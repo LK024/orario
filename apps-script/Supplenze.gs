@@ -1,14 +1,18 @@
 /**
- * Supplenze condivise tra le app Orario (Android, macOS, PWA).
+ * Supplenze e pausa condivise tra le app Orario (Android, macOS, PWA).
  *
  * Lo script vive dentro il foglio dell'orario e risponde come app web:
- *   GET  ?token=…                      → elenco delle supplenze
+ *   GET  ?token=…                      → supplenze e pausa
  *   POST {token, changes: [...]}       → aggiunge, modifica o cancella righe
+ *   POST {token, pause: {from, to}}    → imposta la pausa (null la toglie)
  *
  * Le supplenze stanno nella scheda "Supplenze", una riga per ora:
  *   Data | Ora | Classe | Aula | Docente
  * "Libera" nella colonna Classe indica un'ora resa libera solo per quel giorno.
  * Le righe non vengono mai cancellate da sole: la scheda fa da storico dell'anno.
+ *
+ * La pausa (niente promemoria, Live Update né icona sul Mac) sta nella scheda "Pausa":
+ *   Dal | Al     → una sola riga; vuota = nessuna pausa
  *
  * La chiave segreta NON sta qui (la repo è pubblica): va in Impostazioni progetto →
  * Proprietà script, con nome TOKEN. Istruzioni complete in README.md.
@@ -17,10 +21,12 @@
 const SHEET_NAME = 'Supplenze';
 const HEADERS = ['Data', 'Ora', 'Classe', 'Aula', 'Docente'];
 const FREE = 'Libera';
+const PAUSE_SHEET_NAME = 'Pausa';
+const PAUSE_HEADERS = ['Dal', 'Al'];
 
 function doGet(e) {
   if (!authorized(e.parameter.token)) return json({ error: 'unauthorized' });
-  return json({ substitutions: readAll() });
+  return json({ substitutions: readAll(), pause: readPause() });
 }
 
 /**
@@ -36,15 +42,36 @@ function doPost(e) {
   try {
     (body.changes || []).forEach(apply);
     sortRows();
+    // "pause" presente (anche null) = cambia la pausa; assente = non toccarla
+    if ('pause' in body) writePause(body.pause);
   } finally {
     lock.releaseLock();
   }
-  return json({ substitutions: readAll() });
+  return json({ substitutions: readAll(), pause: readPause() });
 }
 
-/** Da eseguire una volta a mano: chiede l'autorizzazione e crea la scheda. */
+/** Da eseguire una volta a mano: chiede l'autorizzazione e crea le schede. */
 function preparaFoglio() {
   getSheet();
+  getPauseSheet();
+}
+
+/** {from, to} in formato ISO, oppure null se la scheda è vuota o le date non sono valide. */
+function readPause() {
+  const sheet = getPauseSheet();
+  if (sheet.getLastRow() < 2) return null;
+  const [from, to] = sheet.getRange(2, 1, 1, PAUSE_HEADERS.length).getValues()[0].map(toIsoDate);
+  return from && to && from <= to ? { from, to } : null;
+}
+
+function writePause(pause) {
+  const sheet = getPauseSheet();
+  const range = sheet.getRange(2, 1, 1, PAUSE_HEADERS.length);
+  if (pause && toIsoDate(pause.from) && toIsoDate(pause.to)) {
+    range.setValues([[fromIsoDate(toIsoDate(pause.from)), fromIsoDate(toIsoDate(pause.to))]]);
+  } else {
+    range.clearContent();
+  }
 }
 
 function apply(change) {
@@ -94,6 +121,18 @@ function getSheet() {
     sheet.setFrozenRows(1);
     sheet.getRange('A2:A').setNumberFormat('dd/mm/yyyy');
     sheet.getRange('C2:E').setNumberFormat('@');
+  }
+  return sheet;
+}
+
+function getPauseSheet() {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = spreadsheet.getSheetByName(PAUSE_SHEET_NAME);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(PAUSE_SHEET_NAME, spreadsheet.getNumSheets());
+    sheet.getRange(1, 1, 1, PAUSE_HEADERS.length).setValues([PAUSE_HEADERS]).setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    sheet.getRange('A2:B2').setNumberFormat('dd/mm/yyyy');
   }
   return sheet;
 }
