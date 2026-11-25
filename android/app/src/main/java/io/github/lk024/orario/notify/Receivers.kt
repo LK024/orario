@@ -7,7 +7,9 @@ import androidx.core.app.NotificationManagerCompat
 import io.github.lk024.orario.OrarioApplication
 import io.github.lk024.orario.data.ManualReminder
 import io.github.lk024.orario.notify.ReminderScheduler.toMillis
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 private fun BroadcastReceiver.runAsync(context: Context, block: suspend (OrarioApplication) -> Unit) {
     val pending = goAsync()
@@ -21,9 +23,19 @@ private fun BroadcastReceiver.runAsync(context: Context, block: suspend (OrarioA
     }
 }
 
+/**
+ * Prima di mostrare qualcosa controlla nel foglio se nel frattempo è stata messa (o tolta) una pausa,
+ * per esempio dal Mac. Al massimo pochi secondi: senza rete vale la pausa già nota.
+ */
+private suspend fun OrarioApplication.checkPause() {
+    val check = appScope.async { settingsRepository.syncPause() }
+    withTimeoutOrNull(4_000) { check.await() }
+}
+
 /** Sveglia del prossimo promemoria: mostra le notifiche di quell'orario e programma la successiva. */
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) = runAsync(context) { app ->
+        app.checkPause()
         val trigger = intent.getLongExtra(ReminderScheduler.EXTRA_TRIGGER, 0)
         val reminders = app.computeUpcomingReminders()
         reminders.filter { it.triggerAt.toMillis() == trigger }.forEach { ReminderScheduler.show(context, it) }
@@ -58,5 +70,8 @@ class RescheduleReceiver : BroadcastReceiver() {
 
 /** Cambio d'ora: ridisegna (o toglie) il Live Update della giornata e programma il prossimo. */
 class LiveDayReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) = runAsync(context) { app -> app.refreshLiveDay() }
+    override fun onReceive(context: Context, intent: Intent) = runAsync(context) { app ->
+        app.checkPause()
+        app.refreshLiveDay()
+    }
 }

@@ -6,6 +6,7 @@ import io.github.lk024.orario.data.DayConfig
 import io.github.lk024.orario.data.Lesson
 import io.github.lk024.orario.data.Override
 import io.github.lk024.orario.data.Schedule
+import io.github.lk024.orario.data.dayEndLabel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -103,6 +104,22 @@ class AgendaTest {
         val wednesdayEvening = schedule.tileState(at(thursday.plusDays(6), 18, 0), emptyMap()) as TileState.Lessons
         assertEquals(thursday.plusWeeks(1), wednesdayEvening.agenda.date)
         assertEquals("Domani", wednesdayEvening.title)
+    }
+
+    @Test
+    fun footerShowsTheEndOfTheDay() {
+        val end = 14 * 60 + 10
+        assertEquals("Fine · 14:10", dayEndLabel(end, hidden = 0))
+        assertEquals("+ 1 ora · Fine 14:10", dayEndLabel(end, hidden = 1))
+        assertEquals("+ 2 ore · Fine 14:10", dayEndLabel(end, hidden = 2))
+    }
+
+    @Test
+    fun tileChangesWhenTheCountdownStarts() {
+        // Giovedì la prima lezione è alle 9:20: il conteggio parte alle 8:20
+        val changes = schedule.tileChanges(at(thursday, 7, 0), emptyMap()).map { it.toString() }
+        assertEquals("2026-10-22T08:20", changes.first())
+        assertTrue("2026-10-22T09:20" in changes)
     }
 
     @Test

@@ -18,6 +18,9 @@ data class LiveDay(
     val lines: List<LiveLine>,
 )
 
+/** Nella tendina il sistema mostra solo le prime 4 righe dell'elenco e taglia le altre senza avvisare. */
+private const val MAX_LIVE_LINES = 4
+
 /** Il Live Update di [now], oppure null se non va mostrato (fuori dalle lezioni, giorno libero, pausa). */
 fun liveDay(
     schedule: Schedule,
@@ -48,7 +51,11 @@ fun liveDay(
             if (current is BreakSlot) "${current.kind.label} fino alle ${formatMinutes(current.end)}" else "Ora libera",
         )
     }
-    val lines = slots.map { slot ->
+    // Le ore passate spariscono; se il resto non ci sta, le ultime si riassumono nella riga di fine
+    val remaining = slots.dropWhile { it != current }
+    val shown = remaining.take(if (remaining.size > MAX_LIVE_LINES) MAX_LIVE_LINES - 1 else MAX_LIVE_LINES)
+    val hidden = remaining.drop(shown.size).count { it is LessonSlot }
+    val lines = shown.map { slot ->
         val text = when (slot) {
             is BreakSlot -> "${if (slot.kind == BreakKind.Lunch) "🍴" else "☕"}  ${formatMinutes(slot.start)}–${formatMinutes(slot.end)}"
             is LessonSlot -> {
@@ -63,7 +70,8 @@ fun liveDay(
         }
         LiveLine(text, current = slot == current)
     }
-    return LiveDay(pill, title, text, lines)
+    val end = if (hidden > 0) listOf(LiveLine(dayEndLabel(slots.last().end, hidden), current = false)) else emptyList()
+    return LiveDay(pill, title, text, lines + end)
 }
 
 /**

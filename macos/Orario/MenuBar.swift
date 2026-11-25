@@ -78,6 +78,11 @@ struct MenuBarContent: View {
         }
         .padding(14)
         .frame(width: 300)
+        .onAppear {
+            model.refreshClock()
+            model.refreshIfStale()
+            model.syncPauseNow()
+        }
     }
 
     private func heading(for date: LocalDate) -> String {

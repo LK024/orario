@@ -46,13 +46,30 @@ class LiveDayTest {
     }
 
     @Test
-    fun listSkipsFreeHoursAtTheEdgesAndMarksSubstitutions() {
+    fun listStartsFromTheCurrentHourAndMarksSubstitutions() {
         val sub = mapOf(OverrideKey(monday, 3) to Override.of(monday, 3, Lesson("2A")))
-        val lines = liveDay(schedule, sub, settings, at(10, 0))!!.lines.map { it.text }
+        val lines = liveDay(schedule, sub, settings, at(10, 30))!!.lines.map { it.text }
         assertEquals(
-            listOf("9:20  3B · Lab 2", "10:20  5D · 2.03", "☕  11:20–11:40", "11:40  2A · supplenza", "12:30  1E"),
+            listOf("10:20  5D · 2.03", "☕  11:20–11:40", "11:40  2A · supplenza", "12:30  1E"),
             lines,
         )
+    }
+
+    @Test
+    fun longListEndsWithTheEndOfTheDay() {
+        // 5 righe restanti: la tendina ne mostra 4, quindi le ultime 2 ore finiscono nella riga di fine
+        val lines = liveDay(schedule, emptyMap(), settings, at(10, 0))!!.lines
+        assertEquals(
+            listOf("9:20  3B · Lab 2", "10:20  5D · 2.03", "☕  11:20–11:40", "+ 2 ore · Fine 13:20"),
+            lines.map { it.text },
+        )
+        assertTrue(lines.first().current)
+    }
+
+    @Test
+    fun lastHourIsListedWhenItFits() {
+        val lines = liveDay(schedule, emptyMap(), settings, at(12, 40))!!.lines
+        assertEquals(listOf("12:30  1E"), lines.map { it.text })
     }
 
     @Test

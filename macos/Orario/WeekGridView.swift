@@ -33,11 +33,20 @@ struct WeekGridView: View {
             if model.days.isEmpty {
                 emptyState
             } else {
-                grid
+                VStack(spacing: 0) {
+                    weekHeader
+                    grid
+                }
             }
         }
         .navigationTitle("Orario")
         .navigationSubtitle(subtitle)
+        .onAppear {
+            model.refreshClock()
+            model.goToCurrentWeek()
+            model.refreshIfStale()
+            model.syncPauseNow()
+        }
         .toolbar {
             ToolbarItemGroup {
                 Button {
@@ -77,10 +86,58 @@ struct WeekGridView: View {
     }
 
     private var subtitle: String {
-        guard !model.days.isEmpty else { return "" }
-        let week = weekRangeText(from: model.date(ofDayAt: 0), to: model.date(ofDayAt: model.days.count - 1))
-        guard let lastSync = model.lastSync else { return week }
-        return "\(week) · aggiornato alle \(timeText(lastSync))"
+        guard !model.days.isEmpty, let lastSync = model.lastSync else { return "" }
+        return "Aggiornato alle \(timeText(lastSync))"
+    }
+
+    /// Come in Calendario: il mese in grande (i giorni sono già nelle righe) e, a destra, i pulsanti per scorrere.
+    private var weekHeader: some View {
+        HStack(alignment: .center) {
+            monthTitle(from: model.date(ofDayAt: 0), to: model.date(ofDayAt: model.days.count - 1))
+                .font(.largeTitle)
+            Spacer()
+            HStack(spacing: 8) {
+                Button {
+                    model.weekOffset -= 1
+                } label: {
+                    Label("Settimana precedente", systemImage: "chevron.left").labelStyle(.iconOnly)
+                }
+                .buttonBorderShape(.circle)
+                .keyboardShortcut(.leftArrow)
+                .help("Settimana precedente")
+
+                Button("Oggi") { model.goToCurrentWeek() }
+                    .buttonBorderShape(.capsule)
+                    .keyboardShortcut("t")
+                    .help("Torna a questa settimana")
+
+                Button {
+                    model.weekOffset += 1
+                } label: {
+                    Label("Settimana successiva", systemImage: "chevron.right").labelStyle(.iconOnly)
+                }
+                .buttonBorderShape(.circle)
+                .keyboardShortcut(.rightArrow)
+                .help("Settimana successiva")
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+    }
+
+    /// "Novembre 2026"; a cavallo di due mesi "Novembre – Dicembre 2026" o "Dicembre 2026 – Gennaio 2027".
+    private func monthTitle(from start: LocalDate, to end: LocalDate) -> Text {
+        let first = Text(start.monthName).fontWeight(.bold)
+        let last = Text(end.monthName).fontWeight(.bold)
+        if start.year != end.year {
+            return Text("\(first) \(String(start.year)) – \(last) \(String(end.year))")
+        }
+        if start.month != end.month {
+            return Text("\(first) – \(last) \(String(start.year))")
+        }
+        return Text("\(first) \(String(start.year))")
     }
 
     private var columns: [GridColumn] {
@@ -174,7 +231,8 @@ struct WeekGridView: View {
                     end: slot.end,
                     lesson: lesson,
                     active: isToday && slot.contains(minute: model.minuteOfDay),
-                    override: override
+                    override: override,
+                    original: override == nil ? nil : model.originalLesson(dayAt: dayIndex, hour: hour)
                 )
                 .contextMenu {
                     Section(EditTarget(date: date, dayName: day.name, hour: hour, current: nil).title) {

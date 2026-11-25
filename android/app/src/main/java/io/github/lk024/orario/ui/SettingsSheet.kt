@@ -190,8 +190,8 @@ fun SettingsSheet(
                 },
                 supportingContent = {
                     Text(
-                        if (pausedUntil != null) "Dal ${settings.pauseFrom?.format(DayMonthFormatter)}: nessun promemoria, neanche quelli personali"
-                        else "Per festività, ferie o permessi"
+                        if (pausedUntil != null) "Dal ${settings.pauseFrom?.format(DayMonthFormatter)}: nessun promemoria, neanche quelli personali. Vale anche sul Mac"
+                        else "Per festività, ferie o permessi. Vale anche sul Mac"
                     )
                 },
                 leadingContent = { Icon(Icons.Rounded.NotificationsPaused, contentDescription = null) },

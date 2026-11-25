@@ -87,6 +87,9 @@ sealed interface TileState {
 /** Dopo l'ultima lezione "Sei libero" resta per questo tempo, poi compare il giorno dopo. */
 const val REST_MINUTES = 60
 
+/** Il Tile conta i minuti solo da questo tempo prima dell'inizio di un'ora: prima mostra l'orario. */
+const val COUNTDOWN_MINUTES = 60
+
 /** Se il prossimo giorno di scuola non è domani (weekend), il suo orario compare dalla sera prima a quest'ora. */
 const val EVENING_BEFORE_HOUR = 18
 
@@ -122,7 +125,7 @@ private fun crossesWeekend(from: LocalDate, to: LocalDate) =
     generateSequence(from) { it.plusDays(1) }.takeWhile { it <= to }
         .any { it.dayOfWeek == java.time.DayOfWeek.SATURDAY || it.dayOfWeek == java.time.DayOfWeek.SUNDAY }
 
-/** Gli istanti in cui il Tile cambia aspetto, da `from` in poi (ore, pause, "Sei libero", sera prima). */
+/** Gli istanti in cui il Tile cambia aspetto, da `from` in poi (ore, pause, inizio del conteggio, "Sei libero", sera prima). */
 fun Schedule.tileChanges(from: LocalDateTime, overrides: Map<OverrideKey, Override>): List<LocalDateTime> {
     val today = from.toLocalDate()
     val moments = mutableListOf<LocalDateTime>()
@@ -132,6 +135,8 @@ fun Schedule.tileChanges(from: LocalDateTime, overrides: Map<OverrideKey, Overri
         agenda.slots.filter { it.start >= first && it.end <= last }
             .flatMap { listOf(it.start, it.end) }
             .forEach { moments += today.atTime(it / 60, it % 60) }
+        agenda.slots.filterIsInstance<LessonSlot>().filter { it.start >= first && it.end <= last }
+            .forEach { moments += today.atStartOfDay().plusMinutes((it.start - COUNTDOWN_MINUTES).toLong()) }
         moments += today.atTime(0, 0).plusMinutes((last + REST_MINUTES).toLong())
     }
     (0..14L).forEach { moments += today.plusDays(it).atTime(EVENING_BEFORE_HOUR, 0) }

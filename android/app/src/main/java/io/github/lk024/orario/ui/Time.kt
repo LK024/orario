@@ -41,6 +41,12 @@ val LocalDateTime.minuteOfDay get() = hour * 60 + minute
 private val italian = Locale.ITALIAN
 val DayMonthFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM", italian)
 private val TimeFormatter = DateTimeFormatter.ofPattern("H:mm", italian)
+private val ShortDayMonthFormatter = DateTimeFormatter.ofPattern("d MMM", italian)
+
+/** "16–20 nov" oppure "30 nov – 4 dic": breve, per stare nella barra in alto. */
+fun weekRangeLabel(start: LocalDate, end: LocalDate): String =
+    if (start.month == end.month) "${start.dayOfMonth}–${end.format(ShortDayMonthFormatter)}"
+    else "${start.format(ShortDayMonthFormatter)} – ${end.format(ShortDayMonthFormatter)}"
 
 fun formatLastSync(millis: Long, today: LocalDate): String {
     val dateTime = LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(millis), java.time.ZoneId.systemDefault())

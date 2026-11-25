@@ -78,7 +78,7 @@ class OverridesRepository(dir: File, private val api: SubstitutionsApi) {
                         ?.let { list -> StoredOverrides(list, list.map { o -> PendingChange(o.date, o.hour, o.lesson) }) }
             } ?: StoredOverrides(emptyList())
             pending = stored.pending
-            _overrides.value = recent(stored.overrides.associateBy { it.key })
+            _overrides.value = stored.overrides.associateBy { it.key }
             _loaded.value = true
         }
     }
@@ -102,7 +102,7 @@ class OverridesRepository(dir: File, private val api: SubstitutionsApi) {
                 val before = _overrides.value
                 // Quello che è cambiato mentre la richiesta era in corso resta in coda
                 pending = pending.filterNot { it in sent }
-                _overrides.value = recent(mergeWithPending(remote, pending))
+                _overrides.value = mergeWithPending(remote, pending)
                 save()
                 if (_overrides.value != before) SyncResult.Updated else SyncResult.Unchanged
             }
@@ -124,12 +124,6 @@ class OverridesRepository(dir: File, private val api: SubstitutionsApi) {
     private fun save() {
         runCatching { file.writeText(json.encodeToString(StoredOverrides(_overrides.value.values.toList(), pending))) }
             .onFailure { Log.w(TAG, "Salvataggio fallito", it) }
-    }
-
-    /** Sul telefono bastano le ultime due settimane: lo storico completo resta nel foglio. */
-    private fun recent(overrides: Map<OverrideKey, Override>): Map<OverrideKey, Override> {
-        val oldest = LocalDate.now().minusDays(14)
-        return overrides.filterKeys { it.date >= oldest }
     }
 
     private companion object {

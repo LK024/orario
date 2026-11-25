@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.lk024.orario.BuildConfig
 import io.github.lk024.orario.data.Settings
+import io.github.lk024.orario.data.dateIn
 import io.github.lk024.orario.data.displayedWeekStart
 import io.github.lk024.orario.data.todayIndex
 import kotlinx.coroutines.launch
@@ -75,7 +76,9 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
     val now by rememberNow()
     val today = now.toLocalDate()
     val days = schedule?.days.orEmpty()
-    val weekStart = displayedWeekStart(today)
+    val weekOffset by viewModel.weekOffset.collectAsStateWithLifecycle()
+    LaunchedEffect(today) { viewModel.onToday(today) }
+    val weekStart = displayedWeekStart(today).plusWeeks(weekOffset.toLong())
 
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
@@ -116,9 +119,10 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
         if (days.isNotEmpty()) pagerState.scrollToPage(days.todayIndex(today))
     }
 
+    // Torna alla settimana corrente; nella vista giornaliera anche al giorno di oggi
     fun goToToday() {
-        viewModel.setWeeklyView(false)
-        scope.launch { pagerState.animateScrollToPage(days.todayIndex(today)) }
+        viewModel.goToCurrentWeek()
+        if (!settings.weeklyView) scope.launch { pagerState.animateScrollToPage(days.todayIndex(today)) }
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -126,7 +130,17 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text(if (settings.weeklyView) "Settimana" else "Orario") },
+                title = {
+                    Text(
+                        when {
+                            // Fuori dalla settimana corrente il titolo dice quale si sta guardando
+                            weekOffset != 0 && days.isNotEmpty() ->
+                                weekRangeLabel(weekStart, days.last().dateIn(weekStart, days.lastIndex))
+                            settings.weeklyView -> "Settimana"
+                            else -> "Orario"
+                        }
+                    )
+                },
                 actions = {
                     IconButton(onClick = ::goToToday) {
                         Icon(Icons.Rounded.Today, contentDescription = "Oggi")
@@ -168,6 +182,8 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
                         overrides = overrides,
                         manualReminders = manualReminders,
                         weekStart = weekStart,
+                        weekOffset = weekOffset,
+                        onWeekOffsetChange = viewModel::setWeekOffset,
                         now = now,
                         contentPadding = padding,
                         refreshing = refreshing,
@@ -183,6 +199,8 @@ fun MainScreen(viewModel: MainViewModel, settings: Settings) {
                         overrides = overrides,
                         manualReminders = manualReminders,
                         weekStart = weekStart,
+                        weekOffset = weekOffset,
+                        onWeekOffsetChange = viewModel::setWeekOffset,
                         now = now,
                         pagerState = pagerState,
                         contentPadding = padding,

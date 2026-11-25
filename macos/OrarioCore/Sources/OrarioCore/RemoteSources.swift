@@ -88,6 +88,32 @@ public struct SubstitutionsAPI: Sendable {
         return try Self.decode(data, response)
     }
 
+    /// Legge la pausa dal foglio.
+    public func fetchPause() async throws -> RemotePause {
+        guard let url else { throw APIError.disabled }
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+        components.queryItems = [URLQueryItem(name: "token", value: token)]
+        // Si controlla subito prima di cambiare l'icona: senza rete meglio rinunciare presto
+        var request = URLRequest(url: components.url!, timeoutInterval: 8)
+        request.httpMethod = "GET"
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try ScheduleSource.check(response)
+        return try RemotePause.parse(data)
+    }
+
+    /// Scrive la pausa nel foglio (nil la toglie) e restituisce quella salvata.
+    public func pushPause(_ pause: PausePeriod?) async throws -> RemotePause {
+        guard let url else { throw APIError.disabled }
+        var request = URLRequest(url: url, timeoutInterval: 8)
+        request.httpMethod = "POST"
+        request.setValue("text/plain;charset=utf-8", forHTTPHeaderField: "Content-Type")
+        let value: Any = pause.map { ["from": $0.from.description, "to": $0.to.description] } ?? NSNull()
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["token": token, "pause": value])
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try ScheduleSource.check(response)
+        return try RemotePause.parse(data)
+    }
+
     static func decode(_ data: Data, _ response: URLResponse) throws -> [Override] {
         try ScheduleSource.check(response)
         let decoded = try JSONDecoder().decode(Response.self, from: data)

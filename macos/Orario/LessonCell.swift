@@ -8,6 +8,8 @@ struct LessonCell: View {
     let lesson: Lesson?
     let active: Bool
     let override: Override?
+    /// Con una variazione, la lezione dell'orario fisso che ha sostituito.
+    let original: Lesson?
 
     private let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
 
@@ -23,13 +25,20 @@ struct LessonCell: View {
                     if let room = lesson.room {
                         Text(room).font(.caption).foregroundStyle(.secondary)
                     }
-                    if let teacher = lesson.teacher {
+                    // Con una variazione l'ultima riga è per la lezione sostituita
+                    if let teacher = lesson.teacher, original == nil {
                         Text(teacher).font(.caption2).foregroundStyle(.tertiary)
                     }
                 } else {
                     Text(override == nil ? "–" : "Libera")
                         .font(override == nil ? .body : .caption)
                         .foregroundStyle(.tertiary)
+                }
+                if let original {
+                    Text([original.title, original.room].compactMap { $0 }.joined(separator: " · "))
+                        .font(.caption2)
+                        .strikethrough()
+                        .foregroundStyle(.secondary)
                 }
             }
             .lineLimit(1)
